@@ -18,6 +18,7 @@ autopep8 = "*"
 pytest = "*"
 sphinx = "*"
 sphinx-rtd-theme = "*"
+pip = "*"
 
 [requires]
 
