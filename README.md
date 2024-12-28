@@ -20,6 +20,24 @@ So many bugs are still there, and I am trying to fix them.
 
 Details (e.g., how to install and modify) are described in [Pre-requisites](PreRequisites.md).
 
+## Installation
+
+You can install this package by
+
+```shell
+$ pip install git+https://github.com/skrbcr/almaqso.git
+```
+
+Then you can use the package like this:
+
+```python
+import almaqso
+```
+
+## Usage
+
+See `sample` folder and [documentation](https://skrbcr.github.io/almaqso/).
+
 ## Test
 
 ### CASA to use
