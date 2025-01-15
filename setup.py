@@ -2,8 +2,8 @@ from setuptools import setup, find_packages
 
 setup(
     name='almaqso',
-    version='1.0',
+    version='1.0.1',
     description='ALMA QSO analysis',
     packages=find_packages(),
-    install_requires=[ 'astropy', 'numpy', 'pandas', 'pyvo', 'scipy', 'matplotlib' ],
+    install_requires=[ 'astropy', 'numpy', 'pandas', 'pyvo', 'scipy', 'matplotlib', 'astroquery', 'setuptools' ],
 )
