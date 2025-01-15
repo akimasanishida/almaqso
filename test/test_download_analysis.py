@@ -6,7 +6,7 @@ from almaqso.download_archive import download_archive
 from almaqso.analysis import analysis
 
 CURRENT_DIR = Path(__file__).parent
-CASA_PATH = os.environ.get('ALMAQSO_CASA', 'casa')
+CASA_PATH = 'casa'  # Path to CASA. Please modify this if necessary.
 DATA_PATH = './uid___A002_Xd68367_X9885'
 TARFILE = './2018.1.01575.S_uid___A002_Xd68367_X9885.asdm.sdm.tar'
 

@@ -25,7 +25,7 @@ Details (e.g., how to install and modify) are described in [Pre-requisites](PreR
 You can install this package by
 
 ```shell
-pip install git+https://github.com/skrbcr/almaqso.git
+pip install almaqso
 ```
 
 Then you can use the package like this:
@@ -42,28 +42,7 @@ See `sample` folder and [documentation](https://skrbcr.github.io/almaqso/).
 
 ### CASA to use
 
-First, make sure that you have CASA with alma pipeline installed e.g., the version that I am using.
-To set environment variables shown below, you can tell this program which CASA to use:
-
-**`bash` and `zsh`**
-
-Write above line in your `.bashrc` or `.zshrc`.
-
-```shell
-export ALMAQSO_CASA=/path/to/your/casa
-```
-
-**`fish`**
-
-Write above line in your `config.fish`.
-
-```shell
-set -gx ALMAQSO_CASA /path/to/your/casa
-```
-
-**Note**
-
-I am considering to delete this feature and alternatively I want you to specify the path to CASA in the parameter of the functions.
+First, make sure that you have CASA with ALMA pipeline installed e.g., 6.6.1-17-pipeline-2024.1.0.8.
 
 ### Prepare the environment
 
@@ -92,6 +71,13 @@ Edit `test/test_download_analysis.py`:
 ```python
 # test/test_download_analysis.py
 # Edit the following constants.
+
+...
+
+CASA_PATH = 'casa'  # Path to CASA. Please modify this if necessary.
+
+...
+
 DOWNLOAD = False  # True: Download the tar file, False: Use the existing tar file
 MODE = 'aftercal'  # 'all': All Steps, 'calonly': Step 1-4, 'aftercal': Step 5-8 of analysis
 ```
@@ -108,3 +94,8 @@ To work with this package, you have to download JSON files from [ALMA Calibrator
 Explanation on it is [here](https://almascience.nao.ac.jp/alma-data/calibrator-catalogue).
 
 Sample code is at `sample/sample.py`.
+
+### Branches
+
+- `main`: The main branch.
+- `with-old-codes`: The branch with old codes (created by original editor). This is for the reference.
