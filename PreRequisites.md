@@ -46,7 +46,7 @@ clean:
 Now, you can install it by
 
 ```shell
-$ make install
+make install
 ```
 
 Finally, please tell your CASA where the UVMultiFit is by edditiong `~/.casa/startup.py`:

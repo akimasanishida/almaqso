@@ -25,7 +25,7 @@ Details (e.g., how to install and modify) are described in [Pre-requisites](PreR
 You can install this package by
 
 ```shell
-$ pip install git+https://github.com/skrbcr/almaqso.git
+pip install git+https://github.com/skrbcr/almaqso.git
 ```
 
 Then you can use the package like this:
@@ -70,19 +70,19 @@ I am considering to delete this feature and alternatively I want you to specify 
 Then please install pipenv.
 
 ```shell
-$ pip install pipenv
+pip install pipenv
 ```
 
 Then, you can reproduce the environment by
 
 ```shell
-$ pipenv install --dev
+pipenv install --dev
 ```
 
 You can enter the environment by
 
 ```shell
-$ pipenv shell
+pipenv shell
 ```
 
 ### Test run
@@ -99,7 +99,7 @@ MODE = 'aftercal'  # 'all': All Steps, 'calonly': Step 1-4, 'aftercal': Step 5-8
 Then you can run the test by
 
 ```
-$ pytest
+pytest
 ```
 
 ### Usage
