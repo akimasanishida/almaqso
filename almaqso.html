@@ -233,13 +233,12 @@
 <span id="almaqso-analysis-module"></span><h2>almaqso.analysis module<a class="headerlink" href="#module-almaqso.analysis" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="almaqso.analysis.analysis">
-<span class="sig-name descname"><span class="pre">analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tardir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'calonly'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">casacmd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'casa'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#almaqso.analysis.analysis" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tardir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">casacmd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'casa'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#almaqso.analysis.analysis" title="Link to this definition"></a></dt>
 <dd><p>Run the analysis of the QSO data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tardir</strong> (<em>str</em>) – Directory containing the <cite>*.asdm.sdm.tar</cite> files.</p></li>
-<li><p><strong>mode</strong> (<em>str</em>) – ‘calonly’: Step 1-4, ‘aftercal’: Step 5-8 of analysis, ‘all’: Step 1-8 of analysis. Default is ‘calonly’.</p></li>
 <li><p><strong>casacmd</strong> (<em>str</em>) – CASA command. Default is ‘casa’.</p></li>
 <li><p><strong>skip</strong> (<em>bool</em>) – Skip the analysis if the output directory exists. Default is True.</p></li>
 </ul>
