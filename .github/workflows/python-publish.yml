@@ -6,12 +6,11 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
 
     steps:
       - uses: actions/checkout@v4
