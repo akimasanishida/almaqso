@@ -1,6 +1,3 @@
-import os
-import sys
-sys.path.append('../almaqso')  # Specify the path to the almaqso directory
 from almaqso.download_archive import download_archive
 from almaqso.analysis import analysis
 
