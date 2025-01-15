@@ -21,13 +21,12 @@ def _run_casa_script(casa: str, cmd: str, cmd_name: str):
         raise
 
 
-def analysis(tardir: str, mode='calonly', casacmd='casa', skip=True):
+def analysis(tardir: str, casacmd='casa', skip=True):
     """
     Run the analysis of the QSO data.
 
     Args:
         tardir (str): Directory containing the `*.asdm.sdm.tar` files.
-        mode (str): 'calonly': Step 1-4, 'aftercal': Step 5-8 of analysis, 'all': Step 1-8 of analysis. Default is 'calonly'.
         casacmd (str): CASA command. Default is 'casa'.
         skip (bool): Skip the analysis if the output directory exists. Default is True.
     """
@@ -37,5 +36,5 @@ def analysis(tardir: str, mode='calonly', casacmd='casa', skip=True):
         cmd = "sys.path.append('.');" + \
             "from almaqso._analysis import _analysis;" + \
             f"_analysis('{asdm_file}', skip={skip}," + \
-            f"casacmd='{casacmd}', mode='{mode}')"
+            f"casacmd='{casacmd}')"
         _run_casa_script(casacmd, cmd, asdm_file)

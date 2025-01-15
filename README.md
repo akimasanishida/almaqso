@@ -16,7 +16,6 @@ So many bugs are still there, and I am trying to fix them.
 ### CASA Modules
 
 - analysisUtilities
-- UVMultiFit: (optional) When you run analysis with `mode='aftercal'` or `mode='all'` (this means that you run Step 5), this is needed. If you use CASA 6, you should switch the branch to `develop` to build properly.
 
 Details (e.g., how to install and modify) are described in [Pre-requisites](PreRequisites.md).
 

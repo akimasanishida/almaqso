@@ -11,8 +11,7 @@ DATA_PATH = './uid___A002_Xd68367_X9885'
 TARFILE = './2018.1.01575.S_uid___A002_Xd68367_X9885.asdm.sdm.tar'
 
 # Edit the following constants.
-DOWNLOAD = True  # True: Download the tar file, False: Use the existing tar file
-MODE = 'calonly'
+DOWNLOAD = False  # True: Download the tar file, False: Use the existing tar file
 
 
 def test_download():
@@ -25,11 +24,7 @@ def test_download():
 def test_analysis():
     os.system(f'rm -rf {DATA_PATH}')
 
-    if MODE == 'aftercal':
-        os.system(f'cp -r {DATA_PATH}_backup {DATA_PATH}')
-
     analysis('.', casacmd=CASA_PATH)
 
-    if MODE == 'calonly':
-        os.system(f'rm -rf {DATA_PATH}_backup')
-        os.system(f'cp -r {DATA_PATH} {DATA_PATH}_backup')
+    os.system(f'rm -rf {DATA_PATH}_backup')
+    os.system(f'cp -r {DATA_PATH} {DATA_PATH}_backup')
