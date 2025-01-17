@@ -5,7 +5,7 @@ from logging import StreamHandler, Formatter, INFO, getLogger
 import logging
 
 
-class QSOquery:
+class _QSOquery:
     """
     Query the ALMA Science Archive for the QSO data.
 
