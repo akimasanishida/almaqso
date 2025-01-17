@@ -6,7 +6,7 @@ from almaqso.download_archive import download_archive
 from almaqso.analysis import analysis
 
 CURRENT_DIR = Path(__file__).parent
-CASA_PATH = 'casa'  # Path to CASA. Please modify this if necessary.
+CASA_PATH = '/usr/local/casa/casa-6.6.1-17-pipeline-2024.1.0.8-py3.8.el8/bin/casa'  # Path to CASA. Please modify this if necessary.
 DATA_PATH = './uid___A002_Xd68367_X9885'
 TARFILE = './2018.1.01575.S_uid___A002_Xd68367_X9885.asdm.sdm.tar'
 
@@ -22,9 +22,6 @@ def test_download():
 
 
 def test_analysis():
-    os.system(f'rm -rf {DATA_PATH}')
+    os.system(f'rm -r {DATA_PATH}')
 
     analysis('.', casacmd=CASA_PATH)
-
-    os.system(f'rm -rf {DATA_PATH}_backup')
-    os.system(f'cp -r {DATA_PATH} {DATA_PATH}_backup')

@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 import json
-from almaqso.QSOquery import QSOquery
+from almaqso._QSOquery import _QSOquery
 
 
 def download_archive(band: int, jfilename: str):
@@ -32,7 +32,7 @@ def download_archive(band: int, jfilename: str):
     for i, sname in enumerate(cals):
         try:
             print(f'[{i+1}/{cals.shape[0]}] {sname} -> start')
-            obj = QSOquery(
+            obj = _QSOquery(
                 sname,
                 band=band,
                 replaceNAOJ=True,
