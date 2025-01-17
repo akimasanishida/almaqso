@@ -47,10 +47,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">almaqso package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#almaqso-qsoanalysis-module">almaqso.QSOanalysis module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-almaqso.QSOquery">almaqso.QSOquery module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#almaqso.QSOquery.QSOquery"><code class="docutils literal notranslate"><span class="pre">QSOquery</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="#almaqso-qsoquery-module">almaqso.QSOquery module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-almaqso.analysis">almaqso.analysis module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#almaqso.analysis.analysis"><code class="docutils literal notranslate"><span class="pre">analysis()</span></code></a></li>
 </ul>
@@ -99,135 +96,8 @@
 <section id="almaqso-qsoanalysis-module">
 <h2>almaqso.QSOanalysis module<a class="headerlink" href="#almaqso-qsoanalysis-module" title="Link to this heading"></a></h2>
 </section>
-<section id="module-almaqso.QSOquery">
-<span id="almaqso-qsoquery-module"></span><h2>almaqso.QSOquery module<a class="headerlink" href="#module-almaqso.QSOquery" title="Link to this heading"></a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="almaqso.QSOquery.QSOquery">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QSOquery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">band</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'4'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">almaurl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'https://almascience.nao.ac.jp'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replaceNAOJ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only12m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">onlyFDM</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#almaqso.QSOquery.QSOquery" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Query the ALMA Science Archive for the QSO data.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="almaqso.QSOquery.QSOquery.sname">
-<span class="sig-name descname"><span class="pre">sname</span></span><a class="headerlink" href="#almaqso.QSOquery.QSOquery.sname" title="Link to this definition"></a></dt>
-<dd><p>Source name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="almaqso.QSOquery.QSOquery.band">
-<span class="sig-name descname"><span class="pre">band</span></span><a class="headerlink" href="#almaqso.QSOquery.QSOquery.band" title="Link to this definition"></a></dt>
-<dd><p>Band number.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="almaqso.QSOquery.QSOquery.almaurl">
-<span class="sig-name descname"><span class="pre">almaurl</span></span><a class="headerlink" href="#almaqso.QSOquery.QSOquery.almaurl" title="Link to this definition"></a></dt>
-<dd><p>ALMA Science Archive URL.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="almaqso.QSOquery.QSOquery.download_d">
-<span class="sig-name descname"><span class="pre">download_d</span></span><a class="headerlink" href="#almaqso.QSOquery.QSOquery.download_d" title="Link to this definition"></a></dt>
-<dd><p>Download directory.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="almaqso.QSOquery.QSOquery.replaceNAOJ">
-<span class="sig-name descname"><span class="pre">replaceNAOJ</span></span><a class="headerlink" href="#almaqso.QSOquery.QSOquery.replaceNAOJ" title="Link to this definition"></a></dt>
-<dd><p>Replace NAOJ URL.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="almaqso.QSOquery.QSOquery.only12m">
-<span class="sig-name descname"><span class="pre">only12m</span></span><a class="headerlink" href="#almaqso.QSOquery.QSOquery.only12m" title="Link to this definition"></a></dt>
-<dd><p>Only 12m data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="almaqso.QSOquery.QSOquery.onlyFDM">
-<span class="sig-name descname"><span class="pre">onlyFDM</span></span><a class="headerlink" href="#almaqso.QSOquery.QSOquery.onlyFDM" title="Link to this definition"></a></dt>
-<dd><p>Only FDM data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="almaqso.QSOquery.QSOquery.queryALMA">
-<span class="sig-name descname"><span class="pre">queryALMA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">almaquery</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#almaqso.QSOquery.QSOquery.queryALMA" title="Link to this definition"></a></dt>
-<dd><p>Query ALMA data using TAP service or myAlma interface.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>almaquery</strong> (<em>bool</em>) – If True, use self.myAlma for querying. Otherwise, use pyvo TAP service.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Filtered query results.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>pandas.DataFrame</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="almaqso.QSOquery.QSOquery.get_data_urls">
-<span class="sig-name descname"><span class="pre">get_data_urls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">almaquery</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#almaqso.QSOquery.QSOquery.get_data_urls" title="Link to this definition"></a></dt>
-<dd><p>Retrieve data URLs and total size for ALMA observations.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>almaquery</strong> (<em>bool</em>) – If True, query data using myAlma. Otherwise, use alternative methods.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="almaqso.QSOquery.QSOquery.wget_f">
-<span class="sig-name descname"><span class="pre">wget_f</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#almaqso.QSOquery.QSOquery.wget_f" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="almaqso.QSOquery.QSOquery.init_logger">
-<span class="sig-name descname"><span class="pre">init_logger</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#almaqso.QSOquery.QSOquery.init_logger" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="almaqso.QSOquery.QSOquery.download">
-<span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#almaqso.QSOquery.QSOquery.download" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
+<section id="almaqso-qsoquery-module">
+<h2>almaqso.QSOquery module<a class="headerlink" href="#almaqso-qsoquery-module" title="Link to this heading"></a></h2>
 </section>
 <section id="module-almaqso.analysis">
 <span id="almaqso-analysis-module"></span><h2>almaqso.analysis module<a class="headerlink" href="#module-almaqso.analysis" title="Link to this heading"></a></h2>
