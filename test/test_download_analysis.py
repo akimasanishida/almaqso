@@ -2,8 +2,8 @@ import os
 import sys
 from pathlib import Path
 sys.path.append('../almaqso')  # isort:skip
-from almaqso.download_archive import download_archive
-from almaqso.analysis import analysis
+from almaqso import download_archive, analysis
+
 
 CURRENT_DIR = Path(__file__).parent
 CASA_PATH = '/usr/local/casa/casa-6.6.1-17-pipeline-2024.1.0.8-py3.8.el8/bin/casa'  # Path to CASA. Please modify this if necessary.

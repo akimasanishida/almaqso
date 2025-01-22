@@ -1,5 +1,4 @@
-from almaqso.download_archive import download_archive
-from almaqso.analysis import analysis
+from almaqso import download_archive, analysis
 
 
 if __name__ == '__main__':
