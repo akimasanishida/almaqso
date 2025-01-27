@@ -36,11 +36,11 @@ def _run_casa_cmd(casa: str, mpicasa: str, n_core: int,
             print(f"STDOUT for {cmd}:", result.stdout)
             print(f"STDERR for {cmd}:", result.stderr)
     except subprocess.CalledProcessError as e:
-        print(f"Error while executing {cmd}:")
-        print(f"Return Code: {e.returncode}")
-        print(f"STDOUT: {e.stdout}")
-        print(f"STDERR: {e.stderr}")
-        raise
+        if verbose:
+            print(f"Error while executing {cmd}:")
+            print(f"Return Code: {e.returncode}")
+            print(f"STDOUT: {e.stdout}")
+            print(f"STDERR: {e.stderr}")
 
 
 def _calibration(casa_options: map) -> None:
@@ -78,7 +78,31 @@ def _calibration(casa_options: map) -> None:
     )
 
 
-def analysis(tardir: str, casapath: str, mpicasa: str = None,
+def _check_severe_error() -> bool:
+    """
+    Check the severe error in the log files.
+
+    Args:
+        None
+
+    Returns:
+        bool: True if the severe error is found, False otherwise
+    """
+    log_files = glob.glob('*.log')
+    result = False
+
+    for log_file in log_files:
+        with open(log_file, 'r') as f:
+            lines = f.readlines()
+        for i, line in enumerate(lines):
+            if 'SEVERE' in line:
+                print(f'SEVERE error is found in {log_file} (line: {i+1})')
+                result = True
+
+    return result
+
+
+def analysis(tardir: str, casapath: str, mpicasa: bool = False,
              n_core: int = 2, skip: bool = True, verbose: bool = False) -> None:
     """
     Run the analysis of the QSO data.
@@ -86,7 +110,7 @@ def analysis(tardir: str, casapath: str, mpicasa: str = None,
     Args:
         tardir (str): Directory containing the `*.asdm.sdm.tar` files.
         casapath (str): Path to the CASA executable. Provide full path even if it is in the PATH for using MPI CASA.
-        mpicasa (str): Path to the MPI CASA executable. Default is 'mpicasa'.
+        mpicasa (bool): Use MPI CASA. Default is False.
         n_core (int): Number of cores to use for the analysis. Default is 8.
         skip (bool): Skip the analysis if the output directory exists. Default is True.
         verbose (bool): Print the STDOUT of the CASA commands when no errors occur. Default is False.
@@ -96,12 +120,20 @@ def analysis(tardir: str, casapath: str, mpicasa: str = None,
     """
     asdm_files = [file for file in os.listdir(f'{tardir}') if file.endswith('.asdm.sdm.tar')]
     almaqso_dir = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
+
+    if mpicasa:
+        mpicasa = os.path.dirname(casapath) + '/mpicasa'
+    else:
+        mpicasa = None
+
     casa_options = {
         'casa': casapath,
         'mpicasa': mpicasa,
         'n_core': n_core,
         'verbose': verbose
     }
+
+    severe_error_list = []
 
     for asdm_file in asdm_files:
         asdmname = 'uid___' + \
@@ -134,5 +166,19 @@ def analysis(tardir: str, casapath: str, mpicasa: str = None,
             "_remove_target()"
         _run_casa_cmd(cmd=cmd, **casa_options)
 
+        # Check severe error
+        if _check_severe_error():
+            severe_error_list.append(asdmname)
+
         os.chdir('..')
         print(f'Processing {asdmname} is done.')
+
+    print('#' * 80)
+    print('All processing is done.')
+
+    if len(severe_error_list) > 0:
+        print('The following data have SEVERE errors:')
+        for severe_error in severe_error_list:
+            print(severe_error)
+    else:
+        print('No severe errors are found.')

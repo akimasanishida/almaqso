@@ -4,9 +4,11 @@ This section describes how to prepare the required packages.
 
 ## analysisUtilites
 
-[analysisUtilites](https://zenodo.org/records/7502160) is a CASA utility package. If you don't have it, please intall the latest.
+[analysisUtilites](https://zenodo.org/records/7502160) is a CASA utility package.
+If you don't have it, please intall the latest.
+How to install is explained [here](https://casaguides.nrao.edu/index.php/Analysis_Utilities).
 
-You may have to modify the code:
+You have to modify the code to run almaqso correctly:
 
 - `analysisUtils.py` of analysisUtilities:
     - `np.int32`, `np.int64` and `np.long` -> `int`
