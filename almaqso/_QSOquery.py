@@ -1,8 +1,12 @@
-import numpy as np
-import os
-from concurrent.futures import ThreadPoolExecutor
-from logging import StreamHandler, Formatter, INFO, getLogger
 import logging
+import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from logging import INFO, Formatter, StreamHandler, getLogger
+
+import numpy as np
+# import pandas as pd
+import requests
+from tqdm import tqdm
 
 
 class _QSOquery:
@@ -19,10 +23,16 @@ class _QSOquery:
         onlyFDM (bool): Only FDM data.
     """
 
-    def __init__(self, sname, band='4',
-                 almaurl='https://almascience.nao.ac.jp',
-                 download_d='./',
-                 replaceNAOJ=False, only12m=False, onlyFDM=False):
+    def __init__(
+        self,
+        sname,
+        band="4",
+        almaurl="https://almascience.nao.ac.jp",
+        download_d="./",
+        replaceNAOJ=False,
+        only12m=False,
+        onlyFDM=False,
+    ):
         """
         Initialize the class.
 
@@ -36,6 +46,7 @@ class _QSOquery:
             onlyFDM (bool): Only FDM data. Default is False.
         """
         from astroquery.alma import Alma
+
         self.sname = sname
         self.band = band
         self.almaurl = almaurl
@@ -70,16 +81,17 @@ class _QSOquery:
             ret = self.myAlma.query_tap(query).to_table().to_pandas()
         else:
             from pyvo.dal import TAPService
+
             # ALMA TAP service initialization
             service = TAPService(self.almaurl + "/tap")
             ret = service.search(query).to_table().to_pandas()
 
         # Apply filters based on conditions
         if self.only12m:
-            ret = ret[ret['antenna_arrays'].str.contains('DV|DA')]
+            ret = ret[ret["antenna_arrays"].str.contains("DV|DA")]
 
         if self.onlyFDM:
-            ret = ret[ret['velocity_resolution'] < 50000]
+            ret = ret[ret["velocity_resolution"] < 50000]
 
         return ret
 
@@ -92,7 +104,9 @@ class _QSOquery:
         """
         logging.info("Starting ALMA data query...")
         rlist = self.queryALMA(almaquery=almaquery)
-        mous_list = np.unique(rlist['member_ous_uid'])
+        # with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+        #     print(rlist)
+        mous_list = np.unique(rlist["member_ous_uid"])
 
         total_size = 0.0
         url_list = []
@@ -102,17 +116,17 @@ class _QSOquery:
 
             # Filter ASDM data
             url_size = [
-                [url, size] for url, size in zip(
-                    uid_url_table['access_url'],
-                    uid_url_table['content_length']
+                [url, size]
+                for url, size in zip(
+                    uid_url_table["access_url"], uid_url_table["content_length"]
                 )
-                if '.asdm.sdm.tar' in url
+                if ".asdm.sdm.tar" in url
             ]
 
             if url_size:
-                asdm_size = np.sum(
-                    [float(size) for _, size in url_size]
-                ) / 1024 / 1024 / 1024
+                asdm_size = (
+                    np.sum([float(size) for _, size in url_size]) / 1024 / 1024 / 1024
+                )
                 url_list.extend(url_size)
                 print(f"[{id + 1}/{len(mous_list)}] {asdm_size:.2f} GB")
                 total_size += asdm_size
@@ -130,36 +144,81 @@ class _QSOquery:
         logging.info(f"Total data size: {total_size:.2f} GB")
 
     def wget_f(self, num):
-        getLogger().info("%s start", num)
+        logger = getLogger()
+        logger.info("%s start", num)
+
+        # URLの選択
         if self.replaceNAOJ:
-            download_url = (self.url_list[num][0]).replace(
-                self.almaurl, "https://almascience.nao.ac.jp")
+            download_url = self.url_list[num][0].replace(
+                self.almaurl, "https://almascience.nao.ac.jp"
+            )
         else:
             download_url = self.url_list[num][0]
-        print('wget -q --no-check-certificate -P ' +
-              self.download_d+' '+download_url)
-        os.system('wget -q --no-check-certificate -P ' +
-                  self.download_d+' '+download_url)
-        getLogger().info("%s end", num)
+
+        # 保存先パスの生成
+        filename = os.path.basename(download_url)
+        save_path = os.path.join(self.download_d, filename)
+
+        # ログ出力
+        logger.info("Downloading from: %s", download_url)
+        logger.info("Saving to: %s", save_path)
+
+        # ダウンロード実行
+        try:
+            response = requests.get(download_url, stream=True, verify=True)
+            response.raise_for_status()
+            total = int(response.headers.get("content-length", 0))
+            os.makedirs(
+                self.download_d, exist_ok=True
+            )  # 保存先ディレクトリがなければ作る
+
+            with (
+                open(save_path, "wb") as file,
+                tqdm(
+                    desc=filename,
+                    total=total,
+                    unit="iB",
+                    unit_scale=True,
+                    unit_divisor=1024,
+                    leave=False,
+                ) as bar,
+            ):
+                for chunk in response.iter_content(chunk_size=1024):
+                    if chunk:
+                        file.write(chunk)
+                        bar.update(len(chunk))
+
+            logger.info("%s end", num)
+
+        except requests.exceptions.RequestException as e:
+            logger.error("Download failed for %s: %s", num, e)
 
     def init_logger(self):
         handler = StreamHandler()
         handler.setLevel(INFO)
-        handler.setFormatter(
-            Formatter("[%(asctime)s] [%(threadName)s] %(message)s"))
+        handler.setFormatter(Formatter("[%(asctime)s] [%(threadName)s] %(message)s"))
         logger = getLogger()
         logger.addHandler(handler)
         logger.setLevel(INFO)
 
     def download(self):
         nFiles = self.url_list.shape[0]
+        if nFiles == 0:
+            getLogger().warning("No files to download.")
+            return
+
         self.init_logger()
         getLogger().info("main start")
+
         with ThreadPoolExecutor(
-                max_workers=min(nFiles, 5),
-                thread_name_prefix="thread"
+            max_workers=min(nFiles, 5), thread_name_prefix="thread"
         ) as executor:
-            for i in range(nFiles):
-                executor.submit(self.wget_f, i)
-            getLogger().info("submit end")
+            futures = {executor.submit(self.wget_f, i): i for i in range(nFiles)}
+            for future in as_completed(futures):
+                i = futures[future]
+                try:
+                    future.result()
+                except Exception as e:
+                    getLogger().error("Thread %s raised an error: %s", i, e)
+
         getLogger().info("main end")

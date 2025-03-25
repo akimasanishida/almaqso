@@ -122,13 +122,13 @@ def analysis(tardir: str, casapath: str, mpicasa: bool = False,
     almaqso_dir = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
 
     if mpicasa:
-        mpicasa = os.path.dirname(casapath) + '/mpicasa'
+        mpicasa_path = os.path.dirname(casapath) + '/mpicasa'
     else:
-        mpicasa = None
+        mpicasa_path = None
 
     casa_options = {
         'casa': casapath,
-        'mpicasa': mpicasa,
+        'mpicasa': mpicasa_path,
         'n_core': n_core,
         'verbose': verbose
     }
@@ -164,6 +164,12 @@ def analysis(tardir: str, casapath: str, mpicasa: bool = False,
         cmd = f"sys.path.append('{almaqso_dir}');" + \
             "from almaqso._qsoanalysis import _remove_target;" + \
             "_remove_target()"
+        _run_casa_cmd(cmd=cmd, **casa_options)
+
+        # Create dirty image
+        cmd = f"sys.path.append('{almaqso_dir}');" + \
+            "from almaqso._qsoanalysis import _create_dirty_image;" + \
+            f"_create_dirty_image(parallel={mpicasa})"
         _run_casa_cmd(cmd=cmd, **casa_options)
 
         # Check severe error

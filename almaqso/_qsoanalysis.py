@@ -99,3 +99,30 @@ def _remove_target() -> None:
             f'field="{kw_split["field"]}", datacolumn="{kw_split["datacolumn"]}")'
 
     client.push_command_request(command,block,target_server,parameters)
+
+
+def _create_dirty_image(parallel) -> None:
+    """
+    Create dirty image with the measurement set by using tclean.
+
+    Args:
+        parallel (bool): Running in MPICASA or not.
+
+    Returns:
+        None
+    """
+    visname = glob.glob('*.ms.split')[0]
+    cell, imsize, _ = aU.pickCellSize(visname, imsize=True, cellstring=True)
+
+    kw_tclean = {
+        'vis': visname,
+        'imagename': visname + '_dirty',
+        'cell': cell,
+        'imsize': imsize,
+        'niter': 0,
+        'interactive': False,
+    }
+
+    if parallel:
+        kw_tclean['parallel'] = True
+    tclean(**kw_tclean)
