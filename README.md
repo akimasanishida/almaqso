@@ -16,7 +16,7 @@ So many bugs are still there, and I am trying to fix them.
 
 ### CASA Modules
 
-Almaqso uses [analysisUtilites](https://zenodo.org/records/7502160).
+Almaqso uses [analysisUtilites](https://zenodo.org/records/13887809).
 
 **Modification of analysisUtilites is necessary**.
 Please read [Pre-requisites](PreRequisites.md).

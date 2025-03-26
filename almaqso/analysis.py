@@ -149,6 +149,7 @@ def analysis(tardir: str, casapath: str, mpicasa: bool = False,
             os.makedirs(asdmname)
 
         os.chdir(asdmname)
+
         os.system(f'tar -xf ../{asdm_file}')
 
         # Create calibration script
@@ -163,7 +164,7 @@ def analysis(tardir: str, casapath: str, mpicasa: bool = False,
         # Remove target
         cmd = f"sys.path.append('{almaqso_dir}');" + \
             "from almaqso._qsoanalysis import _remove_target;" + \
-            "_remove_target()"
+            f"_remove_target(parallel={mpicasa})"
         _run_casa_cmd(cmd=cmd, **casa_options)
 
         # Create dirty image

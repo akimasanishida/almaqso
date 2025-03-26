@@ -4,7 +4,7 @@ This section describes how to prepare the required packages.
 
 ## analysisUtilites
 
-[analysisUtilites](https://zenodo.org/records/7502160) is a CASA utility package.
+[analysisUtilites](https://zenodo.org/records/13887809) is a CASA utility package.
 If you don't have it, please intall the latest.
 How to install is explained [here](https://casaguides.nrao.edu/index.php/Analysis_Utilities).
 
