@@ -2,6 +2,7 @@ import os
 import shutil
 import glob
 from casatasks import *
+from casatools import msmetadata
 import analysisUtils as aU
 import almaqa2csg as csg
 from casampi.MPICommandClient import MPICommandClient
@@ -111,11 +112,28 @@ def _create_dirty_image(parallel) -> None:
     """
     visname = glob.glob('*.ms.split.split')[0]
     cell, imsize, _ = aU.pickCellSize(visname, imsize=True, cellstring=True)
+    fields = aU.getFields(visname)
+    msmd = msmetadata()
+
+    # Create directory
+    dir_name = 'dirty_cube'
+    if not os.path.exists(dir_name):
+        os.mkdir(dir_name)
 
     kw_tclean = {
         'vis': visname,
+        'specmode': 'cube',
+        'veltype': 'radio',
+        'nchan': -1,
+        'outframe': 'lsrk',
         'cell': cell,
         'imsize': imsize,
+        'deconvolver': 'hogbom',
+        'weighting': 'natural',
+        # 'weighting': 'briggs',
+        # 'robust': 0.5,
+        'gridder': 'standard',
+        'restoringbeam': 'common',
         'niter': 0,
         'interactive': False,
         'pbcor': True,
@@ -124,9 +142,14 @@ def _create_dirty_image(parallel) -> None:
     if parallel:
         kw_tclean['parallel'] = True
 
-    fields = aU.getFields(visname)
-
     for field in fields:
-        kw_tclean['imagename'] = f'{visname}_{field}_dirty'
-        kw_tclean['field'] = field
-        tclean(**kw_tclean)
+        msmd.open(visname)
+        spws = msmd.spwsforfield(field)
+        msmd.close()
+        print('spws:', spws)
+        for spw in spws:
+            kw_tclean['spw'] = str(spw)
+            kw_tclean['imagename'] = f'{dir_name}/{field}_spw{spw}'
+            kw_tclean['field'] = str(field)
+            tclean(**kw_tclean)
+
