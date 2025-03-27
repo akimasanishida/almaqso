@@ -167,7 +167,7 @@ def analysis(tardir: str, casapath: str, mpicasa: bool = False,
             f"_remove_target(parallel={mpicasa})"
         _run_casa_cmd(cmd=cmd, **casa_options)
 
-        # Create dirty image
+        # Create dirty cube
         cmd = f"sys.path.append('{almaqso_dir}');" + \
             "from almaqso._qsoanalysis import _create_dirty_image;" + \
             f"_create_dirty_image(parallel={mpicasa})"
