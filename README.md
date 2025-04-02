@@ -16,7 +16,7 @@ So many bugs are still there, and I am trying to fix them.
 
 ### CASA Modules
 
-Almaqso uses [analysisUtilites](https://zenodo.org/records/7502160).
+Almaqso uses [analysisUtilites](https://zenodo.org/records/13887809).
 
 **Modification of analysisUtilites is necessary**.
 Please read [Pre-requisites](PreRequisites.md).
@@ -47,22 +47,12 @@ First, make sure that you have CASA with ALMA pipeline installed e.g., 6.6.1-17-
 
 ### Prepare the environment
 
-Then please install pipenv.
-
-```shell
-pip install pipenv
-```
+Then please install [uv](https://github.com/astral-sh/uv).
 
 Then, you can reproduce the environment by
 
 ```shell
-pipenv install --dev
-```
-
-You can enter the environment by
-
-```shell
-pipenv shell
+uv sync --dev
 ```
 
 ### Test run
@@ -86,7 +76,7 @@ MODE = 'aftercal'  # 'all': All Steps, 'calonly': Step 1-4, 'aftercal': Step 5-8
 Then you can run the test by
 
 ```
-pytest
+uv run pytest
 ```
 
 ### Usage

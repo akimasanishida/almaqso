@@ -1,0 +1,76 @@
+[
+  {
+    "amplitudeCalibrator": "J1427-4206_1.514",
+    "angle": null,
+    "angleUncertainty": null,
+    "bandName": "ALMA-Band 7",
+    "catalogueId": 5,
+    "dateCreated": "2025-01-13T07:50:03.000+00:00",
+    "dateObserved": "2025-01-01 15:03:13",
+    "dec": -10.586444825,
+    "decUncertainty": 1.69444444444e-7,
+    "degree": null,
+    "degreeUncertainty": null,
+    "deltaDec": null,
+    "deltaRa": null,
+    "execblockUid": "uid://A002/X1232108/X12daf",
+    "flux": 0.208,
+    "fluxUncertainty": 0.01,
+    "frequency": 3.435e11,
+    "frequencySupportDisplay": null,
+    "origin": "C11_HF_flux_check_B7_uid___A002_X1232108_X12daf.txt",
+    "polFractionCircular": null,
+    "polFractionCircularUncertainty": null,
+    "ra": 278.086818496,
+    "raUncertainty": 1.5e-7,
+    "source": {
+      "decDeg": -10.586444825,
+      "decDegUncertainty": 1.69444444444e-7,
+      "exclusions": [],
+      "id": 8048,
+      "names": [
+        { "name": "J1832-1035" },
+        { "name": "J1832-105" },
+        { "name": "B1829-106" }
+      ],
+      "raDeg": 278.086818496,
+      "raDegUncertainty": 1.5e-7,
+      "sourceBands": [
+        {
+          "id": 43497,
+          "name": "ALMA-Band 7",
+          "sourceId": 8048,
+          "rangeId": 7,
+          "spectralIndex": null,
+          "uvMax": -17109.1,
+          "uvMin": null
+        }
+      ],
+      "types": [{ "name": "Point source" }],
+      "separationInDegrees": "Not Applicable"
+    },
+    "update": {
+      "user": "swampler",
+      "date": "2025-01-13 07:50:03",
+      "comment": "created"
+    },
+    "uvMax": -43.1,
+    "uvMin": null,
+    "names": [
+      { "name": "J1832-1035" },
+      { "name": "J1832-105" },
+      { "name": "B1829-106" }
+    ],
+    "spectralIndex": null,
+    "updateUser": "swampler",
+    "updateComment": "created",
+    "separationInDegrees": "Not Applicable",
+    "updateDate": "2025-01-13 07:50:03",
+    "sourceDecDeg": -10.586444825,
+    "sourceDecDegUncertainty": 1.69444444444e-7,
+    "sourceRaDeg": 278.086818496,
+    "sourceRaDegUncertainty": 1.5e-7,
+    "raHex": "18:32:20.83644",
+    "decHex": "-10:35:11.2014"
+  }
+]
