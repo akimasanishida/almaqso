@@ -103,7 +103,9 @@ def _check_severe_error() -> bool:
 
 
 def analysis(tardir: str, casapath: str, mpicasa: bool = False,
-             n_core: int = 2, skip: bool = True, verbose: bool = False) -> None:
+             n_core: int = 2, skip: bool = True, verbose: bool = False,
+             tclean_weighting: str = 'natural', tclean_robust: float | int = 0.5,
+             tclean_split_half: bool = False) -> None:
     """
     Run the analysis of the QSO data.
 
@@ -150,27 +152,28 @@ def analysis(tardir: str, casapath: str, mpicasa: bool = False,
 
         os.chdir(asdmname)
 
-        os.system(f'tar -xf ../{asdm_file}')
+        # os.system(f'tar -xf ../{asdm_file}')
 
-        # Create calibration script
-        cmd = f"sys.path.append('{almaqso_dir}');" + \
-            "from almaqso._qsoanalysis import _make_script;" + \
-            f"_make_script('{asdm_file}')"
-        _run_casa_cmd(cmd=cmd, **casa_options)
+        # # Create calibration script
+        # cmd = f"sys.path.append('{almaqso_dir}');" + \
+        #     "from almaqso._qsoanalysis import _make_script;" + \
+        #     f"_make_script('{asdm_file}')"
+        # _run_casa_cmd(cmd=cmd, **casa_options)
 
-        # Calibration
-        _calibration(casa_options)
+        # # Calibration
+        # _calibration(casa_options)
 
-        # Remove target
-        cmd = f"sys.path.append('{almaqso_dir}');" + \
-            "from almaqso._qsoanalysis import _remove_target;" + \
-            f"_remove_target(parallel={mpicasa})"
-        _run_casa_cmd(cmd=cmd, **casa_options)
+        # # Remove target
+        # cmd = f"sys.path.append('{almaqso_dir}');" + \
+        #     "from almaqso._qsoanalysis import _remove_target;" + \
+        #     f"_remove_target(parallel={mpicasa})"
+        # _run_casa_cmd(cmd=cmd, **casa_options)
 
         # Create dirty cube
         cmd = f"sys.path.append('{almaqso_dir}');" + \
             "from almaqso._qsoanalysis import _create_dirty_image;" + \
-            f"_create_dirty_image(parallel={mpicasa})"
+            f"_create_dirty_image(weighting='{tclean_weighting}'," + \
+            f"robust={tclean_robust}, split_half={tclean_split_half}, parallel={mpicasa})"
         _run_casa_cmd(cmd=cmd, **casa_options)
 
         # Check severe error
