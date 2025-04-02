@@ -15,3 +15,44 @@ You have to modify the code to run almaqso correctly:
     - `np.float`, `np.float32`, `np.float64`, `float32` and `float64` -> `float`
 - `almaqa2csg.py` of analysisUtilities:
     - `np.long` -> `int`
+
+### `pickCellSize` function
+
+Convert the type of `meanfreq` from `numpy.floatXX` to `float`:
+
+**Before**
+
+```python
+    if (verbose):
+        print("mean frequency = ", meanfreq)
+    cellsize = printBaselineAngularScale(baselineStats,meanfreq*1e-9,verbose=verbose) / npix
+```
+
+**After**
+
+```python
+    if (verbose):
+        print("mean frequency = ", meanfreq)
+    meanfreq = float(meanfreq)  # Add this line!
+    cellsize = printBaselineAngularScale(baselineStats,meanfreq*1e-9,verbose=verbose) / npix
+```
+
+### `centralObstructionFactor` function
+
+Convert the type of `factor` from `numpy.floatXX` to `float`:
+
+**Before**
+
+```python
+    epsilon = obscuration/float(diameter)
+    myspline = scipy.interpolate.UnivariateSpline([0, 0.1, 0.2, 0.33, 0.4], [1.22, 1.205, 1.167, 1.098, 1.058], s=s)
+    factor = myspline(epsilon)/1.22
+```
+
+**After**
+
+```python
+    epsilon = obscuration/float(diameter)
+    myspline = scipy.interpolate.UnivariateSpline([0, 0.1, 0.2, 0.33, 0.4], [1.22, 1.205, 1.167, 1.098, 1.058], s=s)
+    factor = float(myspline(epsilon)/1.22)  # Mod the right value as float(...)
+```
