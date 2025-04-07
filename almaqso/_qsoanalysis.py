@@ -101,45 +101,42 @@ def _remove_target(parallel) -> None:
     listobs(vis=kw_split["outputvis"], listfile=kw_split["outputvis"] + ".listobs")
 
 
-def _mjd_to_datetime(mjd_sec):
-    """MJD秒をdatetimeに変換"""
-    mjd_days = mjd_sec / 86400.0
-    return datetime(1858, 11, 17) + timedelta(days=mjd_days)
+def _tclean(kw_tclean: dict, fields: list, dir_dirty: str) -> None:
+    """
+    tclean wrapper for the dirty image.
+
+    Args:
+        kw_tclean (dict): Keyword arguments for tclean.
+        fields (list): List of fields.
+        dir_dirty (str): Directory for dirty images.
+    """
+    msmd = msmetadata()
+
+    if kw_tclean["specmode"] == "cube":
+        kw_tclean["veltype"] = "radio"
+        kw_tclean["nchan"] = -1
+        kw_tclean["outframe"] = "lsrk"
+        kw_tclean["restoringbeam"] = "common"
+
+        for field in fields:
+            msmd.open(kw_tclean["visname"])
+            spws = msmd.spwsforfield(field)
+            msmd.close()
+            for spw in spws:
+                kw_tclean["spw"] = str(spw)
+                kw_tclean["field"] = str(field)
+                kw_tclean["imagename"] = f"{dir_dirty}/{field}_spw{spw}_cube"
+                tclean(**kw_tclean)
+    elif kw_tclean["specmode"] == "mfs":
+        for field in fields:
+            kw_tclean["field"] = str(field)
+            kw_tclean["imagename"] = f"{dir_dirty}/{field}_mfs"
+            tclean(**kw_tclean)
+    else:
+        raise ValueError(f"specmode {specmode} is not supported.")
 
 
-def _datetime_to_hhmmss(dt):
-    """datetimeをhh:mm:ss形式に変換"""
-    return dt.strftime('%H:%M:%S')
-
-
-def _generate_timerange_halves(vis, field, spw):
-    tb = table()
-    tb.open(vis)
-    query = f"FIELD_ID=={field} && DATA_DESC_ID=={spw}"
-    subtb = tb.query(query)
-    times = subtb.getcol('TIME')  # MJD秒
-    tb.close()
-
-    t_min = np.min(times)
-    t_max = np.max(times)
-    t_mid = (t_min + t_max) / 2
-
-    dt_min = _mjd_to_datetime(t_min)
-    dt_mid = _mjd_to_datetime(t_mid)
-    dt_max = _mjd_to_datetime(t_max)
-
-    # 開始日（dt_minの日付）で timerange を作る
-    date_str_min = dt_min.strftime('%Y/%m/%d')
-    date_str_mid = dt_mid.strftime('%Y/%m/%d')
-    date_str_max = dt_max.strftime('%Y/%m/%d')
-
-    timerange1 = f"{date_str_min}/{_datetime_to_hhmmss(dt_min)}~{date_str_mid}/{_datetime_to_hhmmss(dt_mid)}"
-    timerange2 = f"{date_str_mid}/{_datetime_to_hhmmss(dt_mid)}~{date_str_max}/{_datetime_to_hhmmss(dt_max)}"
-
-    return timerange1, timerange2
-
-
-def _create_dirty_image(weighting, robust, split_half, parallel) -> None:
+def _create_dirty_image(specmode, weighting, robust, selfcal, parallel) -> None:
     """
     Create dirty image with the measurement set by using tclean.
 
@@ -149,30 +146,32 @@ def _create_dirty_image(weighting, robust, split_half, parallel) -> None:
     Returns:
         None
     """
-    msmd = msmetadata()
-    visname = glob.glob("*.ms.split.split")[0]
+    msfiles = glob.glob("*.ms.split.split")
+    if len(msfiles) == 0:
+        raise FileNotFoundError("No measurement set found.")
+    elif len(msfiles) > 1:
+        raise FileExistsError("Multiple measurement sets found.")
+    else:
+        visname = msfiles[0]
 
     # Create directory
-    dir_name = "dirty_cube"
-    if not os.path.exists(dir_name):
-        os.mkdir(dir_name)
+    dir_dirty = "dirty_cube"
+    dir_selfcal = "selfcal"
+    if not os.path.exists(dir_dirty):
+        os.mkdir(dir_dirty)
 
     cell, imsize, _ = aU.pickCellSize(visname, imsize=True, cellstring=True)
     fields = aU.getFields(visname)
 
     kw_tclean = {
         "vis": visname,
-        "specmode": "cube",
-        "veltype": "radio",
-        "nchan": -1,
-        "outframe": "lsrk",
         "cell": cell,
+        "specmode": specmode,
         "imsize": imsize,
         "deconvolver": "hogbom",
         "weighting": weighting,
         'robust': robust,
         "gridder": "standard",
-        "restoringbeam": "common",
         "niter": 0,
         "interactive": False,
         "pbcor": True,
@@ -180,26 +179,35 @@ def _create_dirty_image(weighting, robust, split_half, parallel) -> None:
 
     if parallel:
         kw_tclean["parallel"] = True
+    if selfcal:
+        kw_tclean["savemodel"] = "modelcolumn"
 
-    # enumerate for all fields
-    for field_id, field in enumerate(fields):
-        msmd.open(visname)
-        spws = msmd.spwsforfield(field)
-        msmd.close()
-        print("spws:", spws)
-        for spw in spws:
-            kw_tclean["spw"] = str(spw)
-            kw_tclean["field"] = str(field)
-            if split_half:
-                timerange1, timerange2 = _generate_timerange_halves(visname, field_id, spw)
-                kw_tclean["imagename"] = f"{dir_name}/{field}_spw{spw}_1st_half"
-                kw_tclean["timerange"] = timerange1
-                print(timerange1)
-                tclean(**kw_tclean)
-                kw_tclean["imagename"] = f"{dir_name}/{field}_spw{spw}_2nd_half"
-                kw_tclean["timerange"] = timerange2
-                print(timerange2)
-                tclean(**kw_tclean)
-            else:
-                kw_tclean["imagename"] = f"{dir_name}/{field}_spw{spw}"
-                tclean(**kw_tclean)
+    _tclean(kw_tclean, fields, dir_dirty)
+
+    # Self-calibration
+    if selfcal:
+        for field in fields:
+            caltable = f"{dir_selfcal}/phase_{field}.cal"
+            gaincal(
+                vis=visname,
+                caltable=caltable,
+                field=str(field),
+                solint="inf",
+                calmode="p",
+                refant=aU.getRefAnt(visname),
+                gaintype="G",
+            )
+            applycal(
+                vis=visname,
+                field=str(field),
+                gaintable=caltable,
+                interp="linear",
+            )
+    split(
+        vis=visname,
+        outputvis=visname.replace(".ms.split.split", "_selfcal.ms.split.split"),
+        datacolumn="corrected",
+    )
+
+    kw_tclean["visname"] = visname.replace(".ms.split.split", "_selfcal.ms.split.split")
+    _tclean(kw_tclean, fields, dir_selfcal)
