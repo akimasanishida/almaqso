@@ -185,7 +185,10 @@ def _create_dirty_image(specmode, weighting, robust, selfcal, parallel) -> None:
     _tclean(kw_tclean, fields, dir_dirty)
 
     # Self-calibration
+    sfsdr = aU.stuffForScienceDataReduction()
     if selfcal:
+        if not os.path.exists(dir_selfcal):
+            os.mkdir(dir_selfcal)
         for field in fields:
             caltable = f"{dir_selfcal}/phase_{field}.cal"
             gaincal(
@@ -194,7 +197,7 @@ def _create_dirty_image(specmode, weighting, robust, selfcal, parallel) -> None:
                 field=str(field),
                 solint="inf",
                 calmode="p",
-                refant=aU.getRefAnt(visname),
+                refant=sfsdr.getRefAntenna(visname, minDays=""),
                 gaintype="G",
             )
             applycal(
@@ -209,5 +212,6 @@ def _create_dirty_image(specmode, weighting, robust, selfcal, parallel) -> None:
         datacolumn="corrected",
     )
 
-    kw_tclean["visname"] = visname.replace(".ms.split.split", "_selfcal.ms.split.split")
+    kw_tclean["vis"] = visname.replace(".ms.split.split", "_selfcal.ms.split.split")
+    kw_tclean["savemodel"] = ""
     _tclean(kw_tclean, fields, dir_selfcal)
