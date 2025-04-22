@@ -1,6 +1,6 @@
 [project]
 name = "almaqso"
-version = "0.1.0"
+version = "1.4.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -13,6 +13,7 @@ dependencies = [
     "scipy>=1.15.2",
     "setuptools>=78.0.2",
     "tdqm>=0.0.1",
+    "twine>=6.1.0",
 ]
 
 [dependency-groups]
