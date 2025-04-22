@@ -1,6 +1,6 @@
 [project]
 name = "almaqso"
-dynamic = ["version"]
+version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -23,16 +23,3 @@ dev = [
     "sphinx>=8.2.3",
     "sphinx-rtd-theme>=3.0.2",
 ]
-
-[build-system]
-requires = [
-  "setuptools>=62",
-  "wheel",
-  "setuptools_scm[toml]>=6.4"
-]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools_scm]
-version_scheme = "post-release"
-local_scheme   = "no-local-version"
-write_to       = "almaqso/_version.py"  # 任意
