@@ -44,6 +44,7 @@ def _run_casa_cmd(
             print(f"Return Code: {e.returncode}")
             print(f"STDOUT: {e.stdout}")
             print(f"STDERR: {e.stderr}")
+        raise RuntimeError(f"Error while executing {cmd}: {e.stderr}") from e
 
 
 def _calibration(casa_options: map) -> None:
@@ -111,6 +112,7 @@ def analysis(
     tclean_weighting: str = "natural",
     tclean_robust: float | int = 0.5,
     tclean_selfcal: bool = False,
+    remove_asdm: bool = False,
     remove_others: bool = False,
 ) -> None:
     """
@@ -127,6 +129,7 @@ def analysis(
         tclean_weighting (str): Weighting for the tclean task. Default is 'natural'.
         tclean_robust (float | int): Robust parameter for the tclean task. Default is 0.5.
         tclean_selfcal (bool): Perform self-calibration. Default is False.
+        remove_asdm (bool): Remove the ASDM files after processing. Default is False.
         remove_others (bool): Remove other files in the output directory. Default is False.
 
     Returns:
@@ -197,6 +200,9 @@ def analysis(
         )
         _run_casa_cmd(cmd=cmd, **casa_options)
 
+        # Remove files
+        if remove_asdm:
+            os.remove(f"../{asdm_file}")
         if remove_others:
             keep_dirs = {"dirty_cube", "selfcal"}
             for file in os.listdir("."):
@@ -207,7 +213,7 @@ def analysis(
                         continue
                     shutil.rmtree(file)
                 else:
-                    if fnmatch.fnmatch(file, "*.listbos") or fnmatch.fnmatch(file, "*.log"):
+                    if fnmatch.fnmatch(file, "*.listobs") or fnmatch.fnmatch(file, "*.log"):
                         continue
                     os.remove(file)
 
