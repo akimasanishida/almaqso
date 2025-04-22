@@ -112,6 +112,7 @@ def analysis(
     tclean_weighting: str = "natural",
     tclean_robust: float | int = 0.5,
     tclean_selfcal: bool = False,
+    export_fits: bool = False,
     remove_asdm: bool = False,
     remove_others: bool = False,
 ) -> None:
@@ -129,6 +130,7 @@ def analysis(
         tclean_weighting (str): Weighting for the tclean task. Default is 'natural'.
         tclean_robust (float | int): Robust parameter for the tclean task. Default is 0.5.
         tclean_selfcal (bool): Perform self-calibration. Default is False.
+        export_fits (bool): Export the final image to FITS format. Default is False.
         remove_asdm (bool): Remove the ASDM files after processing. Default is False.
         remove_others (bool): Remove other files in the output directory. Default is False.
 
@@ -200,11 +202,20 @@ def analysis(
         )
         _run_casa_cmd(cmd=cmd, **casa_options)
 
+        # Export fits
+        if export_fits:
+            cmd = (
+                f"sys.path.append('{almaqso_dir}');"
+                + "from almaqso._qsoanalysis import _export_fits;"
+                + f"_export_fits()"
+            )
+            _run_casa_cmd(cmd=cmd, **casa_options)
+
         # Remove files
         if remove_asdm:
             os.remove(f"../{asdm_file}")
         if remove_others:
-            keep_dirs = {"dirty_cube", "selfcal"}
+            keep_dirs = {"dirty", "dirty_fits", "selfcal", "selfcal_fits"}
             for file in os.listdir("."):
                 if os.path.isdir(file):
                     if file in keep_dirs:

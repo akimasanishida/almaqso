@@ -10,5 +10,7 @@ if __name__ == '__main__':
         skip=False,
         remove_asdm=True,
         remove_others=True,
-        tclean_selfcal=True,
+        tclean_specmode="cube",
+        # tclean_selfcal=True,
+        export_fits=True,
     )
