@@ -9,5 +9,4 @@ if __name__ == '__main__':
         verbose=True,
         skip=False,
         # remove_others=True,
-        tclean_selfcal=True,
     )

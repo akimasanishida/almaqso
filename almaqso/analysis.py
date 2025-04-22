@@ -107,10 +107,6 @@ def analysis(
     n_core: int = 2,
     skip: bool = True,
     verbose: bool = False,
-    tclean_specmode: str = "mfs",
-    tclean_weighting: str = "natural",
-    tclean_robust: float | int = 0.5,
-    tclean_selfcal: bool = False,
     remove_others: bool = False,
 ) -> None:
     """
@@ -123,10 +119,6 @@ def analysis(
         n_core (int): Number of cores to use for the analysis. Default is 8.
         skip (bool): Skip the analysis if the output directory exists. Default is True.
         verbose (bool): Print the STDOUT of the CASA commands when no errors occur. Default is False.
-        tclean_specmode (str): Spectral mode for the tclean task. Default is 'mfs'.
-        tclean_weighting (str): Weighting for the tclean task. Default is 'natural'.
-        tclean_robust (float | int): Robust parameter for the tclean task. Default is 0.5.
-        tclean_selfcal (bool): Perform self-calibration. Default is False.
         remove_others (bool): Remove other files in the output directory. Default is False.
 
     Returns:
@@ -185,15 +177,6 @@ def analysis(
             f"sys.path.append('{almaqso_dir}');"
             + "from almaqso._qsoanalysis import _remove_target;"
             + f"_remove_target(parallel={mpicasa})"
-        )
-        _run_casa_cmd(cmd=cmd, **casa_options)
-
-        # Create dirty cube
-        cmd = (
-            f"sys.path.append('{almaqso_dir}');"
-            + "from almaqso._qsoanalysis import _create_dirty_image;"
-            + f"_create_dirty_image(specmode='{tclean_specmode}', weighting='{tclean_weighting}',"
-            + f"robust={tclean_robust}, selfcal={tclean_selfcal}, parallel={mpicasa})"
         )
         _run_casa_cmd(cmd=cmd, **casa_options)
 
