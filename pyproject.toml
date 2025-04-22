@@ -23,3 +23,8 @@ dev = [
     "sphinx>=8.2.3",
     "sphinx-rtd-theme>=3.0.2",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["almaqso*"]
+exclude = ["sphinx*", "sample*", "catalog*"]
