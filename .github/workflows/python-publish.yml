@@ -15,6 +15,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0                      # フルクローン
+          ref: ${{ github.event.release.tag_name }}  # タグを直接チェックアウト
 
       - uses: actions/setup-python@v5
         with:
