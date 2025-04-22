@@ -1,6 +1,7 @@
 # User Defined
 /urls/
 *.tar
+*.bkp
 /uid__*
 Pipfile.lock
 *.last
