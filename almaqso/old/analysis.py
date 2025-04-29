@@ -41,36 +41,6 @@ def _run_casa_cmd(
         raise RuntimeError(f"Error while executing {cmd}: {e.stderr}") from e
 
 
-def _calibration(casa_options: map) -> None:
-    """
-    Run the calibration steps.
-
-    Args:
-        casa_options (map): Dictionary containing the CASA options.
-
-    Returns:
-        None
-    """
-    scriptfile = glob.glob("*.scriptForCalibration.py")[0]
-
-    with open(scriptfile, "r") as f:
-        syscalcheck = f.readlines().copy()[21]
-
-    scriptfile_part = scriptfile.replace(".py", ".part.py")
-    with open(scriptfile_part, "w") as f:
-        if (
-            syscalcheck.split(":")[1].split("'")[1]
-            == "Application of the bandpass and gain cal tables"
-        ):
-            f.write("mysteps = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]" + "\n")
-        else:
-            f.write("mysteps = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]" + "\n")
-        f.write("applyonly = True" + "\n")
-        f.write(f'execfile("{scriptfile}", globals())\n')
-
-    _run_casa_cmd(cmd=f"execfile('{scriptfile_part}', globals())", **casa_options)
-
-
 def _check_severe_error() -> bool:
     """
     Check the severe error in the log files.
@@ -135,25 +105,6 @@ def analysis(
     severe_error_list = []
 
     for asdm_file in asdm_files:
-        # Create calibration script
-        cmd = (
-            f"sys.path.append('{almaqso_dir}');"
-            + "from almaqso._qsoanalysis import _make_script;"
-            + f"_make_script('{asdm_file}')"
-        )
-        _run_casa_cmd(cmd=cmd, **casa_options)
-
-        # Calibration
-        _calibration(casa_options)
-
-        # Remove target
-        cmd = (
-            f"sys.path.append('{almaqso_dir}');"
-            + "from almaqso._qsoanalysis import _remove_target;"
-            + f"_remove_target()"
-        )
-        _run_casa_cmd(cmd=cmd, **casa_options)
-
         # Create dirty cube
         cmd = (
             f"sys.path.append('{almaqso_dir}');"

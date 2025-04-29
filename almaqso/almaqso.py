@@ -232,10 +232,58 @@ class Almaqso:
         logging.info(f"Extracting {filename}")
         os.system(f"tar -xf ../{filename}")
 
-        analysis = Analysis(asdmname, self._casapath)
+        analysis = Analysis(filename, self._casapath)
 
+        # Make a CASA script
+        try:
+            logging.info("Creating a calibration script")
+            ret = analysis.make_script()
+            logging.info("Generated calibration script")
+            if ret is not None:
+                logging.info(f"STDOUT: {ret['stdout']}")
+                logging.warning(f"STDERR: {ret['stderr']}")
+        except Exception as e:
+            logging.error(f"ERROR while creating a calibration script: {e}")
+            logging.error(f"Stop processing {asdmname}")
+            return
+
+        # Calibration
+        try:
+            logging.info("Starting calibration")
+            ret = analysis.calibrate()
+            logging.info("Calibration completed")
+            if ret is not None:
+                logging.info(f"STDOUT: {ret['stdout']}")
+                logging.warning(f"STDERR: {ret['stderr']}")
+        except Exception as e:
+            logging.error(f"ERROR while calibration: {e}")
+            logging.error(f"Stop processing {asdmname}")
+            return
+
+        # Remove target
+        try:
+            logging.info("Removing target")
+            analysis.remove_target()
+            logging.info("Target removed")
+        except Exception as e:
+            logging.error(f"ERROR while removing target: {e}")
+            logging.error(f"Stop processing {asdmname}")
+            return
+
+        # tclean
         if do_tclean:
-            logging.info("Performing tclean...")
+            if do_selfcal:
+                kw_tclean["savemodel"] = "modelcolumn"
+            try:
+                logging.info("Performing imaging")
+                analysis.tclean(kw_tclean)
+                logging.info("Imaging completed")
+            except Exception as e:
+                logging.error(f"ERROR while imaging: {e}")
+                logging.error(f"Stop processing {asdmname}")
+                return
+
+        # self-calibration
         if do_selfcal:
             logging.info("Performing self-calibration...")
         if do_export_fits:
