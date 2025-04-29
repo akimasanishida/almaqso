@@ -25,7 +25,6 @@ dependencies = [
     { name = "scipy" },
     { name = "setuptools" },
     { name = "tdqm" },
-    { name = "twine" },
 ]
 
 [package.dev-dependencies]
@@ -48,7 +47,6 @@ requires-dist = [
     { name = "scipy", specifier = ">=1.15.2" },
     { name = "setuptools", specifier = ">=78.0.2" },
     { name = "tdqm", specifier = ">=0.0.1" },
-    { name = "twine", specifier = ">=6.1.0" },
 ]
 
 [package.metadata.requires-dev]
