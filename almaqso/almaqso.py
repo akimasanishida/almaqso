@@ -1,0 +1,246 @@
+import json
+import logging
+import os
+import shutil
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from datetime import datetime
+from pathlib import Path
+from typing import Dict
+
+import coloredlogs
+import numpy as np
+from tqdm import tqdm
+
+from ._api import Analysis, Query, download
+
+
+class Almaqso:
+    def __init__(
+        self,
+        json_filename: str,
+        band: int,
+        work_dir: str = "./",
+        casapath: str = "casa",
+    ) -> None:
+        """
+        Args:
+            json_filename (str): JSON file name obtained from the ALMA Calibration Catalog.
+            band (int): Band number to work with.
+            work_dir (str): Working directory. Default is './'.
+            casapath (str): Path to the CASA executable. Default is 'casa'.
+        """
+        self._band: int = band
+        self._work_dir: Path = Path(work_dir).absolute()
+        self._original_dir: str = os.getcwd()
+        self._casapath: str = casapath
+        self._log_file_path: Path | None = None
+
+        # Load the JSON file
+        try:
+            with open(json_filename, "r") as f:
+                jdict = json.load(f)
+        except FileNotFoundError:
+            logging.error(f'ERROR: File "{json_filename}" not found')
+            return
+        except json.JSONDecodeError as e:
+            logging.error(
+                f'Error: Failed to parse JSON file "{json_filename}" (reason: {e}).'
+            )
+            return
+
+        # Prepare working dir
+        os.makedirs(self._work_dir, exist_ok=True)
+        self._init_logger()
+        logging.info(f"Working directory: {self._work_dir}")
+
+        # Get source names
+        try:
+            sources_list = [entry["names"][0]["name"] for entry in jdict]
+        except KeyError as e:
+            logging.error(
+                f"ERROR: Failed to extract source names from JSON file. (reason: {e})"
+            )
+            return
+        self._sources = np.unique(sources_list)
+
+    def _init_logger(self) -> None:
+        """
+        Initialize the logger
+        """
+        logger = logging.getLogger()
+        logger.setLevel(logging.INFO)
+
+        if logger.hasHandlers():
+            logger.handlers.clear()
+
+        fmt = "[%(asctime)s] [%(threadName)s %(processName)s] [%(levelname)s] %(message)s"
+        datefmt = "%H:%M:%S"
+
+        formatter = logging.Formatter(
+            fmt,
+            datefmt=datefmt,
+        )
+        stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(formatter)
+        logger.addHandler(stream_handler)
+
+        # coloredlogs は StreamHandler に影響する
+        coloredlogs.install(
+            level=logging.INFO,
+            logger=logger,
+            fmt=fmt,
+            datefmt=datefmt,
+        )
+
+        # --- FileHandler（ファイル保存、色なし） ---
+        if self._log_file_path is None:
+            now_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+            self._log_file_path = Path(self._work_dir) / f"almaqso_{now_str}.log"
+            logging.info(f"Log file: {self._log_file_path}")
+            mode = "w"
+        else:
+            mode = "a"
+        file_handler = logging.FileHandler(self._log_file_path, mode=mode, encoding="utf-8")
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+
+        # tqdmとの相性：必要なら tqdm.write() を使う
+        tqdm.write = lambda x, *args, **kwargs: logging.getLogger().info(x)
+
+    def _pre_process(self) -> None:
+        os.chdir(self._work_dir)
+
+        # Remove all *.asdm.sdm.tar
+        # for file in os.listdir("."):
+        #     if file.endswith(".asdm.sdm.tar"):
+        #         os.remove(file)
+
+    def _post_process(self) -> None:
+        os.chdir(self._original_dir)
+
+    def run(
+        self,
+        n_parallel: int = 1,
+        do_tclean: bool = False,
+        kw_tclean: Dict[str, object] = {},
+        do_selfcal: bool = False,
+        kw_selfcal: Dict[str, object] = {},
+        do_export_fits: bool = False,
+        remove_asdm: bool = False,
+        remove_intermediate: bool = False,
+    ) -> None:
+        """
+        Download and process ALMA data.
+
+        Args:
+            n_parallel (int): The number of the parallel execution.
+            do_tclean (bool): Perform tclean. Default is False.
+            kw_tclean (Dict[str, object]): Parameters for the `tclean` task.
+            do_selfcal (bool): Perform self-calibration. Default is False.
+            kw_selfcal (Dict[str, object]): Parameters for the self-calibration and `tclean` task.
+            do_export_fits (bool): Export the final image to FITS format. Default is False.
+            remove_asdm (bool): Remove the ASDM files after processing. Default is False.
+            remove_intermediate (bool): Remove the intermediate files after processing. Log of CASA will be retained. Default is False.
+        """
+        try:
+            self._pre_process()
+        except Exception as e:
+            logging.error(f"ERROR: {e}")
+            return
+
+        # Search for ALMA data
+        url_list = []
+
+        for source in self._sources:
+            logging.info(f"Target source: {source}")
+            query = Query(source, self._band).query()
+            for q in query:
+                data_size = round(float(q["size_bytes"]) / (1024**3), 2)
+                logging.info(f"{q['url']} will be downloaded ({data_size} GB)")
+                url_list.append(q["url"])
+
+        if len(url_list) == 0:
+            logging.warning("No data found for the specified source.")
+
+        # Download and process each data with parallel processing
+        with (
+            ProcessPoolExecutor(max_workers=n_parallel) as proc_pool,
+            ThreadPoolExecutor(max_workers=5) as dl_pool,
+        ):
+
+            def _schedule_analysis(future):
+                try:
+                    filename = future.result()
+                    logging.info(f"Downloaded file: {filename}")
+                except Exception as e:
+                    logging.error(f"Download task failed: {e}")
+                else:
+                    proc_pool.submit(
+                        self._analysis,
+                        filename,
+                        do_tclean,
+                        kw_tclean,
+                        do_selfcal,
+                        kw_selfcal,
+                        do_export_fits,
+                        remove_asdm,
+                        remove_intermediate,
+                    )
+
+            for url in url_list:
+                logging.info(f"Downloading from: {url}")
+                fut = dl_pool.submit(download, url)
+                fut.add_done_callback(_schedule_analysis)
+
+            dl_pool.shutdown(wait=True)
+            proc_pool.shutdown(wait=True)
+
+        logging.info("== All tasks completed ==")
+
+        self._post_process()
+
+    def _analysis(
+        self,
+        filename: str,
+        do_tclean: bool,
+        kw_tclean: Dict[str, object],
+        do_selfcal: bool,
+        kw_selfcal: Dict[str, object],
+        do_export_fits: bool,
+        remove_asdm: bool,
+        remove_intermediate: bool,
+    ) -> None:
+        """
+        Wrapper function for the analysis process.
+        """
+        self._init_logger()
+        logging.info(f"Processing file: {filename}")
+
+        # Determine the working directory
+        asdmname = "uid___" + (filename.split("_uid___")[1]).replace(
+            ".asdm.sdm.tar", ""
+        )
+
+        if os.path.exists(asdmname):
+            shutil.rmtree(asdmname)
+        os.makedirs(asdmname)
+
+        logging.info(f"Working directory: {asdmname}")
+        os.chdir(asdmname)
+
+        # Extract the tar file
+        logging.info(f"Extracting {filename}")
+        os.system(f"tar -xf ../{filename}")
+
+        analysis = Analysis(asdmname, self._casapath)
+
+        if do_tclean:
+            logging.info("Performing tclean...")
+        if do_selfcal:
+            logging.info("Performing self-calibration...")
+        if do_export_fits:
+            logging.info("Exporting to FITS...")
+        if remove_asdm:
+            logging.info("Removing ASDM files...")
+        if remove_intermediate:
+            logging.info("Removing intermediate files...")

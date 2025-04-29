@@ -1,16 +1,8 @@
-from almaqso.analysis import analysis
-from almaqso.download_archive import download_archive
+import sys
+sys.path.append('.')
+from almaqso import Almaqso
 
-if __name__ == '__main__':
-    # download_archive(7, './catalog/test_2.json')
-    analysis(
-        ".",
-        "/usr/local/casa/casa-6.6.1-17-pipeline-2024.1.0.8/bin/casa",
-        verbose=True,
-        skip=False,
-        remove_asdm=True,
-        remove_others=True,
-        tclean_specmode="cube",
-        # tclean_selfcal=True,
-        export_fits=True,
-    )
+
+if __name__ == "__main__":
+    almaqso = Almaqso(json_filename="./catalog/test_2.json", band=4, work_dir="./test_dir")
+    almaqso.run(n_parallel=5)

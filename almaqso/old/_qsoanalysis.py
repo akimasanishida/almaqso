@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 import almaqa2csg as csg
 import analysisUtils as aU
 import numpy as np
-from casampi.MPICommandClient import MPICommandClient
 from casatasks import *
 from casatools import msmetadata, table
 
@@ -60,21 +59,16 @@ def _make_script(tarfilename: str) -> None:
     casalog.post("almaqso: Generated calibration script is done.")
 
 
-def _remove_target(parallel) -> None:
+def _remove_target() -> None:
     """
     Remove the target fields from the measurement set.
 
     Args:
-        parallel (bool): Running in MPICASA or not.
+        None
 
     Returns:
         None
     """
-    if parallel:
-        client = MPICommandClient()
-        client.set_log_mode("redirect")
-        client.start_services()
-
     visname = glob.glob("*.ms.split")[0]
     print(visname)
     fields = aU.getFields(visname)
@@ -89,14 +83,7 @@ def _remove_target(parallel) -> None:
         "datacolumn": "all",
     }
 
-    if parallel:
-        command = (
-            f'mstransform("{kw_split["vis"]}", "{kw_split["outputvis"]}",'
-            + f'field="{kw_split["field"]}", datacolumn="{kw_split["datacolumn"]}")'
-        )
-        client.push_command_request(command, block, target_server, parameters)
-    else:
-        mstransform(**kw_split)
+    mstransform(**kw_split)
 
     listobs(vis=kw_split["outputvis"], listfile=kw_split["outputvis"] + ".listobs")
 
@@ -136,12 +123,11 @@ def _tclean(kw_tclean: dict, fields: list, dir_dirty: str) -> None:
         raise ValueError(f"specmode {specmode} is not supported.")
 
 
-def _create_dirty_image(specmode, weighting, robust, selfcal, parallel) -> None:
+def _create_dirty_image(specmode, weighting, robust, selfcal) -> None:
     """
     Create dirty image with the measurement set by using tclean.
 
     Args:
-        parallel (bool): Running in MPICASA or not.
 
     Returns:
         None
@@ -177,8 +163,6 @@ def _create_dirty_image(specmode, weighting, robust, selfcal, parallel) -> None:
         "pbcor": True,
     }
 
-    if parallel:
-        kw_tclean["parallel"] = True
     if selfcal:
         kw_tclean["savemodel"] = "modelcolumn"
 

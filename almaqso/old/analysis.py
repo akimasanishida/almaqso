@@ -6,27 +6,21 @@ import subprocess
 
 
 def _run_casa_cmd(
-    casa: str, mpicasa: str, n_core: int, cmd: str, verbose: bool
+    casa: str, cmd: str, verbose: bool
 ) -> None:
     """
     Run a CASA command.
 
     Args:
         casa (str): Path to the CASA executable. Provide full path even if it is in the PATH for using MPI CASA.
-        mpicasa (str): Path to the MPI CASA executable.
-        n_core (int): Number of cores to run with MPI CASA.
         cmd (str): CASA command to run.
         verbose (bool): Print the STDOUT of the CASA commands.
 
     Returns:
         None
     """
-    if mpicasa is not None:
-        exe = mpicasa
-        options = ["-n", str(n_core), casa, "--nologger", "--nogui", "-c", cmd]
-    else:
-        exe = casa
-        options = ["--nologger", "--nogui", "-c", cmd]
+    exe = casa
+    options = ["--nologger", "--nogui", "-c", cmd]
     try:
         result = subprocess.run(
             [exe] + options,
@@ -104,8 +98,6 @@ def _check_severe_error() -> bool:
 def analysis(
     tardir: str,
     casapath: str,
-    mpicasa: bool = False,
-    n_core: int = 2,
     skip: bool = True,
     verbose: bool = False,
     tclean_specmode: str = "mfs",
@@ -122,8 +114,6 @@ def analysis(
     Args:
         tardir (str): Directory containing the `*.asdm.sdm.tar` files.
         casapath (str): Path to the CASA executable. Provide full path even if it is in the PATH for using MPI CASA.
-        mpicasa (bool): Use MPI CASA. Default is False.
-        n_core (int): Number of cores to use for the analysis. Default is 8.
         skip (bool): Skip the analysis if the output directory exists. Default is True.
         verbose (bool): Print the STDOUT of the CASA commands when no errors occur. Default is False.
         tclean_specmode (str): Spectral mode for the tclean task. Default is 'mfs'.
@@ -137,43 +127,14 @@ def analysis(
     Returns:
         None
     """
-    asdm_files = [
-        file for file in os.listdir(f"{tardir}") if file.endswith(".asdm.sdm.tar")
-    ]
-    almaqso_dir = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
-
-    if mpicasa:
-        mpicasa_path = os.path.dirname(casapath) + "/mpicasa"
-    else:
-        mpicasa_path = None
-
     casa_options = {
         "casa": casapath,
-        "mpicasa": mpicasa_path,
-        "n_core": n_core,
         "verbose": verbose,
     }
 
     severe_error_list = []
 
     for asdm_file in asdm_files:
-        asdmname = "uid___" + (asdm_file.split("_uid___")[1]).replace(
-            ".asdm.sdm.tar", ""
-        )
-        print(f"Processing {asdmname}")
-
-        if os.path.exists(asdmname) and skip:
-            print(f"{asdmname}: analysis already done and skip")
-            continue
-        if os.path.exists(asdmname):
-            print(f"{asdmname}: analysis already done but reanalyzed")
-        else:
-            os.makedirs(asdmname)
-
-        os.chdir(asdmname)
-
-        os.system(f"tar -xf ../{asdm_file}")
-
         # Create calibration script
         cmd = (
             f"sys.path.append('{almaqso_dir}');"
@@ -189,7 +150,7 @@ def analysis(
         cmd = (
             f"sys.path.append('{almaqso_dir}');"
             + "from almaqso._qsoanalysis import _remove_target;"
-            + f"_remove_target(parallel={mpicasa})"
+            + f"_remove_target()"
         )
         _run_casa_cmd(cmd=cmd, **casa_options)
 

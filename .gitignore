@@ -6,6 +6,7 @@
 Pipfile.lock
 *.last
 /docs/
+/test_dir/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
