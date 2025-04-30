@@ -1,7 +1,7 @@
 import fnmatch
+import glob
 import json
 import logging
-import glob
 import os
 import shutil
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
@@ -323,7 +323,7 @@ class Almaqso:
         if remove_asdm:
             try:
                 logging.info("Removing ASDM files")
-                shutil.rmtree("../" + filename)
+                os.remove("../" + filename)
                 logging.info("ASDM files removed")
             except Exception as e:
                 logging.error(f"ERROR while removing ASDM files: {e}")
@@ -333,11 +333,12 @@ class Almaqso:
         if remove_intermediate:
             try:
                 logging.info("Removing intermediate files")
-                keep_dirs: list[str] = analysis.get_image_dirs()
+                keep_dirs: list[str] = analysis.get_image_dirs() + [
+                    analysis.get_vis_name()
+                ]
                 keep_files: list[str] = [
                     "*.py",
                     "*.log",
-                    analysis.get_vis_name(),
                 ]
                 for path in os.listdir("."):
                     if os.path.isdir(path):
@@ -357,12 +358,19 @@ class Almaqso:
         # Check if `SEVERE` error is found
         log_files = glob.glob("*.log")
 
+        found_severe_error = False
         for log_file in log_files:
             with open(log_file, "r") as f:
                 lines = f.readlines()
             for i, line in enumerate(lines):
                 if "SEVERE" in line:
                     logging.error(f"SEVERE error is found in {log_file} (line: {i+1})")
+                    found_severe_error = True
+
+        if found_severe_error:
+            logging.error(f"SEVERE error is found in {asdmname}")
+        else:
+            logging.info(f"No severe errors are found in {asdmname}")
 
         # Processing complete
         logging.info(f"Processing {asdmname} is done.")
