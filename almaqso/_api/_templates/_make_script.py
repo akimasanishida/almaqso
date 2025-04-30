@@ -1,3 +1,4 @@
+import os
 import analysisUtils as aU
 import almaqa2csg as csg
 

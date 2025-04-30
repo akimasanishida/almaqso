@@ -1,11 +1,11 @@
 import json
+import fnmatch
 import logging
 import os
 import shutil
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
-from typing import Dict
 
 import coloredlogs
 import numpy as np
@@ -111,20 +111,21 @@ class Almaqso:
         os.chdir(self._work_dir)
 
         # Remove all *.asdm.sdm.tar
-        # for file in os.listdir("."):
-        #     if file.endswith(".asdm.sdm.tar"):
-        #         os.remove(file)
+        for file in os.listdir("."):
+            if file.endswith(".asdm.sdm.tar"):
+                os.remove(file)
 
     def _post_process(self) -> None:
+        logging.info("Processing complete.")
         os.chdir(self._original_dir)
 
     def run(
         self,
         n_parallel: int = 1,
         do_tclean: bool = False,
-        kw_tclean: Dict[str, object] = {},
+        kw_tclean: dict[str, object] = {},
         do_selfcal: bool = False,
-        kw_selfcal: Dict[str, object] = {},
+        kw_selfcal: dict[str, object] = {},
         do_export_fits: bool = False,
         remove_asdm: bool = False,
         remove_intermediate: bool = False,
@@ -135,12 +136,15 @@ class Almaqso:
         Args:
             n_parallel (int): The number of the parallel execution.
             do_tclean (bool): Perform tclean. Default is False.
-            kw_tclean (Dict[str, object]): Parameters for the `tclean` task.
+            kw_tclean (dict[str, object]): Parameters for the `tclean` task.
             do_selfcal (bool): Perform self-calibration. Default is False.
-            kw_selfcal (Dict[str, object]): Parameters for the self-calibration and `tclean` task.
+            kw_selfcal (dict[str, object]): Parameters for the self-calibration and `tclean` task.
             do_export_fits (bool): Export the final image to FITS format. Default is False.
             remove_asdm (bool): Remove the ASDM files after processing. Default is False.
             remove_intermediate (bool): Remove the intermediate files after processing. Log of CASA will be retained. Default is False.
+
+        Returns:
+            None
         """
         try:
             self._pre_process()
@@ -153,7 +157,11 @@ class Almaqso:
 
         for source in self._sources:
             logging.info(f"Target source: {source}")
-            query = Query(source, self._band).query()
+            try:
+                query = Query(source, self._band).query()
+            except Exception as e:
+                logging.error(f"NETWORK ERROR while quering {source}: {e}")
+                return
             for q in query:
                 data_size = round(float(q["size_bytes"]) / (1024**3), 2)
                 logging.info(f"{q['url']} will be downloaded ({data_size} GB)")
@@ -203,9 +211,9 @@ class Almaqso:
         self,
         filename: str,
         do_tclean: bool,
-        kw_tclean: Dict[str, object],
+        kw_tclean: dict[str, object],
         do_selfcal: bool,
-        kw_selfcal: Dict[str, object],
+        kw_selfcal: dict[str, object],
         do_export_fits: bool,
         remove_asdm: bool,
         remove_intermediate: bool,
@@ -285,10 +293,59 @@ class Almaqso:
 
         # self-calibration
         if do_selfcal:
-            logging.info("Performing self-calibration...")
+            kw_selfcal["specmode"] = kw_tclean["specmode"]
+            try:
+                logging.info("Performing self-calibration")
+                analysis.selfcal(kw_selfcal)
+                logging.info("Self-calibration completed")
+            except Exception as e:
+                logging.error(f"ERROR while self-calibration: {e}")
+                logging.error(f"Stop processing {asdmname}")
+                return
+
+        # Export to FITS
         if do_export_fits:
-            logging.info("Exporting to FITS...")
+            try:
+                logging.info("Exporting to FITS")
+                analysis.export_fits()
+                logging.info("Exported to FITS")
+            except Exception as e:
+                logging.error(f"ERROR while exporting to FITS: {e}")
+                logging.error(f"Stop processing {asdmname}")
+                return
+
+        # Remove ASDM files
         if remove_asdm:
-            logging.info("Removing ASDM files...")
+            try:
+                logging.info("Removing ASDM files")
+                shutil.rmtree("../" + filename)
+                logging.info("ASDM files removed")
+            except Exception as e:
+                logging.error(f"ERROR while removing ASDM files: {e}")
+                logging.warning("Continue the post-processing")
+
+        # Remove intermediate files
         if remove_intermediate:
-            logging.info("Removing intermediate files...")
+            try:
+                logging.info("Removing intermediate files")
+                keep_dirs: list[str] = analysis.get_image_dirs()
+                keep_files: list[str] = [
+                    "*.py",
+                    "*.log",
+                    analysis.get_vis_name(),
+                ]
+                for path in os.listdir("."):
+                    if os.path.isdir(path):
+                        if path in keep_dirs:
+                            continue
+                        shutil.rmtree(path)
+                    else:
+                        if any(fnmatch.fnmatch(path, pattern) for pattern in keep_files):
+                            continue
+                        os.remove(path)
+            except Exception as e:
+                logging.error(f"ERROR while removing intermediate files: {e}")
+                logging.warning("Continue the post-processing")
+
+        # Processing complete
+        logging.info(f"Processing {asdmname} is done.")

@@ -10,4 +10,13 @@ if __name__ == "__main__":
         work_dir="./test_dir",
         casapath="/usr/local/casa/casa-6.6.1-17-pipeline-2024.1.0.8/bin/casa",
     )
-    almaqso.run(n_parallel=5, do_tclean=True, kw_tclean={"specmode": "mfs"})
+    almaqso.run(
+        n_parallel=2,
+        do_tclean=True,
+        kw_tclean={"specmode": "cube"},
+        do_selfcal=False,
+        kw_selfcal={},
+        do_export_fits=True,
+        remove_asdm=True,
+        remove_intermediate=True,
+    )

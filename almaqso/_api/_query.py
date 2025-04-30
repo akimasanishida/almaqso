@@ -1,6 +1,7 @@
-from typing import List, Dict
 import numpy as np
 from astroquery.alma import Alma
+from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
+from pyvo.dal.exceptions import DALServiceError
 
 
 class Query:
@@ -17,6 +18,11 @@ class Query:
         self._alma = Alma()
         self._alma.archive_url = "https://almascience.nao.ac.jp"
 
+    @retry(
+        retry=retry_if_exception_type(DALServiceError),
+        stop=stop_after_attempt(3),
+        wait=wait_fixed(3),
+    )
     def _query(self) -> np.ndarray:
         """
         Query ALMA data using TAP service or myAlma interface.
@@ -43,7 +49,15 @@ class Query:
 
         return ret
 
-    def query(self) -> List[Dict]:
+    @retry(
+        retry=retry_if_exception_type(DALServiceError),
+        stop=stop_after_attempt(3),
+        wait=wait_fixed(3),
+    )
+    def _get_data_info(self, uid):
+        return self._alma.get_data_info(uid)
+
+    def query(self) -> list[dict]:
         """
         Query ALMA data and get the URLs of the data, the size of the data, and the total size of the data.
         """
@@ -53,6 +67,9 @@ class Query:
 
         for mous in mous_list:
             uid_url_table = self._alma.get_data_info(mous)
+
+            if uid_url_table is None:
+                continue
 
             url_size_list = [
                 {"url": url, "size_bytes": size}
