@@ -1,6 +1,7 @@
-import json
 import fnmatch
+import json
 import logging
+import glob
 import os
 import shutil
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
@@ -73,7 +74,9 @@ class Almaqso:
         if logger.hasHandlers():
             logger.handlers.clear()
 
-        fmt = "[%(asctime)s] [%(threadName)s %(processName)s] [%(levelname)s] %(message)s"
+        fmt = (
+            "[%(asctime)s] [%(threadName)s %(processName)s] [%(levelname)s] %(message)s"
+        )
         datefmt = "%H:%M:%S"
 
         formatter = logging.Formatter(
@@ -100,7 +103,9 @@ class Almaqso:
             mode = "w"
         else:
             mode = "a"
-        file_handler = logging.FileHandler(self._log_file_path, mode=mode, encoding="utf-8")
+        file_handler = logging.FileHandler(
+            self._log_file_path, mode=mode, encoding="utf-8"
+        )
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
@@ -340,12 +345,24 @@ class Almaqso:
                             continue
                         shutil.rmtree(path)
                     else:
-                        if any(fnmatch.fnmatch(path, pattern) for pattern in keep_files):
+                        if any(
+                            fnmatch.fnmatch(path, pattern) for pattern in keep_files
+                        ):
                             continue
                         os.remove(path)
             except Exception as e:
                 logging.error(f"ERROR while removing intermediate files: {e}")
                 logging.warning("Continue the post-processing")
+
+        # Check if `SEVERE` error is found
+        log_files = glob.glob("*.log")
+
+        for log_file in log_files:
+            with open(log_file, "r") as f:
+                lines = f.readlines()
+            for i, line in enumerate(lines):
+                if "SEVERE" in line:
+                    logging.error(f"SEVERE error is found in {log_file} (line: {i+1})")
 
         # Processing complete
         logging.info(f"Processing {asdmname} is done.")
