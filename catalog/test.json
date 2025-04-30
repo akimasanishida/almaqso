@@ -1,101 +1,103 @@
 [
-	{
-		"amplitudeCalibrator":"Uranus",
-		"bandName":"ALMA-Band 4",
-		"catalogueId":5,
-		"dateCreated":"2022-01-27 19:33:14",
-		"dateObserved":"2022-01-25 00:00:00",
-		"dec":-44.0858163639,"decUncertainty":2.77777777778E-8,
-		"deltaDec":null,
-		"deltaRa":null,
-		"execblockUid":"uid://A002/Xf53eeb/X513d",
-		"flux":4.94,
-		"fluxUncertainty":0.07,
-		"frequency":1.5498E11,
-		"frequencySupportDisplay":null,
-		"origin":"ALMA_CalSurveyResults_uid___A002_Xf53eeb_X513d_a_B4_2022-01-27_EDITED.txt",
-		"polFractionCircular":null,
-		"polFractionCircularUncertainty":null,
-		"ra":84.709839825,
-		"raUncertainty":3.88888888889E-8,
-		"source":{
-			"decDeg":-44.0858163639,
-			"decDegUncertainty":2.77777777778E-8,
-			"exclusions":[],
-			"id":2713,
-			"names":[
-				{
-					"name":"J0538-4405"
-				},
-				{
-					"name":"J0538-440"
-				},
-				{
-					"name":"J053851-440507"
-				},
-				{
-					"name":"B0537-441"
-				}
-			],
-			"raDeg":84.709839825,
-			"raDegUncertainty":3.88888888889E-8,
-			"sourceBands":[
-				{
-					"id":14520,"name":"ALMA-Band 4",
-					"sourceId":2713,
-					"rangeId":4,
-					"spectralIndex":null,
-					"uvMax":-2732.0,
-					"uvMin":null
-				}
-			],
-			"types":[
-				{
-					"name":"Point source"
-				},
-				{
-					"name":"Polarization source"
-				},
-				{
-					"name":"Grid source"
-				},
-				{
-					"name":"Flux calibrator"
-				}
-			],
-			"separationInDegrees":"Not Applicable"
-		},
-		"update":{
-			"user":"cverdugo",
-			"date":"2022-01-27 19:33:14",
-			"comment":"created"
-		},
-		"uvMax":-22.0,
-		"uvMin":null,
-		"updateUser":"cverdugo",
-		"updateComment":"created",
-		"spectralIndex":null,
-		"updateDate":"2022-01-27 19:33:14",
-		"separationInDegrees":"Not Applicable",
-		"sourceDecDeg":-44.0858163639,
-		"sourceDecDegUncertainty":2.77777777778E-8,
-		"sourceRaDeg":84.709839825,
-		"sourceRaDegUncertainty":3.88888888889E-8,
-		"names":[
-			{
-				"name":"J0538-4405"
-			},
-			{
-				"name":"J0538-440"
-			},
-			{
-				"name":"J053851-440507"
-			},
-			{
-				"name":"B0537-441"
-			}
-		],
-		"raHex":"05:38:50.36156",
-		"decHex":"-44:05:08.9389"
-	}
+  {
+    "amplitudeCalibrator": "Uranus",
+    "bandName": "ALMA-Band 4",
+    "catalogueId": 5,
+    "dateCreated": "2022-01-27 19:33:14",
+    "dateObserved": "2022-01-25 00:00:00",
+    "dec": -44.0858163639,
+    "decUncertainty": 2.77777777778e-8,
+    "deltaDec": null,
+    "deltaRa": null,
+    "execblockUid": "uid://A002/Xf53eeb/X513d",
+    "flux": 4.94,
+    "fluxUncertainty": 0.07,
+    "frequency": 1.5498e11,
+    "frequencySupportDisplay": null,
+    "origin": "ALMA_CalSurveyResults_uid___A002_Xf53eeb_X513d_a_B4_2022-01-27_EDITED.txt",
+    "polFractionCircular": null,
+    "polFractionCircularUncertainty": null,
+    "ra": 84.709839825,
+    "raUncertainty": 3.88888888889e-8,
+    "source": {
+      "decDeg": -44.0858163639,
+      "decDegUncertainty": 2.77777777778e-8,
+      "exclusions": [],
+      "id": 2713,
+      "names": [
+        {
+          "name": "J0538-4405"
+        },
+        {
+          "name": "J0538-440"
+        },
+        {
+          "name": "J053851-440507"
+        },
+        {
+          "name": "B0537-441"
+        }
+      ],
+      "raDeg": 84.709839825,
+      "raDegUncertainty": 3.88888888889e-8,
+      "sourceBands": [
+        {
+          "id": 14520,
+          "name": "ALMA-Band 4",
+          "sourceId": 2713,
+          "rangeId": 4,
+          "spectralIndex": null,
+          "uvMax": -2732.0,
+          "uvMin": null
+        }
+      ],
+      "types": [
+        {
+          "name": "Point source"
+        },
+        {
+          "name": "Polarization source"
+        },
+        {
+          "name": "Grid source"
+        },
+        {
+          "name": "Flux calibrator"
+        }
+      ],
+      "separationInDegrees": "Not Applicable"
+    },
+    "update": {
+      "user": "cverdugo",
+      "date": "2022-01-27 19:33:14",
+      "comment": "created"
+    },
+    "uvMax": -22.0,
+    "uvMin": null,
+    "updateUser": "cverdugo",
+    "updateComment": "created",
+    "spectralIndex": null,
+    "updateDate": "2022-01-27 19:33:14",
+    "separationInDegrees": "Not Applicable",
+    "sourceDecDeg": -44.0858163639,
+    "sourceDecDegUncertainty": 2.77777777778e-8,
+    "sourceRaDeg": 84.709839825,
+    "sourceRaDegUncertainty": 3.88888888889e-8,
+    "names": [
+      {
+        "name": "J0538-4405"
+      },
+      {
+        "name": "J0538-440"
+      },
+      {
+        "name": "J053851-440507"
+      },
+      {
+        "name": "B0537-441"
+      }
+    ],
+    "raHex": "05:38:50.36156",
+    "decHex": "-44:05:08.9389"
+  }
 ]
