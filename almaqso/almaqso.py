@@ -274,14 +274,14 @@ class Almaqso:
             return
 
         # Remove target
-        try:
-            logging.info("Removing target")
-            analysis.remove_target()
-            logging.info("Target removed")
-        except Exception as e:
-            logging.error(f"ERROR while removing target: {e}")
-            logging.error(f"Stop processing {asdmname}")
-            return
+        # try:
+        #     logging.info("Removing target")
+        #     analysis.remove_target()
+        #     logging.info("Target removed")
+        # except Exception as e:
+        #     logging.error(f"ERROR while removing target: {e}")
+        #     logging.error(f"Stop processing {asdmname}")
+        #     return
 
         # tclean
         if do_tclean:

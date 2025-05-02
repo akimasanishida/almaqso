@@ -14,7 +14,7 @@ if __name__ == "__main__":
         n_parallel=2,
         do_tclean=True,
         kw_tclean={"specmode": "mfs"},
-        do_selfcal=False,
+        do_selfcal=True,
         kw_selfcal={},
         do_export_fits=True,
         remove_asdm=True,
