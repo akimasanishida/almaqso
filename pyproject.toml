@@ -21,6 +21,7 @@ dependencies = [
     "pyvo>=1.6.1",
     "scipy>=1.15.2",
     "setuptools>=78.0.2",
+    "spectral-cube>=0.6.6",
     "tdqm>=0.0.1",
     "tenacity>=9.1.2",
 ]

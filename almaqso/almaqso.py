@@ -7,6 +7,7 @@ import shutil
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
+import subprocess
 
 import coloredlogs
 import numpy as np
@@ -243,18 +244,24 @@ class Almaqso:
 
         # Extract the tar file
         logging.info(f"Extracting {filename}")
-        os.system(f"tar -xf ../{filename}")
+        try:
+            subprocess.run(["tar", "-xf", f"../{filename}"], check=True)
+            logging.info("Extraction completed")
+        except subprocess.CalledProcessError as e:
+            logging.error(f"ERROR: Failed to extract {filename} (reason: {e})")
+            logging.error(f"Stop processing {asdmname}")
+            return
 
         analysis = Analysis(filename, self._casapath)
 
         # Make a CASA script
         try:
-            logging.info("Creating a calibration script")
+            logging.info(f"{asdmname}: Creating a calibration script")
             ret = analysis.make_script()
-            logging.info("Generated calibration script")
+            logging.info(f"{asdmname}: Generated calibration script")
             if ret is not None:
-                logging.info(f"STDOUT: {ret['stdout']}")
-                logging.warning(f"STDERR: {ret['stderr']}")
+                logging.info(f"STDOUT ({asdmname}): {ret['stdout']}")
+                logging.warning(f"STDERR ({asdmname}): {ret['stderr']}")
         except Exception as e:
             logging.error(f"ERROR while creating a calibration script: {e}")
             logging.error(f"Stop processing {asdmname}")
@@ -262,35 +269,35 @@ class Almaqso:
 
         # Calibration
         try:
-            logging.info("Starting calibration")
+            logging.info(f"{asdmname}: Starting calibration")
             ret = analysis.calibrate()
-            logging.info("Calibration completed")
+            logging.info(f"{asdmname}: Calibration completed")
             if ret is not None:
-                logging.info(f"STDOUT: {ret['stdout']}")
-                logging.warning(f"STDERR: {ret['stderr']}")
+                logging.info(f"STDOUT ({asdmname}): {ret['stdout']}")
+                logging.warning(f"STDERR ({asdmname}): {ret['stderr']}")
         except Exception as e:
             logging.error(f"ERROR while calibration: {e}")
             logging.error(f"Stop processing {asdmname}")
             return
 
         # Remove target
-        # try:
-        #     logging.info("Removing target")
-        #     analysis.remove_target()
-        #     logging.info("Target removed")
-        # except Exception as e:
-        #     logging.error(f"ERROR while removing target: {e}")
-        #     logging.error(f"Stop processing {asdmname}")
-        #     return
+        try:
+            logging.info("Removing target")
+            analysis.remove_target()
+            logging.info("Target removed")
+        except Exception as e:
+            logging.error(f"ERROR while removing target: {e}")
+            logging.error(f"Stop processing {asdmname}")
+            return
 
         # tclean
         if do_tclean:
             if do_selfcal:
                 kw_tclean["savemodel"] = "modelcolumn"
             try:
-                logging.info("Performing imaging")
+                logging.info(f"{asdmname}: Performing imaging")
                 analysis.tclean(kw_tclean)
-                logging.info("Imaging completed")
+                logging.info(f"{asdmname}: Imaging completed")
             except Exception as e:
                 logging.error(f"ERROR while imaging: {e}")
                 logging.error(f"Stop processing {asdmname}")
@@ -300,9 +307,9 @@ class Almaqso:
         if do_selfcal:
             kw_selfcal["specmode"] = kw_tclean["specmode"]
             try:
-                logging.info("Performing self-calibration")
+                logging.info(f"{asdmname}: Performing self-calibration")
                 analysis.selfcal(kw_selfcal)
-                logging.info("Self-calibration completed")
+                logging.info(f"{asdmname}: Self-calibration completed")
             except Exception as e:
                 logging.error(f"ERROR while self-calibration: {e}")
                 logging.error(f"Stop processing {asdmname}")
@@ -311,20 +318,33 @@ class Almaqso:
         # Export to FITS
         if do_export_fits:
             try:
-                logging.info("Exporting to FITS")
+                logging.info(f"{asdmname}: Exporting to FITS")
                 analysis.export_fits()
-                logging.info("Exported to FITS")
+                logging.info(f"{asdmname}: Exported to FITS")
             except Exception as e:
                 logging.error(f"ERROR while exporting to FITS: {e}")
                 logging.error(f"Stop processing {asdmname}")
                 return
 
+        # If tclean was performed as `specmode="cube"`
+        # and the cube image was exported as FITS,
+        # then create a spectrum plot
+        # if do_tclean and kw_tclean["specmode"] == "cube" and do_export_fits:
+        #     try:
+        #         logging.info(f"{asdmname}: Creating spectrum plot")
+        #         analysis.plot_spectrum()
+        #         logging.info(f"{asdmname}: Spectrum plot created")
+        #     except Exception as e:
+        #         logging.error(f"ERROR while creating spectrum plot: {e}")
+        #         logging.error(f"Stop processing {asdmname}")
+        #         return
+
         # Remove ASDM files
         if remove_asdm:
             try:
-                logging.info("Removing ASDM files")
+                logging.info(f"{asdmname}: Removing ASDM files")
                 os.remove("../" + filename)
-                logging.info("ASDM files removed")
+                logging.info(f"{asdmname}: ASDM files removed")
             except Exception as e:
                 logging.error(f"ERROR while removing ASDM files: {e}")
                 logging.warning("Continue the post-processing")
@@ -332,7 +352,7 @@ class Almaqso:
         # Remove intermediate files
         if remove_intermediate:
             try:
-                logging.info("Removing intermediate files")
+                logging.info(f"{asdmname}: Removed intermediate files")
                 keep_dirs: list[str] = analysis.get_image_dirs() + [
                     analysis.get_vis_name()
                 ]
@@ -351,6 +371,7 @@ class Almaqso:
                         ):
                             continue
                         os.remove(path)
+                logging.info(f"{asdmname}: Removing intermediate files")
             except Exception as e:
                 logging.error(f"ERROR while removing intermediate files: {e}")
                 logging.warning("Continue the post-processing")
@@ -364,13 +385,16 @@ class Almaqso:
                 lines = f.readlines()
             for i, line in enumerate(lines):
                 if "SEVERE" in line:
-                    logging.error(f"SEVERE error is found in {log_file} (line: {i+1})")
+                    logging.error(f"{asdmname}: SEVERE error is found in {log_file} (line: {i+1})")
                     found_severe_error = True
 
         if found_severe_error:
             logging.error(f"SEVERE error is found in {asdmname}")
         else:
             logging.info(f"No severe errors are found in {asdmname}")
+
+        # Return to the original directory
+        os.chdir(self._work_dir)
 
         # Processing complete
         logging.info(f"Processing {asdmname} is done.")

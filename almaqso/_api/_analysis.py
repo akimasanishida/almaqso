@@ -3,6 +3,7 @@ import shutil
 import subprocess
 from glob import glob
 from pathlib import Path
+from spectral_cube import SpectralCube
 
 
 class Analysis:
@@ -286,6 +287,38 @@ class Analysis:
             ret["stderr"] += ret_selfcal["stderr"] + "\n"
 
         return ret
+
+    def plot_spectrum(self) -> dict[str, str]:
+        """
+        Plot the spectrum of the target from the cube FITS image.
+        """
+        ret = {
+            "stdout": "",
+            "stderr": "",
+        }
+
+        # Search "dirty_fits/*.fits" files
+        fits_files = glob("dirty_fits/*.fits")
+
+        for fits_file in fits_files:
+            # Load the FITS file
+            cube = SpectralCube.read(fits_file)
+
+            # Get the frequencies
+            freqs = cube.spectral_axis.to("GHz")
+
+            # Get the spectrum at the center pixel
+            spectrum = cube[:, cube.shape[1] // 2, cube.shape[2] // 2]
+
+            # Plot the spectrum
+            plot_name = f"{fits_file}.png"
+            try:
+                spectrum.plot()
+                plt.savefig(plot_name)
+                plt.close()
+                ret["stdout"] += f"Saved plot to {plot_name}\n"
+            except Exception as e:
+                ret["stderr"] += f"Failed to plot {fits_file}: {e}\n"
 
     def get_image_dirs(self) -> list[str]:
         """

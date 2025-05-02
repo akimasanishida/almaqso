@@ -13,7 +13,7 @@ if __name__ == "__main__":
     almaqso.run(
         n_parallel=2,
         do_tclean=True,
-        kw_tclean={"specmode": "mfs"},
+        kw_tclean={"specmode": "cube"},
         do_selfcal=True,
         kw_selfcal={},
         do_export_fits=True,

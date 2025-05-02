@@ -7,9 +7,11 @@ weighting = "{weighting}"
 robust = {robust}
 
 sfsdr = aU.stuffForScienceDataReduction()
-fields = aU.getFields("{vis}")
+fields = aU.getFields(vis)
+fields_target = aU.getTargetsForIntent(vis)
+fields_cal = list(set(fields) - set(fields_target))
 
-for field in fields:
+for field in fields_cal:
     caltable = os.path.join(dir, f"phase_{{field}}.cal")
     gaincal(
         vis=vis,

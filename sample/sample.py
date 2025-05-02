@@ -10,7 +10,7 @@ if __name__ == "__main__":
     )
     # Then just run the analysis. This will download and analyze the data.
     almaqso.run(
-        n_parallel=2,  # Number of parallel processes to run (In MDAS, you should smaller than 1 in mana00 or 16 in mana01-07)
+        n_parallel=2,  # Number of parallel processes to run (In MDAS, you should smaller than 2 in mana00 or 16 in mana01-07)
         do_tclean=True,  # Whether to run tclean
         kw_tclean={"specmode": "mfs"},  # Keyword arguments for tclean. specmode is required. weighting, robust are optional.
         do_selfcal=True,  # Whether to run selfcal
