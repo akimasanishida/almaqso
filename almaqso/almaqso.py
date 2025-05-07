@@ -326,19 +326,6 @@ class Almaqso:
                 logging.error(f"Stop processing {asdmname}")
                 return
 
-        # If tclean was performed as `specmode="cube"`
-        # and the cube image was exported as FITS,
-        # then create a spectrum plot
-        # if do_tclean and kw_tclean["specmode"] == "cube" and do_export_fits:
-        #     try:
-        #         logging.info(f"{asdmname}: Creating spectrum plot")
-        #         analysis.plot_spectrum()
-        #         logging.info(f"{asdmname}: Spectrum plot created")
-        #     except Exception as e:
-        #         logging.error(f"ERROR while creating spectrum plot: {e}")
-        #         logging.error(f"Stop processing {asdmname}")
-        #         return
-
         # Remove ASDM files
         if remove_asdm:
             try:
@@ -375,6 +362,19 @@ class Almaqso:
             except Exception as e:
                 logging.error(f"ERROR while removing intermediate files: {e}")
                 logging.warning("Continue the post-processing")
+
+        # If tclean was performed as `specmode="cube"`
+        # and the cube image was exported as FITS,
+        # then create a spectrum plot
+        if do_tclean and kw_tclean["specmode"] == "cube" and do_export_fits:
+            try:
+                logging.info(f"{asdmname}: Creating spectrum plot")
+                analysis.plot_spectrum()
+                logging.info(f"{asdmname}: Spectrum plot created")
+            except Exception as e:
+                logging.error(f"ERROR while creating spectrum plot: {e}")
+                logging.error(f"Stop processing {asdmname}")
+                return
 
         # Check if `SEVERE` error is found
         log_files = glob.glob("*.log")

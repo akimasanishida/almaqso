@@ -3,6 +3,10 @@ import shutil
 import subprocess
 from glob import glob
 from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+from astropy.io import fits
 from spectral_cube import SpectralCube
 
 
@@ -301,24 +305,58 @@ class Analysis:
         fits_files = glob("dirty_fits/*.fits")
 
         for fits_file in fits_files:
-            # Load the FITS file
-            cube = SpectralCube.read(fits_file)
+            with fits.open(fits_file) as hdul:
+                # Get the beam size in pixels
+                data_header = hdul[0].header
+                CDELT = abs(data_header["CDELT1"])
+                cell_size = CDELT * 3600  # arcsec
+                beam_size = hdul[1].data[0][0]  # arcsec
+                beam_px = round(beam_size / cell_size)  # px
+                # print(f"Cell size: {cell_size} arcsec")
+                # print(f"Beam size: {beam_size} arcsec")
+                # print(f"Beam size in pixels: {beam_px} px")
+                BMAJ = hdul[1].data[0][0]  # arcsec
+                BMIN = hdul[1].data[0][1]  # arcsec
 
-            # Get the frequencies
-            freqs = cube.spectral_axis.to("GHz")
+                # Get the center pixel of the image
+                x_center = data_header["CRPIX1"]
+                y_center = data_header["CRPIX2"]
 
-            # Get the spectrum at the center pixel
-            spectrum = cube[:, cube.shape[1] // 2, cube.shape[2] // 2]
+                # Extract the region around the peak of the image with the beam size
+                data_extract = hdul[0].data[
+                    0,
+                    :,
+                    int(y_center - beam_px / 2) : int(y_center + beam_px / 2),
+                    int(x_center - beam_px / 2) : int(x_center + beam_px / 2),
+                ]
 
-            # Plot the spectrum
-            plot_name = f"{fits_file}.png"
-            try:
-                spectrum.plot()
-                plt.savefig(plot_name)
-                plt.close()
-                ret["stdout"] += f"Saved plot to {plot_name}\n"
-            except Exception as e:
-                ret["stderr"] += f"Failed to plot {fits_file}: {e}\n"
+                # Calculate the total flux density
+                beam_area = (np.pi / (4 * np.log(2))) * BMAJ * BMIN
+                total_flux_density = (
+                    np.sum(data_extract, axis=(1, 2)) * cell_size**2 / beam_area
+                )
+
+                # Frequency axis
+                CRVAL3 = data_header["CRVAL3"]
+                CRPIX3 = data_header["CRPIX3"]
+                CDELT3 = data_header["CDELT3"]
+
+                freqs = (
+                    CRVAL3 + (np.arange(data_extract.shape[0]) - (CRPIX3 - 1)) * CDELT3
+                ) / 1e9  # in GHz
+
+                # Plot the spectrum
+                fits_name = os.path.basename(fits_file)
+                fig, ax = plt.subplots()
+                ax.plot(freqs, total_flux_density)
+                ax.set_xlabel("Frequency (GHz)")
+                ax.set_ylabel("Integrated flux (Jy)")
+                ax.set_title(f"Spectrum from {fits_name}")
+                ax.grid()
+                fig.tight_layout()
+                fig.savefig(f"{fits_name}_spectrum.png")
+
+        return ret
 
     def get_image_dirs(self) -> list[str]:
         """

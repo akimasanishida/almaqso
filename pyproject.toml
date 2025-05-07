@@ -16,6 +16,7 @@ dependencies = [
     "astroquery>=0.4.10",
     "coloredlogs>=15.0.1",
     "ipython>=9.0.2",
+    "matplotlib>=3.10.1",
     "numpy>=2.2.4",
     "pandas>=2.2.3",
     "pyvo>=1.6.1",
