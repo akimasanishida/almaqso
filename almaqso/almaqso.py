@@ -282,9 +282,9 @@ class Almaqso:
 
         # Remove target
         try:
-            logging.info("Removing target")
+            logging.info(f"{asdmname}: Removing target")
             analysis.remove_target()
-            logging.info("Target removed")
+            logging.info(f"{asdmname}: Target removed")
         except Exception as e:
             logging.error(f"ERROR while removing target: {e}")
             logging.error(f"Stop processing {asdmname}")
