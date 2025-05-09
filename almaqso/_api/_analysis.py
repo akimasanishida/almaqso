@@ -348,8 +348,15 @@ class Analysis:
                 # Calculate y-axis limits based on the standard deviation
                 y_mean = np.mean(total_flux_density)
                 y_std = np.std(total_flux_density)
-                y_min = y_mean - 3 * y_std
-                y_max = y_mean + 3 * y_std
+                y_min = y_mean - 5 * y_std
+                y_max = y_mean + 5 * y_std
+
+                # Get the minimun larger than y_min and maximum smaller than y_max
+                y_min_data = np.min(total_flux_density[total_flux_density > y_min])
+                y_max_data = np.max(total_flux_density[total_flux_density < y_max])
+
+                y_min_lim = y_mean - (y_mean - y_min_data) * 1.2
+                y_max_lim = y_mean + (y_max_data - y_mean) * 1.2
 
                 # Plot the spectrum
                 fits_name = os.path.basename(fits_file)
@@ -357,11 +364,11 @@ class Analysis:
                 ax.plot(freqs, total_flux_density)
                 ax.set_xlabel("Frequency (GHz)")
                 ax.set_ylabel("Integrated flux (Jy)")
-                ax.set_ylim(y_min, y_max)
+                ax.set_ylim(y_min_lim, y_max_lim)
                 ax.set_title(f"Spectrum from {fits_name}")
                 ax.grid()
                 fig.tight_layout()
-                fig.savefig(f"{fits_name}_spectrum.png")
+                fig.savefig(f"{fits_name}_spectrum.png", dpi=300)
 
         return ret
 
