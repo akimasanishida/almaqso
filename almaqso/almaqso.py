@@ -179,7 +179,7 @@ class Almaqso:
         # Download and process each data with parallel processing
         with (
             ProcessPoolExecutor(max_workers=n_parallel) as proc_pool,
-            ThreadPoolExecutor(max_workers=5) as dl_pool,
+            ThreadPoolExecutor(max_workers=2) as dl_pool,
         ):
 
             def _schedule_analysis(future):

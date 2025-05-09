@@ -345,12 +345,19 @@ class Analysis:
                     CRVAL3 + (np.arange(data_extract.shape[0]) - (CRPIX3 - 1)) * CDELT3
                 ) / 1e9  # in GHz
 
+                # Calculate y-axis limits based on the standard deviation
+                y_mean = np.mean(total_flux_density)
+                y_std = np.std(total_flux_density)
+                y_min = y_mean - 3 * y_std
+                y_max = y_mean + 3 * y_std
+
                 # Plot the spectrum
                 fits_name = os.path.basename(fits_file)
                 fig, ax = plt.subplots()
                 ax.plot(freqs, total_flux_density)
                 ax.set_xlabel("Frequency (GHz)")
                 ax.set_ylabel("Integrated flux (Jy)")
+                ax.set_ylim(y_min, y_max)
                 ax.set_title(f"Spectrum from {fits_name}")
                 ax.grid()
                 fig.tight_layout()
