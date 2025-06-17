@@ -13,13 +13,15 @@ import coloredlogs
 import numpy as np
 from tqdm import tqdm
 
-from ._api import Analysis, Query, download
+from ._api import Process, Query, download
+from ._api import Analysis
 
 
 class Almaqso:
     def __init__(
         self,
-        json_filename: str,
+        # json_filename: str,
+        target: list[str],
         band: int,
         work_dir: str = "./",
         casapath: str = "casa",
@@ -27,6 +29,7 @@ class Almaqso:
         """
         Args:
             json_filename (str): JSON file name obtained from the ALMA Calibration Catalog.
+            target (str): Target source name.
             band (int): Band number to work with.
             work_dir (str): Working directory. Default is './'.
             casapath (str): Path to the CASA executable. Default is 'casa'.
@@ -36,19 +39,20 @@ class Almaqso:
         self._original_dir: str = os.getcwd()
         self._casapath: str = casapath
         self._log_file_path: Path | None = None
+        self._sources: np.ndarray = np.unique(target)
 
         # Load the JSON file
-        try:
-            with open(json_filename, "r") as f:
-                jdict = json.load(f)
-        except FileNotFoundError:
-            logging.error(f'ERROR: File "{json_filename}" not found')
-            return
-        except json.JSONDecodeError as e:
-            logging.error(
-                f'Error: Failed to parse JSON file "{json_filename}" (reason: {e}).'
-            )
-            return
+        # try:
+        #     with open(json_filename, "r") as f:
+        #         jdict = json.load(f)
+        # except FileNotFoundError:
+        #     logging.error(f'ERROR: File "{json_filename}" not found')
+        #     return
+        # except json.JSONDecodeError as e:
+        #     logging.error(
+        #         f'Error: Failed to parse JSON file "{json_filename}" (reason: {e}).'
+        #     )
+        #     return
 
         # Prepare working dir
         os.makedirs(self._work_dir, exist_ok=True)
@@ -56,14 +60,14 @@ class Almaqso:
         logging.info(f"Working directory: {self._work_dir}")
 
         # Get source names
-        try:
-            sources_list = [entry["names"][0]["name"] for entry in jdict]
-        except KeyError as e:
-            logging.error(
-                f"ERROR: Failed to extract source names from JSON file. (reason: {e})"
-            )
-            return
-        self._sources = np.unique(sources_list)
+        # try:
+        #     sources_list = [entry["names"][0]["name"] for entry in jdict]
+        # except KeyError as e:
+        #     logging.error(
+        #         f"ERROR: Failed to extract source names from JSON file. (reason: {e})"
+        #     )
+        #     return
+        # self._sources = np.unique(sources_list)
 
     def _init_logger(self) -> None:
         """
@@ -125,7 +129,7 @@ class Almaqso:
         logging.info("Processing complete.")
         os.chdir(self._original_dir)
 
-    def run(
+    def process(
         self,
         n_parallel: int = 1,
         do_tclean: bool = False,
@@ -190,7 +194,7 @@ class Almaqso:
                     logging.error(f"Download task failed: {e}")
                 else:
                     proc_pool.submit(
-                        self._analysis,
+                        self._process,
                         filename,
                         do_tclean,
                         kw_tclean,
@@ -213,7 +217,7 @@ class Almaqso:
 
         self._post_process()
 
-    def _analysis(
+    def _process(
         self,
         filename: str,
         do_tclean: bool,
@@ -252,7 +256,7 @@ class Almaqso:
             logging.error(f"Stop processing {asdmname}")
             return
 
-        analysis = Analysis(filename, self._casapath)
+        analysis = Process(filename, self._casapath)
 
         # Make a CASA script
         try:
@@ -366,15 +370,15 @@ class Almaqso:
         # If tclean was performed as `specmode="cube"`
         # and the cube image was exported as FITS,
         # then create a spectrum plot
-        if do_tclean and kw_tclean["specmode"] == "cube" and do_export_fits:
-            try:
-                logging.info(f"{asdmname}: Creating spectrum plot")
-                analysis.plot_spectrum()
-                logging.info(f"{asdmname}: Spectrum plot created")
-            except Exception as e:
-                logging.error(f"ERROR while creating spectrum plot: {e}")
-                logging.error(f"Stop processing {asdmname}")
-                return
+        # if do_tclean and kw_tclean["specmode"] == "cube" and do_export_fits:
+        #     try:
+        #         logging.info(f"{asdmname}: Creating spectrum plot")
+        #         analysis.plot_spectrum()
+        #         logging.info(f"{asdmname}: Spectrum plot created")
+        #     except Exception as e:
+        #         logging.error(f"ERROR while creating spectrum plot: {e}")
+        #         logging.error(f"Stop processing {asdmname}")
+        #         return
 
         # Check if `SEVERE` error is found
         log_files = glob.glob("*.log")
@@ -398,3 +402,47 @@ class Almaqso:
 
         # Processing complete
         logging.info(f"Processing {asdmname} is done.")
+
+    def analysis(self, ):
+        """
+        Perform the analysis.
+        """
+        os.chdir(self._work_dir)
+        
+        # Search directories starting with "uid___"
+        dirs = [
+            d for d in os.listdir(".") if os.path.isdir(d) and d.startswith("uid___")
+        ]
+
+        # For each directory, execute the analysis
+        for d in dirs:
+            logging.info(f"Analyzing {d}")
+            os.chdir(d)
+            # Perform the analysis
+            analysis = Analysis()
+            
+            # Get the spectrum
+            try:
+                analysis.get_spectrum()
+                logging.info(f"{d}: Spectrum analysis completed")
+                analysis.plot_spectrum()
+                logging.info(f"{d}: Spectrum plot created")
+            except Exception as e:
+                logging.error(f"ERROR while getting spectrum: {e}")
+                logging.error(f"Stop analyzing {d}")
+                os.chdir(self._work_dir)
+                return
+            
+            # Calculate the optical depth
+            try:
+                analysis.calc_optical_depth()
+                logging.info(f"{d}: Optical depth calculation completed")
+                analysis.plot_optical_depth()
+                logging.info(f"{d}: Optical depth plot created")
+            except Exception as e:
+                logging.error(f"ERROR while calculating optical depth: {e}")
+                logging.error(f"Stop analyzing {d}")
+                os.chdir(self._work_dir)
+                return
+
+            os.chdir(self._work_dir)

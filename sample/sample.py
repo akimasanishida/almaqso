@@ -9,7 +9,7 @@ if __name__ == "__main__":
         casapath="/usr/local/casa/casa-6.6.1-17-pipeline-2024.1.0.8/bin/casa",  # Path to the CASA executable
     )
     # Then just run the analysis. This will download and analyze the data.
-    almaqso.run(
+    almaqso.process(
         n_parallel=2,  # Number of parallel processes to run (In MDAS, you should smaller than 2 in mana00 or 16 in mana01-07)
         do_tclean=True,  # Whether to run tclean
         kw_tclean={"specmode": "mfs"},  # Keyword arguments for tclean. specmode is required. weighting, robust are optional.
