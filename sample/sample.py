@@ -3,8 +3,8 @@ from almaqso import Almaqso
 if __name__ == "__main__":
     # First create the instance of Almaqso
     almaqso = Almaqso(
-        json_filename="./catalog/test_2.json",  # Path to the JSON file
-        band=4,  # Band number
+    target=["J1832-1035"],  # Target name
+    band=4,  # Band number
         work_dir="./test_dir",  # which directory to work in
         casapath="/usr/local/casa/casa-6.6.1-17-pipeline-2024.1.0.8/bin/casa",  # Path to the CASA executable
     )
