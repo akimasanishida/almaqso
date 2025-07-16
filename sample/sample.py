@@ -19,3 +19,4 @@ if __name__ == "__main__":
         remove_asdm=True,  # Whether to remove the `*.asdm.sdm.tar` files after processing
         remove_intermediate=True,  # Whether to remove the intermediate files after processing. image files, fits files, measurement set, log files, and script files will be retained.
     )
+    almaqso.analysis()  # Run the analysis on the processed data

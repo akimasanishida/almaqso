@@ -8,7 +8,7 @@ if __name__ == "__main__":
         # json_filename="./catalog/test_2.json",
         target=["J1832-1035"],
         band=4,
-        work_dir="./test_dir",
+        work_dir="./test_dir2",
         casapath="/usr/local/casa/casa-6.6.1-17-pipeline-2024.1.0.8/bin/casa",
     )
     # almaqso.process(
