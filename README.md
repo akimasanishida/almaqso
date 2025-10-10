@@ -1,25 +1,23 @@
-<a href='https://github.com/skrbcr/almaqso' target="_blank"><img alt='GitHub' src='https://img.shields.io/badge/GitHub_Repository-100000?style=flat&logo=GitHub&logoColor=white&labelColor=black&color=FFFFFF'/></a>
-[![Static Badge](https://img.shields.io/badge/docs-GitHub%20Pages-blue?logo=GitHub)](https://skrbcr.github.io/almaqso/)
+<a href='https://github.com/akimasanishida/almaqso' target="_blank"><img alt='GitHub' src='https://img.shields.io/badge/GitHub_Repository-100000?style=flat&logo=GitHub&logoColor=white&labelColor=black&color=FFFFFF'/></a>
+[![Static Badge](https://img.shields.io/badge/docs-GitHub%20Pages-blue?logo=GitHub)](https://akimasanishida.github.io/almaqso/)
 
 # almaqso
 
 This repository is a folk of [astroysmr/almaqso](https://github.com/astroysmr/almaqso), which is no longer maintained.
 So many bugs are still there, and I am trying to fix them.
 
-**PLEASE REFER TO THE [ISSUE](https://github.com/skrbcr/almaqso/issues) SECTION SINCE IT CONTAINS THE BUGS AND INFORMATION.**
+**PLEASE REFER TO THE [ISSUE](https://github.com/akimasanishida/almaqso/issues) SECTION SINCE IT CONTAINS THE BUGS AND INFORMATION.**
 
 ## Pre-requisites
 
 ### CASA
 
-- Please use CASA with ALMA pipeline. I am using `CASA version 6.6.1-17-pipeline-2024.1.0.8`.
+Please use CASA with ALMA pipeline. I am using `CASA version 6.6.1-17-pipeline-2024.1.0.8`.
 
 ### CASA Modules
 
-Almaqso uses [analysisUtilites](https://zenodo.org/records/13887809).
-
-**Modification of analysisUtilites is necessary**.
-Please read [Pre-requisites](PreRequisites.md).
+Please install [analysisUtilites](https://zenodo.org/records/17252072).
+I strongly recommend you to use the **LATEST** version of it.
 
 ## Installation
 
@@ -37,17 +35,12 @@ import almaqso
 
 ## Usage
 
-See `sample` folder and [documentation](https://skrbcr.github.io/almaqso/).
+See sample code in `sample` folder and [documentation](https://akimasanishida.github.io/almaqso/).
 
-## Test
+## Developer Guide
 
-### CASA to use
-
-First, make sure that you have CASA with ALMA pipeline installed e.g., 6.6.1-17-pipeline-2024.1.0.8.
-
-### Prepare the environment
-
-Then please install [uv](https://github.com/astral-sh/uv).
+I recommend you to use [uv](https://github.com/astral-sh/uv) to manage everything.
+After installing CASA and analysisUtils shown in Pre-requisites section, please install [uv](https://github.com/astral-sh/uv).
 
 Then, you can reproduce the environment by
 
@@ -55,36 +48,11 @@ Then, you can reproduce the environment by
 uv sync --dev
 ```
 
-### Test run
+You can run `main.py` or something with
 
-Edit `test/test_download_analysis.py`:
-
-```python
-# test/test_download_analysis.py
-# Edit the following constants.
-
-...
-
-CASA_PATH = 'casa'  # Path to CASA. Please modify this if necessary.
-
-...
-
-DOWNLOAD = False  # True: Download the tar file, False: Use the existing tar file
-MODE = 'aftercal'  # 'all': All Steps, 'calonly': Step 1-4, 'aftercal': Step 5-8 of analysis
+```shell
+uv run main.py  # or something
 ```
-
-Then you can run the test by
-
-```
-uv run pytest
-```
-
-### Usage
-
-To work with this package, you have to download JSON files from [ALMA Calibrator Source Catalogue](https://almascience.nao.ac.jp/sc/).
-Explanation on it is [here](https://almascience.nao.ac.jp/alma-data/calibrator-catalogue).
-
-Sample code is at `sample/sample.py`.
 
 ### Branches
 
