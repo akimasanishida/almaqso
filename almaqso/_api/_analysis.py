@@ -18,7 +18,7 @@ class Analysis:
         Get the spectrum of the target from the cube FITS image.
         """
         # Search "dirty_fits/*.fits" files
-        fits_files = glob("dirty_fits/*.fits")
+        fits_files = glob("dirty_fits/*_cube.fits")
 
         # Create the output directory
         os.makedirs(self._dir_plot, exist_ok=True)
@@ -27,33 +27,8 @@ class Analysis:
             with fits.open(fits_file) as hdul:
                 # Get the beam size in pixels
                 data_header = hdul[0].header
-                CDELT = abs(data_header["CDELT1"])
-                cell_size = CDELT * 3600  # arcsec
-                beam_size = hdul[1].data[0][0]  # arcsec
-                beam_px = round(beam_size / cell_size)  # px
-                # print(f"Cell size: {cell_size} arcsec")
-                # print(f"Beam size: {beam_size} arcsec")
-                # print(f"Beam size in pixels: {beam_px} px")
-                BMAJ = hdul[1].data[0][0]  # arcsec
-                BMIN = hdul[1].data[0][1]  # arcsec
-
-                # Get the center pixel of the image
-                x_center = data_header["CRPIX1"]
-                y_center = data_header["CRPIX2"]
-
-                # Extract the region around the peak of the image with the beam size
-                data_extract = hdul[0].data[
-                    0,
-                    :,
-                    int(y_center - beam_px / 2) : int(y_center + beam_px / 2),
-                    int(x_center - beam_px / 2) : int(x_center + beam_px / 2),
-                ]
-
-                # Calculate the total flux density
-                beam_area = (np.pi / (4 * np.log(2))) * BMAJ * BMIN
-                total_flux_intensity = (
-                    np.sum(data_extract, axis=(1, 2)) * cell_size**2 / beam_area
-                )
+                data = hdul[0].data
+                data = np.squeeze(data)  # (stokes, chan, y, x) -> (chan, y, x)
 
                 # Frequency axis
                 CRVAL3 = data_header["CRVAL3"]
@@ -61,47 +36,57 @@ class Analysis:
                 CDELT3 = data_header["CDELT3"]
 
             freqs = (
-                CRVAL3 + (np.arange(data_extract.shape[0]) - (CRPIX3 - 1)) * CDELT3
+                CRVAL3 + (np.arange(data.shape[0]) - (CRPIX3 - 1)) * CDELT3
             ) / 1e9  # in GHz
 
             fits_name = os.path.basename(fits_file)
             self._frequencies[fits_name] = freqs
-            self._spectrums[fits_name] = total_flux_intensity
-    
+            self._spectrums[fits_name] = np.nanmax(data, axis=(1, 2))  # Jy
+            # print(freqs)
+            # print(data)
+
     def plot_spectrum(self):
         """
         Plot the spectrum of the target.
         """
         for fits_name, spectrum in self._spectrums.items():
-                freqs = self._frequencies[fits_name]
+            freqs = self._frequencies[fits_name]
 
-                # Calculate y-axis limits based on the standard deviation
-                y_mean = np.mean(spectrum)
-                y_std = np.std(spectrum)
-                y_min = y_mean - 5 * y_std
-                y_max = y_mean + 5 * y_std
+            # index that values are 0 will be removed
+            mask = spectrum > 0
+            freqs = freqs[mask]
+            spectrum = spectrum[mask]
 
-                # Get the minimun larger than y_min and maximum smaller than y_max
-                y_min_data = np.min(spectrum[spectrum > y_min])
-                y_max_data = np.max(spectrum[spectrum < y_max])
+            # Calculate y-axis limits based on the standard deviation
+            y_mean = np.mean(spectrum)
+            y_std = np.std(spectrum)
+            y_min = y_mean - 5 * y_std
+            y_max = y_mean + 5 * y_std
 
-                y_min_lim = y_mean - (y_mean - y_min_data) * 1.2
-                y_max_lim = y_mean + (y_max_data - y_mean) * 1.2
+            # Get the minimun larger than y_min and maximum smaller than y_max
+            y_min_data = np.min(spectrum[spectrum > y_min])
+            y_max_data = np.max(spectrum[spectrum < y_max])
 
-                # Plot the spectrum
-                fig, ax = plt.subplots()
-                ax.plot(freqs, spectrum)
-                ax.set_xlabel("Frequency (GHz)")
-                ax.set_ylabel("Integrated flux (Jy)")
-                ax.set_ylim(y_min_lim, y_max_lim)
-                ax.set_title(f"Spectrum from {fits_name}")
-                ax.grid()
-                fig.tight_layout()
-                fig.savefig(os.path.join(self._dir_plot, f"{fits_name}_spectrum.png"), dpi=300)
+            y_min_lim = y_mean - (y_mean - y_min_data) * 1.2
+            y_max_lim = y_mean + (y_max_data - y_mean) * 1.2
+
+            # Plot the spectrum
+            fig, ax = plt.subplots()
+            ax.plot(freqs, spectrum)
+            ax.set_xlabel("Frequency (GHz)")
+            ax.set_ylabel("Flux (Jy)")
+            ax.set_ylim(y_min_lim, y_max_lim)
+            ax.set_title(f"Spectrum from {fits_name}")
+            ax.grid()
+            fig.tight_layout()
+            fig.savefig(
+                os.path.join(self._dir_plot, f"{fits_name}_spectrum.png"), dpi=300
+            )
 
     def calc_optical_depth(self):
         """
         Calculate the optical depth from the spectrum data.
+        TODO: Need to correct! The method is wrong.
         """
         for fits_name, spectrum in self._spectrums.items():
             # Calculate the base intensity
@@ -120,11 +105,13 @@ class Analysis:
                     break
 
                 if i == 99:
-                    raise RuntimeError(f"Failed to calculate the base intensity for {fits_name}.")
-                
+                    raise RuntimeError(
+                        f"Failed to calculate the base intensity for {fits_name}."
+                    )
+
                 intensity_base_prev = intensity_base
                 intensity_std_prev = intensity_std
-            
+
             # Calculate the optical depth
             optical_depth = -np.log(spectrum / intensity_base)
 
@@ -145,5 +132,7 @@ class Analysis:
             ax.set_title(f"Optical Depth from {fits_name}")
             ax.grid()
             fig.tight_layout()
-            fig.savefig(os.path.join(self._dir_plot, f"{fits_name}_optical_depth.png"), dpi=300)
+            fig.savefig(
+                os.path.join(self._dir_plot, f"{fits_name}_optical_depth.png"), dpi=300
+            )
             plt.close(fig)

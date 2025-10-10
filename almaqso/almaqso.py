@@ -403,7 +403,7 @@ class Almaqso:
         # Processing complete
         logging.info(f"Processing {asdmname} is done.")
 
-    def analysis(self, ):
+    def analysis(self) -> None:
         """
         Perform the analysis.
         """
@@ -434,15 +434,15 @@ class Almaqso:
                 return
             
             # Calculate the optical depth
-            try:
-                analysis.calc_optical_depth()
-                logging.info(f"{d}: Optical depth calculation completed")
-                analysis.plot_optical_depth()
-                logging.info(f"{d}: Optical depth plot created")
-            except Exception as e:
-                logging.error(f"ERROR while calculating optical depth: {e}")
-                logging.error(f"Stop analyzing {d}")
-                os.chdir(self._work_dir)
-                return
+            # try:
+            #     analysis.calc_optical_depth()
+            #     logging.info(f"{d}: Optical depth calculation completed")
+            #     analysis.plot_optical_depth()
+            #     logging.info(f"{d}: Optical depth plot created")
+            # except Exception as e:
+            #     logging.error(f"ERROR while calculating optical depth: {e}")
+            #     logging.error(f"Stop analyzing {d}")
+            #     os.chdir(self._work_dir)
+            #     return
 
             os.chdir(self._work_dir)
