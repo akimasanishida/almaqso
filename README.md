@@ -4,9 +4,9 @@
 # almaqso
 
 This repository is a folk of [astroysmr/almaqso](https://github.com/astroysmr/almaqso), which is no longer maintained.
-So many bugs are still there, and I am trying to fix them.
+Bugs are being removed and some new feature is being implemented.
 
-**PLEASE REFER TO THE [ISSUE](https://github.com/akimasanishida/almaqso/issues) SECTION SINCE IT CONTAINS THE BUGS AND INFORMATION.**
+If you find something or have questions, please refer, report or ask from [issue](https://github.com/akimasanishida/almaqso/issues)
 
 ## Pre-requisites
 
