@@ -17,15 +17,12 @@ for field in fields_cal:
     for spw in spws:
         tclean(
             vis=vis,
-            imagename=f"{{dir}}/{{field}}_spw{{spw}}_cube",
+            imagename=f"{{dir}}/{{field}}_spw_{{spw}}_mfs",
             deconvolver="hogbom",
             gridder="standard",
-            specmode="cube",
+            specmode="mfs",
             spw=str(spw),
             field=str(field),
-            nchan=-1,
-            outframe="lsrk",
-            veltype="radio",
             weighting=weighting,
             robust=robust,
             cell=str(cell),
@@ -33,6 +30,5 @@ for field in fields_cal:
             niter=0,
             pbcor=True,
             interactive=False,
-            restoringbeam="common",
             savemodel="{savemodel}",
         )

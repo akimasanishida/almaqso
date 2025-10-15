@@ -133,7 +133,8 @@ class Almaqso:
         self,
         n_parallel: int = 1,
         do_tclean: bool = False,
-        kw_tclean: dict[str, object] = {},
+        tclean_mode: list[str] = ["mfs"],
+        tclean_weightings: tuple[str, str] = ("natural", ""),
         do_selfcal: bool = False,
         kw_selfcal: dict[str, object] = {},
         do_export_fits: bool = False,
@@ -146,7 +147,8 @@ class Almaqso:
         Args:
             n_parallel (int): The number of the parallel execution.
             do_tclean (bool): Perform tclean. Default is False.
-            kw_tclean (dict[str, object]): Parameters for the `tclean` task.
+            tclean_mode (list[str]): List of imaging specmodes for tclean. "mfs" creates a MFS image, "mfs_spw" creates MFS images for each spw, and "cube" creates a cube image. Default is ["mfs"].
+            tclean_weightings (tuple[str, str]): Weighting scheme and robust parameter for tclean. Second element is the robust parameter for briggs weighting. Default is ("natural", "").
             do_selfcal (bool): Perform self-calibration. Default is False.
             kw_selfcal (dict[str, object]): Parameters for the self-calibration and `tclean` task.
             do_export_fits (bool): Export the final image to FITS format. Default is False.
@@ -197,7 +199,8 @@ class Almaqso:
                         self._process,
                         filename,
                         do_tclean,
-                        kw_tclean,
+                        tclean_mode,
+                        tclean_weightings,
                         do_selfcal,
                         kw_selfcal,
                         do_export_fits,
@@ -221,7 +224,8 @@ class Almaqso:
         self,
         filename: str,
         do_tclean: bool,
-        kw_tclean: dict[str, object],
+        tclean_mode: list[str],
+        tclean_weightings: tuple[str, str],
         do_selfcal: bool,
         kw_selfcal: dict[str, object],
         do_export_fits: bool,
@@ -295,12 +299,19 @@ class Almaqso:
             return
 
         # tclean
+        kw_tclean: dict[str, object] = {
+            "weighting": tclean_weightings[0],
+            "robust": tclean_weightings[1],
+        }
         if do_tclean:
             if do_selfcal:
                 kw_tclean["savemodel"] = "modelcolumn"
+            else:
+                kw_tclean["savemodel"] = "none"
             try:
                 logging.info(f"{asdmname}: Performing imaging")
-                analysis.tclean(kw_tclean)
+                for mode in tclean_mode:
+                    analysis.tclean(mode, kw_tclean)
                 logging.info(f"{asdmname}: Imaging completed")
             except Exception as e:
                 logging.error(f"ERROR while imaging: {e}")
@@ -389,7 +400,9 @@ class Almaqso:
                 lines = f.readlines()
             for i, line in enumerate(lines):
                 if "SEVERE" in line:
-                    logging.error(f"{asdmname}: SEVERE error is found in {log_file} (line: {i+1})")
+                    logging.error(
+                        f"{asdmname}: SEVERE error is found in {log_file} (line: {i+1})"
+                    )
                     found_severe_error = True
 
         if found_severe_error:
@@ -408,7 +421,7 @@ class Almaqso:
         Perform the analysis.
         """
         os.chdir(self._work_dir)
-        
+
         # Search directories starting with "uid___"
         dirs = [
             d for d in os.listdir(".") if os.path.isdir(d) and d.startswith("uid___")
@@ -420,7 +433,7 @@ class Almaqso:
             os.chdir(d)
             # Perform the analysis
             analysis = Analysis()
-            
+
             # Get the spectrum
             try:
                 analysis.get_spectrum()
@@ -432,7 +445,7 @@ class Almaqso:
                 logging.error(f"Stop analyzing {d}")
                 os.chdir(self._work_dir)
                 return
-            
+
             # Calculate the optical depth
             # try:
             #     analysis.calc_optical_depth()

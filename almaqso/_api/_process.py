@@ -168,7 +168,7 @@ class Process:
 
         return ret
 
-    def tclean(self, kw_tclean: dict) -> dict[str, str]:
+    def tclean(self, mode: str, kw_tclean: dict) -> dict[str, str]:
         """
         Wrapper function for tclean.
 
@@ -178,33 +178,20 @@ class Process:
         Returns:
             dict[str, str]: STDOUT and STDERR of the CASA command.
         """
-        # --- １）specmode チェック & params 作成 ---
-        specmode = kw_tclean.get("specmode")
-        if specmode not in ("cube", "mfs"):
-            raise ValueError(f"specmode {specmode!r} is not supported.")
+        kw_tclean["vis"] = self._vis_name
+        kw_tclean["dir"] = self._dir_tclean
 
-        if os.path.exists(self._dir_tclean):
-            shutil.rmtree(self._dir_tclean)
-        os.makedirs(self._dir_tclean)
-
-        # 共通パラメータ
-        params = {
-            "vis": self._vis_name,
-            "dir": self._dir_tclean,
-            "weighting": kw_tclean.get("weighting") or "natural",
-            "robust": kw_tclean.get("robust", 0.5),
-            "savemodel": kw_tclean.get("savemodel") or "none",
-        }
-
-        # specmode ごとの追加処理
-        if specmode == "cube":
-            kw_tclean["restoringbeam"] = "common"
-            template_name = "_tclean_cube.py"
-        else:  # specmode == "mfs"
+        # set specmode
+        if mode == "mfs":
             template_name = "_tclean_mfs.py"
+        elif mode == "mfs_spw":
+            template_name = "_tclean_mfs_spw.py"
+        elif mode == "cube":
+            template_name = "_tclean_cube.py"
+        else:
+            raise ValueError(f"mode {mode!r} is not supported.")
 
-        # --- ３）スクリプト生成＆実行 ---
-        script_name = self._create_script_from_template(template_name, params)
+        script_name = self._create_script_from_template(template_name, kw_tclean)
         ret = self._run_casa_script(script_name)
 
         return ret
