@@ -1,5 +1,5 @@
-<a href='https://github.com/skrbcr/almaqso' target="_blank"><img alt='GitHub' src='https://img.shields.io/badge/GitHub_Repository-100000?style=flat&logo=GitHub&logoColor=white&labelColor=black&color=FFFFFF'/></a>
-[![Static Badge](https://img.shields.io/badge/docs-GitHub%20Pages-blue?logo=GitHub)](https://skrbcr.github.io/almaqso/)
+<a href='https://github.com/akimasanishida/almaqso' target="_blank"><img alt='GitHub' src='https://img.shields.io/badge/GitHub_Repository-100000?style=flat&logo=GitHub&logoColor=white&labelColor=black&color=FFFFFF'/></a>
+[![Static Badge](https://img.shields.io/badge/docs-GitHub%20Pages-blue?logo=GitHub)](https://akimasanishida.github.io/almaqso/)
 
 # almaqso
 
