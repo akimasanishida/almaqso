@@ -1,10 +1,14 @@
 # User Defined
 /urls/
 *.tar
+*.bkp
 /uid__*
 Pipfile.lock
 *.last
 /docs/
+/test_dir/
+/test_dir2/
+/invest/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
