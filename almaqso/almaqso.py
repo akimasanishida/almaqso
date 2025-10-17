@@ -23,6 +23,7 @@ class Almaqso:
         # json_filename: str,
         target: list[str],
         band: int,
+        cycle: int, # kishikawa
         work_dir: str = "./",
         casapath: str = "casa",
     ) -> None:
@@ -31,10 +32,12 @@ class Almaqso:
             json_filename (str): JSON file name obtained from the ALMA Calibration Catalog.
             target (str): Target source name.
             band (int): Band number to work with.
+            cycle (int): project name to work with.
             work_dir (str): Working directory. Default is './'.
             casapath (str): Path to the CASA executable. Default is 'casa'.
         """
         self._band: int = band
+        self._cycle: int = cycle # kishikawa
         self._work_dir: Path = Path(work_dir).absolute()
         self._original_dir: str = os.getcwd()
         self._casapath: str = casapath
@@ -170,7 +173,7 @@ class Almaqso:
         for source in self._sources:
             logging.info(f"Target source: {source}")
             try:
-                query = Query(source, self._band).query()
+                query = Query(source, self._band, self._cycle).query()
             except Exception as e:
                 logging.error(f"NETWORK ERROR while quering {source}: {e}")
                 return
@@ -183,42 +186,42 @@ class Almaqso:
             logging.warning("No data found for the specified source.")
 
         # Download and process each data with parallel processing
-        with (
-            ProcessPoolExecutor(max_workers=n_parallel) as proc_pool,
-            ThreadPoolExecutor(max_workers=2) as dl_pool,
-        ):
+        # with (
+        #     ProcessPoolExecutor(max_workers=n_parallel) as proc_pool,
+        #     ThreadPoolExecutor(max_workers=2) as dl_pool,
+        # ):
 
-            def _schedule_analysis(future):
-                try:
-                    filename = future.result()
-                    logging.info(f"Downloaded file: {filename}")
-                except Exception as e:
-                    logging.error(f"Download task failed: {e}")
-                else:
-                    proc_pool.submit(
-                        self._process,
-                        filename,
-                        do_tclean,
-                        tclean_mode,
-                        tclean_weightings,
-                        do_selfcal,
-                        kw_selfcal,
-                        do_export_fits,
-                        remove_asdm,
-                        remove_intermediate,
-                    )
+        #     def _schedule_analysis(future):
+        #         try:
+        #             filename = future.result()
+        #             logging.info(f"Downloaded file: {filename}")
+        #         except Exception as e:
+        #             logging.error(f"Download task failed: {e}")
+        #         else:
+        #             proc_pool.submit(
+        #                 self._process,
+        #                 filename,
+        #                 do_tclean,
+        #                 tclean_mode,
+        #                 tclean_weightings,
+        #                 do_selfcal,
+        #                 kw_selfcal,
+        #                 do_export_fits,
+        #                 remove_asdm,
+        #                 remove_intermediate,
+        #             )
 
-            for url in url_list:
-                logging.info(f"Downloading from: {url}")
-                fut = dl_pool.submit(download, url)
-                fut.add_done_callback(_schedule_analysis)
+        #     for url in url_list:
+        #         logging.info(f"Downloading from: {url}")
+        #         fut = dl_pool.submit(download, url)
+        #         fut.add_done_callback(_schedule_analysis)
 
-            dl_pool.shutdown(wait=True)
-            proc_pool.shutdown(wait=True)
+        #     dl_pool.shutdown(wait=True)
+        #     proc_pool.shutdown(wait=True)
 
-        logging.info("== All tasks completed ==")
+        # logging.info("== All tasks completed ==")
 
-        self._post_process()
+        # self._post_process()
 
     def _process(
         self,
