@@ -186,42 +186,42 @@ class Almaqso:
             logging.warning("No data found for the specified source.")
 
         # Download and process each data with parallel processing
-        # with (
-        #     ProcessPoolExecutor(max_workers=n_parallel) as proc_pool,
-        #     ThreadPoolExecutor(max_workers=2) as dl_pool,
-        # ):
+        with (
+            ProcessPoolExecutor(max_workers=n_parallel) as proc_pool,
+            ThreadPoolExecutor(max_workers=2) as dl_pool,
+        ):
 
-        #     def _schedule_analysis(future):
-        #         try:
-        #             filename = future.result()
-        #             logging.info(f"Downloaded file: {filename}")
-        #         except Exception as e:
-        #             logging.error(f"Download task failed: {e}")
-        #         else:
-        #             proc_pool.submit(
-        #                 self._process,
-        #                 filename,
-        #                 do_tclean,
-        #                 tclean_mode,
-        #                 tclean_weightings,
-        #                 do_selfcal,
-        #                 kw_selfcal,
-        #                 do_export_fits,
-        #                 remove_asdm,
-        #                 remove_intermediate,
-        #             )
+            def _schedule_analysis(future):
+                try:
+                    filename = future.result()
+                    logging.info(f"Downloaded file: {filename}")
+                except Exception as e:
+                    logging.error(f"Download task failed: {e}")
+                else:
+                    proc_pool.submit(
+                        self._process,
+                        filename,
+                        do_tclean,
+                        tclean_mode,
+                        tclean_weightings,
+                        do_selfcal,
+                        kw_selfcal,
+                        do_export_fits,
+                        remove_asdm,
+                        remove_intermediate,
+                    )
 
-        #     for url in url_list:
-        #         logging.info(f"Downloading from: {url}")
-        #         fut = dl_pool.submit(download, url)
-        #         fut.add_done_callback(_schedule_analysis)
+            for url in url_list:
+                logging.info(f"Downloading from: {url}")
+                fut = dl_pool.submit(download, url)
+                fut.add_done_callback(_schedule_analysis)
 
-        #     dl_pool.shutdown(wait=True)
-        #     proc_pool.shutdown(wait=True)
+            dl_pool.shutdown(wait=True)
+            proc_pool.shutdown(wait=True)
 
-        # logging.info("== All tasks completed ==")
+        logging.info("== All tasks completed ==")
 
-        # self._post_process()
+        self._post_process()
 
     def _process(
         self,

@@ -28,7 +28,7 @@ class Process:
         self._vis_name = (os.path.basename(self._asdm_path)).replace(".asdm.sdm", ".ms")
         self._casapath = casapath
         self._templates_dir = os.path.join(os.path.dirname(__file__), "_templates")
-        self._dir_tclean = "dirty"
+    def    self._dir_tclean = "dirty"
         self._dir_selfcal = "selfcal"
         self._dir_plot = "plots"
 
@@ -280,98 +280,98 @@ class Process:
 
         return ret
 
-    def plot_spectrum(self) -> dict[str, str]:
-        """
-        Plot the spectrum of the target from the cube FITS image.
-        """
-        ret = {
-            "stdout": "",
-            "stderr": "",
-        }
+    # def plot_spectrum(self) -> dict[str, str]:
+    #     """
+    #     Plot the spectrum of the target from the cube FITS image.
+    #     """
+    #     ret = {
+    #         "stdout": "",
+    #         "stderr": "",
+    #     }
 
-        # Search "dirty_fits/*.fits" files
-        fits_files = glob("dirty_fits/*.fits")
+    #     # Search "dirty_fits/*.fits" files
+    #     fits_files = glob("dirty_fits/*.fits")
 
-        for fits_file in fits_files:
-            with fits.open(fits_file) as hdul:
-                # Get the beam size in pixels
-                data_header = hdul[0].header
-                CDELT = abs(data_header["CDELT1"])
-                cell_size = CDELT * 3600  # arcsec
-                beam_size = hdul[1].data[0][0]  # arcsec
-                beam_px = round(beam_size / cell_size)  # px
-                # print(f"Cell size: {cell_size} arcsec")
-                # print(f"Beam size: {beam_size} arcsec")
-                # print(f"Beam size in pixels: {beam_px} px")
-                BMAJ = hdul[1].data[0][0]  # arcsec
-                BMIN = hdul[1].data[0][1]  # arcsec
+    #     for fits_file in fits_files:
+    #         with fits.open(fits_file) as hdul:
+    #             # Get the beam size in pixels
+    #             data_header = hdul[0].header
+    #             CDELT = abs(data_header["CDELT1"])
+    #             cell_size = CDELT * 3600  # arcsec
+    #             beam_size = hdul[1].data[0][0]  # arcsec
+    #             beam_px = round(beam_size / cell_size)  # px
+    #             # print(f"Cell size: {cell_size} arcsec")
+    #             # print(f"Beam size: {beam_size} arcsec")
+    #             # print(f"Beam size in pixels: {beam_px} px")
+    #             BMAJ = hdul[1].data[0][0]  # arcsec
+    #             BMIN = hdul[1].data[0][1]  # arcsec
 
-                # Get the center pixel of the image
-                x_center = data_header["CRPIX1"]
-                y_center = data_header["CRPIX2"]
+    #             # Get the center pixel of the image
+    #             x_center = data_header["CRPIX1"]
+    #             y_center = data_header["CRPIX2"]
 
-                # Extract the region around the peak of the image with the beam size
-                data_extract = hdul[0].data[
-                    0,
-                    :,
-                    int(y_center - beam_px / 2) : int(y_center + beam_px / 2),
-                    int(x_center - beam_px / 2) : int(x_center + beam_px / 2),
-                ]
+    #             # Extract the region around the peak of the image with the beam size
+    #             data_extract = hdul[0].data[
+    #                 0,
+    #                 :,
+    #                 int(y_center - beam_px / 2) : int(y_center + beam_px / 2),
+    #                 int(x_center - beam_px / 2) : int(x_center + beam_px / 2),
+    #             ]
 
-                # Calculate the total flux density
-                beam_area = (np.pi / (4 * np.log(2))) * BMAJ * BMIN
-                total_flux_intensity = (
-                    np.sum(data_extract, axis=(1, 2)) * cell_size**2 / beam_area
-                )
+    #             # Calculate the total flux density
+    #             beam_area = (np.pi / (4 * np.log(2))) * BMAJ * BMIN
+    #             total_flux_intensity = (
+    #                 np.sum(data_extract, axis=(1, 2)) * cell_size**2 / beam_area
+    #             )
 
-                # Frequency axis
-                CRVAL3 = data_header["CRVAL3"]
-                CRPIX3 = data_header["CRPIX3"]
-                CDELT3 = data_header["CDELT3"]
+    #             # Frequency axis
+    #             CRVAL3 = data_header["CRVAL3"]
+    #             CRPIX3 = data_header["CRPIX3"]
+    #             CDELT3 = data_header["CDELT3"]
 
-                freqs = (
-                    CRVAL3 + (np.arange(data_extract.shape[0]) - (CRPIX3 - 1)) * CDELT3
-                ) / 1e9  # in GHz
+    #             freqs = (
+    #                 CRVAL3 + (np.arange(data_extract.shape[0]) - (CRPIX3 - 1)) * CDELT3
+    #             ) / 1e9  # in GHz
 
-                # Create the output directory
-                os.makedirs(self._dir_plot, exist_ok=True)
+    #             # Create the output directory
+    #             os.makedirs(self._dir_plot, exist_ok=True)
 
-                # Output the spectrum to a text file (*.csv)
-                fits_name = os.path.basename(fits_file)
-                output_file = os.path.join(self._dir_plot, f"{fits_name}_spectrum.csv")
+    #             # Output the spectrum to a text file (*.csv)
+    #             fits_name = os.path.basename(fits_file)
+    #             output_file = os.path.join(self._dir_plot, f"{fits_name}_spectrum.csv")
 
-                with open(output_file, "w", newline="") as csvfile:
-                    writer = csv.writer(csvfile)
-                    writer.writerow(["Frequency", "Integrated flux"])  # ヘッダー
-                    for f, i in zip(freqs, total_flux_intensity):
-                        writer.writerow([f, i])
+    #             with open(output_file, "w", newline="") as csvfile:
+    #                 writer = csv.writer(csvfile)
+    #                 writer.writerow(["Frequency", "Integrated flux"])  # ヘッダー
+    #                 for f, i in zip(freqs, total_flux_intensity):
+    #                     writer.writerow([f, i])
 
 
-                # Calculate y-axis limits based on the standard deviation
-                y_mean = np.mean(total_flux_intensity)
-                y_std = np.std(total_flux_intensity)
-                y_min = y_mean - 5 * y_std
-                y_max = y_mean + 5 * y_std
+    #             # Calculate y-axis limits based on the standard deviation
+    #             y_mean = np.mean(total_flux_intensity)
+    #             y_std = np.std(total_flux_intensity)
+    #             y_min = y_mean - 5 * y_std
+    #             y_max = y_mean + 5 * y_std
 
-                # Get the minimun larger than y_min and maximum smaller than y_max
-                y_min_data = np.min(total_flux_intensity[total_flux_intensity > y_min])
-                y_max_data = np.max(total_flux_intensity[total_flux_intensity < y_max])
+    #             # Get the minimun larger than y_min and maximum smaller than y_max
+    #             y_min_data = np.min(total_flux_intensity[total_flux_intensity > y_min])
+    #             y_max_data = np.max(total_flux_intensity[total_flux_intensity < y_max])
 
-                y_min_lim = y_mean - (y_mean - y_min_data) * 1.2
-                y_max_lim = y_mean + (y_max_data - y_mean) * 1.2
+    #             y_min_lim = y_mean - (y_mean - y_min_data) * 1.2
+    #             y_max_lim = y_mean + (y_max_data - y_mean) * 1.2
 
-                # Plot the spectrum
-                fig, ax = plt.subplots()
-                ax.plot(freqs, total_flux_intensity)
-                ax.set_xlabel("Frequency (GHz)")
-                ax.set_ylabel("Integrated flux (Jy)")
-                ax.set_ylim(y_min_lim, y_max_lim)
-                ax.set_title(f"Spectrum from {fits_name}")
-                ax.grid()
-                fig.tight_layout()
-                fig.savefig(os.path.join(self._dir_plot, f"{fits_name}_spectrum.png"), dpi=300)
+    #             # Plot the spectrum
+    #             fig, ax = plt.subplots()
+    #             ax.plot(freqs, total_flux_intensity)
+    #             ax.set_xlabel("Frequency (GHz)")
+    #             ax.set_ylabel("Integrated flux (Jy)")
+    #             ax.set_ylim(y_min_lim, y_max_lim)
+    #             ax.set_title(f"Spectrum from {fits_name}")
+    #             ax.grid()
+    #             fig.tight_layout()
+    #             fig.savefig(os.path.join(self._dir_plot, f"{fits_name}_spectrum.png"), dpi=300)
 
-        return ret
+    #     return ret
 
     def get_image_dirs(self) -> list[str]:
         """
