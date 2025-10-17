@@ -28,7 +28,7 @@ class Process:
         self._vis_name = (os.path.basename(self._asdm_path)).replace(".asdm.sdm", ".ms")
         self._casapath = casapath
         self._templates_dir = os.path.join(os.path.dirname(__file__), "_templates")
-    def    self._dir_tclean = "dirty"
+        self._dir_tclean = "dirty"
         self._dir_selfcal = "selfcal"
         self._dir_plot = "plots"
 
