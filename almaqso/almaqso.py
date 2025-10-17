@@ -23,6 +23,7 @@ class Almaqso:
         # json_filename: str,
         target: list[str],
         band: int,
+        cycle: int, # kishikawa
         work_dir: str = "./",
         casapath: str = "casa",
     ) -> None:
@@ -31,10 +32,12 @@ class Almaqso:
             json_filename (str): JSON file name obtained from the ALMA Calibration Catalog.
             target (str): Target source name.
             band (int): Band number to work with.
+            cycle (int): project name to work with.
             work_dir (str): Working directory. Default is './'.
             casapath (str): Path to the CASA executable. Default is 'casa'.
         """
         self._band: int = band
+        self._cycle: int = cycle # kishikawa
         self._work_dir: Path = Path(work_dir).absolute()
         self._original_dir: str = os.getcwd()
         self._casapath: str = casapath
@@ -170,7 +173,7 @@ class Almaqso:
         for source in self._sources:
             logging.info(f"Target source: {source}")
             try:
-                query = Query(source, self._band).query()
+                query = Query(source, self._band, self._cycle).query()
             except Exception as e:
                 logging.error(f"NETWORK ERROR while quering {source}: {e}")
                 return
