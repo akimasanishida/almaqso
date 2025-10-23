@@ -443,6 +443,8 @@ class Almaqso:
                 logging.info(f"{d}: Spectrum analysis completed")
                 analysis.plot_spectrum()
                 logging.info(f"{d}: Spectrum plot created")
+                analysis.write_spectrum_csv()
+                logging.info(f"{d}: Write spectrum CSV completed")
             except Exception as e:
                 logging.error(f"ERROR while getting spectrum: {e}")
                 logging.error(f"Stop analyzing {d}")

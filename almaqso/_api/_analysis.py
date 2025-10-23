@@ -83,6 +83,22 @@ class Analysis:
                 os.path.join(self._dir_plot, f"{fits_name}_spectrum.png"), dpi=300
             )
 
+    def write_spectrum_csv(self):
+        """
+        Write the spectrum data to CSV files.
+        """
+        for fits_name, spectrum in self._spectrums.items():
+            freqs = self._frequencies[fits_name]
+
+            csv_name = os.path.join(
+                self._dir_plot, f"{fits_name.replace('.fits', '')}_spectrum.csv"
+            )
+            with open(csv_name, mode="w", newline="") as csv_file:
+                writer = csv.writer(csv_file)
+                writer.writerow(["Frequency (GHz)", "Flux (Jy)"])
+                for freq, flux in zip(freqs, spectrum):
+                    writer.writerow([freq, flux])
+
     def calc_optical_depth(self):
         """
         Calculate the optical depth from the spectrum data.
