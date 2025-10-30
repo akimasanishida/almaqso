@@ -37,7 +37,7 @@ class Almaqso:
             casapath (str): Path to the CASA executable. Default is 'casa'.
         """
         self._band: int = band
-        self._cycle: int = cycle # kishikawa
+        self._cycle: int = cycle
         self._work_dir: Path = Path(work_dir).absolute()
         self._original_dir: str = os.getcwd()
         self._casapath: str = casapath
