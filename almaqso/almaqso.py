@@ -23,7 +23,7 @@ class Almaqso:
         # json_filename: str,
         target: list[str],
         band: int,
-        cycle: int, # kishikawa
+        cycle: str = "",
         work_dir: str = "./",
         casapath: str = "casa",
     ) -> None:
@@ -32,12 +32,12 @@ class Almaqso:
             json_filename (str): JSON file name obtained from the ALMA Calibration Catalog.
             target (str): Target source name.
             band (int): Band number to work with.
-            cycle (int): project name to work with.
-            work_dir (str): Working directory. Default is './'.
-            casapath (str): Path to the CASA executable. Default is 'casa'.
+            cycle (str, optional): project name to work with. Default is "" (all cycles).
+            work_dir (str, optional): Working directory. Default is './'.
+            casapath (str, optional): Path to the CASA executable. Default is 'casa'.
         """
         self._band: int = band
-        self._cycle: int = cycle
+        self._cycle: str = cycle
         self._work_dir: Path = Path(work_dir).absolute()
         self._original_dir: str = os.getcwd()
         self._casapath: str = casapath

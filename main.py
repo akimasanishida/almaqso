@@ -7,7 +7,7 @@ if __name__ == "__main__":
     almaqso = Almaqso(
         target=["J2000-1748"],
         band=7,
-        cycle="",
+        cycle="1",
         work_dir="./test_dir",
         casapath="/usr/local/casa/casa-6.6.6-17-pipeline-2025.1.0.35-py3.10.el8/bin/casa"
     )
