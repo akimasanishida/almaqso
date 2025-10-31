@@ -39,16 +39,19 @@ class Query:
         """
 
         cycle_list = self.parse_selection_string()
-        proposal_id_years = [cycle+2011 for cycle in cycle_list]
-        proposal_id_list = [f"proposal_id LIKE '{proposal_id_year}.%'" for proposal_id_year in proposal_id_years]
-        proposal_id_all = " OR ".join(proposal_id_list)
+        cycle_condition = ""
+        if cycle_list:
+            proposal_id_years = [cycle+2011 for cycle in cycle_list]
+            proposal_id_list = [f"proposal_id LIKE '{proposal_id_year}.%'" for proposal_id_year in proposal_id_years]
+            proposal_id_all = " OR ".join(proposal_id_list)
+            cycle_condition = f"AND ({proposal_id_all})"
         
         query = f"""
             SELECT *
             FROM ivoa.obscore
             WHERE target_name = '{self._source_name}'
               AND band_list = '{self._band}'
-              AND ({proposal_id_all})
+              {cycle_condition}
               AND data_rights = 'Public'
         """
 
