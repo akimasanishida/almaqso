@@ -32,7 +32,7 @@ class Almaqso:
             json_filename (str): JSON file name obtained from the ALMA Calibration Catalog.
             target (str): Target source name.
             band (int): Band number to work with.
-            cycle (str, optional): project name to work with. Default is "" (all cycles).
+            cycle (str, optional): project name to work with. You can specify multiple cycles using `,` or `;` and `~` like `"1,2"` (Cycle 1 and 2), `"1;2"` (Cycle 1 and 2), `"1~3"` (Cycle 1 to 3), `"1,4-6,8-10"` (Cycle 1, 4 to 6, 8 to 10), etc. Default is "" (all cycles).
             work_dir (str, optional): Working directory. Default is './'.
             casapath (str, optional): Path to the CASA executable. Default is 'casa'.
         """
