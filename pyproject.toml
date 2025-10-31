@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "almaqso"
-dynamic = ["version"]
+version = "2.0.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -26,11 +26,6 @@ dependencies = [
     "tdqm>=0.0.1",
     "tenacity>=9.1.2",
 ]
-
-[tool.setuptools_scm]
-version_scheme = "post-release"
-local_scheme = "no-local-version"
-write_to = "almaqso/_version.py"
 
 [tool.setuptools.packages.find]
 where = ["."]
