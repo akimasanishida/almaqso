@@ -1,6 +1,5 @@
 import fnmatch
 import glob
-import json
 import logging
 import os
 import shutil
@@ -185,6 +184,8 @@ class Almaqso:
         if len(url_list) == 0:
             logging.warning("No data found for the specified source.")
 
+        analysis_futures = []
+
         # Download and process each data with parallel processing
         with (
             ProcessPoolExecutor(max_workers=n_parallel) as proc_pool,
@@ -198,18 +199,19 @@ class Almaqso:
                 except Exception as e:
                     logging.error(f"Download task failed: {e}")
                 else:
-                    proc_pool.submit(
-                        self._process,
-                        filename,
-                        do_tclean,
-                        tclean_mode,
-                        tclean_weightings,
-                        do_selfcal,
-                        kw_selfcal,
-                        do_export_fits,
-                        remove_asdm,
-                        remove_intermediate,
+                    f2 = proc_pool.submit(
+                        self._process_wrapper,
+                        filename=filename,
+                        do_tclean=do_tclean,
+                        tclean_mode=tclean_mode,
+                        tclean_weightings=tclean_weightings,
+                        do_selfcal=do_selfcal,
+                        kw_selfcal=kw_selfcal,
+                        do_export_fits=do_export_fits,
+                        remove_asdm=remove_asdm,
+                        remove_intermediate=remove_intermediate,
                     )
+                    analysis_futures.append((filename, f2))
 
             for url in url_list:
                 logging.info(f"Downloading from: {url}")
@@ -220,8 +222,21 @@ class Almaqso:
             proc_pool.shutdown(wait=True)
 
         logging.info("== All tasks completed ==")
+        # Output the summary of the processing results
+        logging.info("Processing results summary:")
+        for f in analysis_futures:
+            filename, result = f
+            logging.info(f"{filename}: {'success' if result else 'failed'}")
 
         self._post_process()
+        
+    def _process_wrapper(self, **kwargs) -> bool:
+        """
+        Wrapper function for the analysis process.
+        """
+        ret = self._process(**kwargs)
+        os.chdir(self._work_dir)
+        return ret
 
     def _process(
         self,
@@ -234,7 +249,7 @@ class Almaqso:
         do_export_fits: bool,
         remove_asdm: bool,
         remove_intermediate: bool,
-    ) -> None:
+    ) -> bool:
         """
         Wrapper function for the analysis process.
         """
@@ -261,7 +276,7 @@ class Almaqso:
         except subprocess.CalledProcessError as e:
             logging.error(f"ERROR: Failed to extract {filename} (reason: {e})")
             logging.error(f"Stop processing {asdmname}")
-            return
+            return False
 
         analysis = Process(filename, self._casapath)
 
@@ -276,7 +291,7 @@ class Almaqso:
         except Exception as e:
             logging.error(f"ERROR while creating a calibration script: {e}")
             logging.error(f"Stop processing {asdmname}")
-            return
+            return False
 
         # Calibration
         try:
@@ -289,7 +304,7 @@ class Almaqso:
         except Exception as e:
             logging.error(f"ERROR while calibration: {e}")
             logging.error(f"Stop processing {asdmname}")
-            return
+            return False
 
         # Remove target
         try:
@@ -299,7 +314,7 @@ class Almaqso:
         except Exception as e:
             logging.error(f"ERROR while removing target: {e}")
             logging.error(f"Stop processing {asdmname}")
-            return
+            return False
 
         # tclean
         kw_tclean: dict[str, object] = {
@@ -319,7 +334,7 @@ class Almaqso:
             except Exception as e:
                 logging.error(f"ERROR while imaging: {e}")
                 logging.error(f"Stop processing {asdmname}")
-                return
+                return False
 
         # self-calibration
         if do_selfcal:
@@ -331,7 +346,7 @@ class Almaqso:
             except Exception as e:
                 logging.error(f"ERROR while self-calibration: {e}")
                 logging.error(f"Stop processing {asdmname}")
-                return
+                return False
 
         # Export to FITS
         if do_export_fits:
@@ -342,7 +357,7 @@ class Almaqso:
             except Exception as e:
                 logging.error(f"ERROR while exporting to FITS: {e}")
                 logging.error(f"Stop processing {asdmname}")
-                return
+                return False
 
         # Remove ASDM files
         if remove_asdm:
@@ -408,16 +423,12 @@ class Almaqso:
                     )
                     found_severe_error = True
 
-        if found_severe_error:
-            logging.error(f"SEVERE error is found in {asdmname}")
-        else:
-            logging.info(f"No severe errors are found in {asdmname}")
-
         # Return to the original directory
-        os.chdir(self._work_dir)
+        # os.chdir(self._work_dir)
 
         # Processing complete
         logging.info(f"Processing {asdmname} is done.")
+        return not found_severe_error
 
     def analysis(self) -> None:
         """
