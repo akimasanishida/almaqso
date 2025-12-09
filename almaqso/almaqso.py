@@ -20,7 +20,6 @@ from ._api import Analysis
 class Almaqso:
     def __init__(
         self,
-        # json_filename: str,
         target: list[str],
         band: int,
         cycle: str = "",
@@ -44,33 +43,10 @@ class Almaqso:
         self._log_file_path: Path | None = None
         self._sources: np.ndarray = np.unique(target)
 
-        # Load the JSON file
-        # try:
-        #     with open(json_filename, "r") as f:
-        #         jdict = json.load(f)
-        # except FileNotFoundError:
-        #     logging.error(f'ERROR: File "{json_filename}" not found')
-        #     return
-        # except json.JSONDecodeError as e:
-        #     logging.error(
-        #         f'Error: Failed to parse JSON file "{json_filename}" (reason: {e}).'
-        #     )
-        #     return
-
         # Prepare working dir
         os.makedirs(self._work_dir, exist_ok=True)
         self._init_logger()
         logging.info(f"Working directory: {self._work_dir}")
-
-        # Get source names
-        # try:
-        #     sources_list = [entry["names"][0]["name"] for entry in jdict]
-        # except KeyError as e:
-        #     logging.error(
-        #         f"ERROR: Failed to extract source names from JSON file. (reason: {e})"
-        #     )
-        #     return
-        # self._sources = np.unique(sources_list)
 
     def _init_logger(self) -> None:
         """
@@ -422,19 +398,6 @@ class Almaqso:
                 logging.error(f"ERROR while removing intermediate files: {e}")
                 logging.warning("Continue the post-processing")
 
-        # If tclean was performed as `specmode="cube"`
-        # and the cube image was exported as FITS,
-        # then create a spectrum plot
-        # if do_tclean and kw_tclean["specmode"] == "cube" and do_export_fits:
-        #     try:
-        #         logging.info(f"{asdmname}: Creating spectrum plot")
-        #         analysis.plot_spectrum()
-        #         logging.info(f"{asdmname}: Spectrum plot created")
-        #     except Exception as e:
-        #         logging.error(f"ERROR while creating spectrum plot: {e}")
-        #         logging.error(f"Stop processing {asdmname}")
-        #         return
-
         # Check if `SEVERE` error is found
         log_files = glob.glob("*.log")
 
@@ -448,9 +411,6 @@ class Almaqso:
                         f"{asdmname}: SEVERE error is found in {log_file} (line: {i+1})"
                     )
                     found_severe_error = True
-
-        # Return to the original directory
-        # os.chdir(self._work_dir)
 
         # Processing complete
         logging.info(f"Processing {asdmname} is done.")
