@@ -17,7 +17,7 @@ for field in fields_cal:
     for spw in spws:
         tclean(
             vis=vis,
-            imagename=f"{{dir}}/{{field}}_spw_{{spw}}_mfs",
+            imagename=f"{{dir}}/{{field}}_spw{{spw}}_mfs",
             deconvolver="hogbom",
             gridder="standard",
             specmode="mfs",

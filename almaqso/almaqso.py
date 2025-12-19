@@ -63,7 +63,7 @@ class Almaqso:
         fmt = (
             "[%(asctime)s] [%(threadName)s %(processName)s] [%(levelname)s] %(message)s"
         )
-        datefmt = "%H:%M:%S"
+        datefmt = "%Y-%m-%d %H:%M:%S"
 
         formatter = logging.Formatter(
             fmt,
