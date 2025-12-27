@@ -112,12 +112,14 @@ class Almaqso:
     def process(
         self,
         n_parallel: int = 1,
+        skip_previous_successful: bool = False,
         do_tclean: bool = False,
         tclean_mode: list[str] = ["mfs"],
         tclean_weightings: tuple[str, str] = ("natural", ""),
         do_selfcal: bool = False,
         kw_selfcal: dict[str, object] = {},
         do_export_fits: bool = False,
+        remove_casa_images: bool = False,
         remove_asdm: bool = False,
         remove_intermediate: bool = False,
     ) -> None:
@@ -127,11 +129,13 @@ class Almaqso:
         Args:
             n_parallel (int): The number of the parallel execution.
             do_tclean (bool): Perform tclean. Default is False.
+            skip_previous_successful (bool): Skip processing for previously successful tasks. Default is False.
             tclean_mode (list[str]): List of imaging specmodes for tclean. "mfs" creates a MFS image, "mfs_spw" creates MFS images for each spw, and "cube" creates a cube image. Default is ["mfs"].
             tclean_weightings (tuple[str, str]): Weighting scheme and robust parameter for tclean. Second element is the robust parameter for briggs weighting. Default is ("natural", "").
             do_selfcal (bool): Perform self-calibration. Default is False.
             kw_selfcal (dict[str, object]): Parameters for the self-calibration and `tclean` task.
             do_export_fits (bool): Export the final image to FITS format. Default is False.
+            remove_casa_images (bool): Remove the CASA images after processing. This option only works if do_tclean is True. Default is False.
             remove_asdm (bool): Remove the ASDM files after processing. Default is False.
             remove_intermediate (bool): Remove the intermediate files after processing. Log of CASA will be retained. Default is False.
 
@@ -148,6 +152,32 @@ class Almaqso:
         # Search for ALMA data
         url_list = []
 
+        # Log the processing settings
+        logging.info("== Processing settings ==")
+        logging.info(f"Target sources: {', '.join(self._sources)}")
+        logging.info(f"Number of parallel processes: {n_parallel}")
+        logging.info(f"Target band: {self._band}")
+        logging.info(f"Target cycle: {self._cycle if self._cycle != '' else 'all'}")
+        logging.info(
+            "I will skip previously successful projects." if skip_previous_successful else "I will process all projects."
+        )
+        if do_tclean:
+            logging.info(f"tclean will be performed. {', '.join(tclean_mode)} images will be created, and the weighting is \"{tclean_weightings[0]}\" with robust=\"{tclean_weightings[1]}\".")
+        else:
+            logging.info("tclean will NOT be performed.")
+        if do_selfcal:
+            logging.warning("Self-calibration is specified but NOT IMPLEMENTED YET.")
+        else:
+            logging.info("Self-calibration will NOT be performed.")
+        if do_export_fits:
+            logging.info(f"Export to FITS: Yes")
+            logging.info(f"Remove CASA images after processing: {'Yes' if remove_casa_images else 'No'}")
+        else:
+            logging.info(f"Export to FITS: No")
+        logging.info(f"Remove ASDM after processing: {'Yes' if remove_asdm else 'No'}")
+        logging.info(f"Remove intermediate files after processing: {'Yes' if remove_intermediate else 'No'}")
+
+
         for source in self._sources:
             logging.info(f"Target source: {source}")
             try:
@@ -163,6 +193,40 @@ class Almaqso:
         if len(url_list) == 0:
             logging.warning("No data found for the specified source.")
 
+        # Skip previously successful tasks
+        if skip_previous_successful:
+            # Load results file
+            try:
+                with open(self._work_dir / "processing_successful.txt", "r") as f:
+                    lines = f.readlines()
+                successful_asdms = [line.strip() for line in lines]
+                # Filter url_list
+                filtered_url_list = []
+                for url in url_list:
+                    # url: .../2019.1.00195.L_uid___A002_Xe230a1_X142.asdm.sdm.tar
+                    # asdm_name: uid___A002_Xe230a1_X142
+                    asdm_name = "uid___" + (url.split("_uid___")[1]).replace(
+                        ".asdm.sdm.tar", ""
+                    )
+                    if asdm_name in successful_asdms:
+                        logging.info(
+                            f"Skipping {asdm_name} as it was processed successfully before."
+                        )
+                    else:
+                        filtered_url_list.append(url)
+                url_list = filtered_url_list
+            except FileNotFoundError:
+                logging.info(
+                    "No previous results file found. All tasks will be processed."
+                )
+        else:
+            # Clear previous results file
+            try:
+                if (self._work_dir / "processing_successful.txt").exists():
+                    os.remove(self._work_dir / "processing_successful.txt")
+            except Exception as _:
+                pass
+
         analysis_results = []
 
         # Download and process each data with parallel processing
@@ -177,6 +241,7 @@ class Almaqso:
                     do_selfcal=do_selfcal,
                     kw_selfcal=kw_selfcal,
                     do_export_fits=do_export_fits,
+                    remove_casa_images=remove_casa_images,
                     remove_asdm=remove_asdm,
                     remove_intermediate=remove_intermediate,
                 ): url
@@ -218,6 +283,7 @@ class Almaqso:
         ret: bool = False
         try:
             filename = download(url)
+            logging.info(f"Downloaded {filename} from {url}")
             asdmname, ret = self._process(filename=filename, **kwargs)
             os.chdir(self._work_dir)
         except Exception as e:
@@ -229,16 +295,27 @@ class Almaqso:
                 try:
                     os.remove(filename)
                 except Exception as e:
-                    logging.warning(f"Failed to remove \"{filename}\": {e}")
+                    logging.warning(f'Failed to remove "{filename}": {e}')
             if asdmname and kwargs.get("remove_intermediate", False):
                 if os.path.exists(asdmname):
                     try:
                         shutil.rmtree(asdmname)
                     except Exception as e:
-                        logging.warning(f"Failed to remove directory \"{asdmname}\": {e}")
+                        logging.warning(f'Failed to remove directory "{asdmname}": {e}')
 
         if not asdmname:
             asdmname = url.split("/")[-1]
+
+        # Write successful processing to file
+        if ret:
+            try:
+                with open(self._work_dir / "processing_successful.txt", "a") as f:
+                    f.write(f"{asdmname}\n")
+            except Exception as e:
+                logging.warning(
+                    f'Failed to write processing result for "{asdmname}": {e}'
+                )
+
         return asdmname, ret
 
     def _process(
@@ -250,6 +327,7 @@ class Almaqso:
         do_selfcal: bool,
         kw_selfcal: dict[str, object],
         do_export_fits: bool,
+        remove_casa_images: bool,
         remove_asdm: bool,
         remove_intermediate: bool,
     ) -> tuple[str, bool]:
@@ -356,6 +434,10 @@ class Almaqso:
                 logging.info(f"{asdmname}: Exporting to FITS")
                 analysis.export_fits()
                 logging.info(f"{asdmname}: Exported to FITS")
+                if remove_casa_images:
+                    logging.info(f"{asdmname}: Removing CASA images")
+                    shutil.rmtree("dirty")
+                    logging.info(f"{asdmname}: CASA images removed")
             except Exception as e:
                 logging.error(f"ERROR while exporting to FITS: {e}")
                 logging.error(f"Stop processing {asdmname}")
