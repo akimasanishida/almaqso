@@ -11,8 +11,8 @@ import sys
 sys.path.append(os.path.abspath('..'))
 
 project = 'ALMAQSO'
-copyright = '2024, Yuki Yoshimura, akimasanishida'
-author = 'Yuki Yoshimura, akimasanishida'
+copyright = '2024, Akimasa Nishida, Yuki Yoshimura'
+author = 'Akimasa Nishida, Yuki Yoshimura'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -22,12 +22,14 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autosummary',
     "sphinxcontrib.plantuml",
+    "sphinx.ext.imgconverter",
 ]
 
 napoleon_google_docstring = True
 autosummary_generate = True
 
 templates_path = ['_templates']
+html_static_path = ['diagrams']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 add_module_names = False
@@ -41,7 +43,4 @@ html_theme = 'sphinx_rtd_theme'
 
 # PlantUML configuration
 plantuml = "plantuml"
-if tags.has("latex"):
-    plantuml_output_format = "png"
-else:
-    plantuml_output_format = "svg"
+plantuml_output_format = "png"

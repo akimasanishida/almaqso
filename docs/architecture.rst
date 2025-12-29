@@ -6,3 +6,5 @@ Architecture
    :caption: Contents:
 
    context
+   container
+   component

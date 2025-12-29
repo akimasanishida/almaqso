@@ -1,0 +1,34 @@
+@startuml L3-component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_LEFT_RIGHT()
+
+Container_Boundary(almaqso_lib, "ALMAQSO Library") {
+    Component(almaqso, "Almaqso Class", "Python", "Public API. User will call methods of this class to use the library.")
+    Component(logmgr, "Logger Manager", "Python", "Initialize and config logs. This will provide colored logs + file logging (coloredlogs)")
+    Component(query, "Query Class", "Python", "Class to query ALMA Science Archive for calibration source data")
+    Component(download, "Download Function", "Python", "Function to download data from ALMA Science Archive")
+    Component(process, "Process Class", "Python", "Class to run CASA jobs for data processing")
+    Component(analysis, "Analysis Functions or Classes", "Python", "Functions or classes to analyze processed data TO BE IMPLEMENTED")
+}
+
+System_Ext(casa, "CASA", "Applications for ALMA data processing and analysis developed by NRAO")
+System_Ext(casa_lib, "AnalysisUtils", "External library for CASA")
+System_Ext(alma_archive, "ALMA Science Archive", "Archive for ALMA data")
+System_Ext(local_fs, "Local File System", "User's local file system")
+
+Rel(almaqso, logmgr, "Logs via")
+Rel(almaqso, query, "Uses for querying")
+Rel(almaqso, download, "Uses for downloading")
+Rel(almaqso, process, "Uses for processing")
+Rel(almaqso, analysis, "Uses for analyzing")
+Rel(logmgr, local_fs, "Writes log files to")
+Rel(query, alma_archive, "Queries data from")
+Rel(download, alma_archive, "Downloads data from")
+Rel(download, local_fs, "Reads/Writes data to")
+Rel(process, casa, "Invokes CASA tasks via")
+Rel(process, casa_lib, "Uses AnalysisUtils library via")
+Rel(process, local_fs, "Reads/Writes data to")
+Rel(casa, local_fs, "Reads/Writes data to")
+Rel(casa_lib, casa, "Uses CASA tasks via")
+@enduml

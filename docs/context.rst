@@ -22,5 +22,10 @@ Components
 C4-Context Diagram
 -------------------
 
-.. uml:: ./diagrams/L1-context.puml
+.. figure:: ./diagrams/L1-context.svg
+   :class: thumbnail
+   :target: _static/L1-context.svg
    :align: center
+   :alt: C4-Context Diagram
+
+   C4-Context Diagram. (Web version: Click to show full-size diagram.)

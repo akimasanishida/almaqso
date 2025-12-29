@@ -39,22 +39,38 @@ See sample code in `sample` folder and [documentation](https://akimasanishida.gi
 
 ## Developer Guide
 
-I recommend you to use [uv](https://github.com/astral-sh/uv) to manage everything.
-After installing CASA and analysisUtils shown in Pre-requisites section, please install [uv](https://github.com/astral-sh/uv).
+### Pre-requisites
 
-Then, you can reproduce the environment by
+**You do not have to install all shown below. Please install only what you need.**
+
+- [uv](https://github.com/astral-sh/uv): *Strongly recommended*. uv will manage everything about Python.
+- `plantuml` & `graphviz`: Install if you want to re-render the `docs/diagrams`.
+- `imagemagick`: Install if you want to build PDF version documentation.
+
+You can reproduce the environment with uv:
 
 ```shell
 uv sync --dev
 ```
 
-You can run `main.py` or something with
+Then, you can run `main.py` or something with
 
 ```shell
 uv run main.py  # or something
 ```
 
+### Render diagrams
+
+(Re-)Render all PUML files in `docs/diagrams` with the command below.
+SVG files will be generated in the same directory.
+
+```shell
+plantuml --svg docs/diagrams/
+```
+
 ### Build documentation
+
+If you change the files in `docs/diagrams`, please recreate the SVG files first as written in **Render diagrams** section.
 
 **HTML:**
 ```shell
@@ -64,6 +80,7 @@ Then, please open `docs/_build/html/index.html` in your browser.
 
 **PDF:**
 The script file will build PDF file and copy it to `docs/almaqso.pdf`.
+
 ```shell
 ./scripts/sphinx-build-pdf.sh
 ```
