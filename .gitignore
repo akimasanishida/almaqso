@@ -5,11 +5,11 @@
 /uid__*
 Pipfile.lock
 *.last
-/docs/
 /test_dir/
 /test_dir2/
 /test_dir*/
 /invest/
+/.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
