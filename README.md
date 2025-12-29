@@ -54,6 +54,25 @@ You can run `main.py` or something with
 uv run main.py  # or something
 ```
 
+### Build documentation
+
+**HTML:**
+```shell
+uv run sphinx-build -b html docs docs/_build/html
+```
+Then, please open `docs/_build/html/index.html` in your browser.
+
+**PDF:**
+The script file will build PDF file and copy it to `docs/almaqso.pdf`.
+```shell
+./scripts/sphinx-build-pdf.sh
+```
+
+When you need to reproduce the `almaqso.rst` file with the change of codes,
+```shell
+uv run sphinx-apidoc -o docs almaqso
+```
+
 ### Branches
 
 - `main`: The main branch.

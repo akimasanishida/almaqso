@@ -13,3 +13,4 @@ ALMAQSO documentation
    :caption: Contents:
 
    modules
+   architecture
