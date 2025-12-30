@@ -74,7 +74,11 @@ If you change the files in `docs/diagrams`, please recreate the SVG files first 
 
 **HTML:**
 ```shell
-uv run sphinx-build -b html docs docs/_build/html
+make -C docs html
+```
+If you do not use uv, run with python instead:
+```shell
+python sphinx-build -b html docs docs/_build/html
 ```
 Then, please open `docs/_build/html/index.html` in your browser.
 
