@@ -4,20 +4,39 @@ import logging
 import os
 import shutil
 from concurrent.futures import ProcessPoolExecutor, as_completed
-import multiprocessing
-from datetime import datetime
 from pathlib import Path
 import subprocess
-
-import coloredlogs
 import numpy as np
-from tqdm import tqdm
 
-from ._api import Process, Query, download
-from ._api import Analysis
+from ._logmgr import initialize_log_listener, get_logger_for_subprocess, stop_log_listener
+from ._process import Process
+from ._query import Query
+from ._download import download
+from ._analysis import Analysis
+
+
+_WORKER_LOGGER_NAME = None
+
+
+def _init_worker(logger_name, queue):
+    global _WORKER_LOGGER_NAME, _WORKER_QUEUE
+    _WORKER_LOGGER_NAME, _WORKER_QUEUE = logger_name, queue
+    get_logger_for_subprocess(logger_name, queue)
 
 
 class Almaqso:
+    """
+    Public class for ALMAQSO.
+    Users can call this class and its methods to use ALMAQSO's functionality.
+
+    Args:
+        json_filename (str): JSON file name obtained from the ALMA Calibration Catalog.
+        target (str): Target source name.
+        band (int): Band number to work with.
+        cycle (str, optional): project name to work with. You can specify multiple cycles using `,` or `;` and `~` like `"1,2"` (Cycle 1 and 2), `"1;2"` (Cycle 1 and 2), `"1~3"` (Cycle 1 to 3), `"1,4-6,8-10"` (Cycle 1, 4 to 6, 8 to 10), etc. Default is "" (all cycles).
+        work_dir (str, optional): Working directory. Default is './'.
+        casapath (str, optional): Path to the CASA executable. Default is 'casa'.
+    """
     def __init__(
         self,
         target: list[str],
@@ -26,15 +45,6 @@ class Almaqso:
         work_dir: str = "./",
         casapath: str = "casa",
     ) -> None:
-        """
-        Args:
-            json_filename (str): JSON file name obtained from the ALMA Calibration Catalog.
-            target (str): Target source name.
-            band (int): Band number to work with.
-            cycle (str, optional): project name to work with. You can specify multiple cycles using `,` or `;` and `~` like `"1,2"` (Cycle 1 and 2), `"1;2"` (Cycle 1 and 2), `"1~3"` (Cycle 1 to 3), `"1,4-6,8-10"` (Cycle 1, 4 to 6, 8 to 10), etc. Default is "" (all cycles).
-            work_dir (str, optional): Working directory. Default is './'.
-            casapath (str, optional): Path to the CASA executable. Default is 'casa'.
-        """
         self._band: int = band
         self._cycle: str = cycle
         self._work_dir: Path = Path(work_dir).absolute()
@@ -45,57 +55,6 @@ class Almaqso:
 
         # Prepare working dir
         os.makedirs(self._work_dir, exist_ok=True)
-        self._init_logger()
-        logging.info(f"Working directory: {self._work_dir}")
-
-    def _init_logger(self) -> None:
-        """
-        Initialize the logger
-        """
-        if multiprocessing.current_process().name != "MainProcess":
-            return
-        logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
-
-        if logger.handlers:
-            return
-
-        fmt = (
-            "[%(asctime)s] [%(threadName)s %(processName)s] [%(levelname)s] %(message)s"
-        )
-        datefmt = "%Y-%m-%d %H:%M:%S"
-
-        formatter = logging.Formatter(
-            fmt,
-            datefmt=datefmt,
-        )
-        stream_handler = logging.StreamHandler()
-        stream_handler.setFormatter(formatter)
-        logger.addHandler(stream_handler)
-
-        # coloredlogs は StreamHandler に影響する
-        coloredlogs.install(
-            level=logging.INFO,
-            logger=logger,
-            fmt=fmt,
-            datefmt=datefmt,
-        )
-
-        # --- FileHandler（ファイル保存、色なし） ---
-        if self._log_file_path is None:
-            now_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-            self._log_file_path = Path(self._work_dir) / f"almaqso_{now_str}.log"
-            logging.info(f"Log file: {self._log_file_path}")
-            mode = "w"
-        else:
-            mode = "a"
-        file_handler = logging.FileHandler(
-            self._log_file_path, mode=mode, encoding="utf-8"
-        )
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-
-        tqdm.write = lambda s, *args, **kwargs: logging.getLogger().info(s)
 
     def _pre_process(self) -> None:
         os.chdir(self._work_dir)
@@ -106,7 +65,8 @@ class Almaqso:
                 os.remove(file)
 
     def _post_process(self) -> None:
-        logging.info("Processing complete.")
+        logger = logging.getLogger(_WORKER_LOGGER_NAME)
+        logger.info("Processing complete.")
         os.chdir(self._original_dir)
 
     def process(
@@ -142,56 +102,59 @@ class Almaqso:
         Returns:
             None
         """
+        logger_name, log_queue, log_listener = initialize_log_listener(self._work_dir)
+        logger: logging.Logger = get_logger_for_subprocess(logger_name, log_queue)
+        logger.info(f"Working directory: {self._work_dir}")
+
         try:
-            self._init_logger()
             self._pre_process()
         except Exception as e:
-            logging.error(f"ERROR: {e}")
+            logger.error(f"ERROR: {e}")
             return
 
         # Search for ALMA data
         url_list = []
 
         # Log the processing settings
-        logging.info("== Processing settings ==")
-        logging.info(f"Target sources: {', '.join(self._sources)}")
-        logging.info(f"Number of parallel processes: {n_parallel}")
-        logging.info(f"Target band: {self._band}")
-        logging.info(f"Target cycle: {self._cycle if self._cycle != '' else 'all'}")
-        logging.info(
+        logger.info("== Processing settings ==")
+        logger.info(f"Target sources: {', '.join(self._sources)}")
+        logger.info(f"Number of parallel processes: {n_parallel}")
+        logger.info(f"Target band: {self._band}")
+        logger.info(f"Target cycle: {self._cycle if self._cycle != '' else 'all'}")
+        logger.info(
             "I will skip previously successful projects." if skip_previous_successful else "I will process all projects."
         )
         if do_tclean:
-            logging.info(f"tclean will be performed. {', '.join(tclean_mode)} images will be created, and the weighting is \"{tclean_weightings[0]}\" with robust=\"{tclean_weightings[1]}\".")
+            logger.info(f"tclean will be performed. {', '.join(tclean_mode)} images will be created, and the weighting is \"{tclean_weightings[0]}\" with robust=\"{tclean_weightings[1]}\".")
         else:
-            logging.info("tclean will NOT be performed.")
+            logger.info("tclean will NOT be performed.")
         if do_selfcal:
-            logging.warning("Self-calibration is specified but NOT IMPLEMENTED YET.")
+            logger.warning("Self-calibration is specified but NOT IMPLEMENTED YET.")
         else:
-            logging.info("Self-calibration will NOT be performed.")
+            logger.info("Self-calibration will NOT be performed.")
         if do_export_fits:
-            logging.info(f"Export to FITS: Yes")
-            logging.info(f"Remove CASA images after processing: {'Yes' if remove_casa_images else 'No'}")
+            logger.info(f"Export to FITS: Yes")
+            logger.info(f"Remove CASA images after processing: {'Yes' if remove_casa_images else 'No'}")
         else:
-            logging.info(f"Export to FITS: No")
-        logging.info(f"Remove ASDM after processing: {'Yes' if remove_asdm else 'No'}")
-        logging.info(f"Remove intermediate files after processing: {'Yes' if remove_intermediate else 'No'}")
+            logger.info(f"Export to FITS: No")
+        logger.info(f"Remove ASDM after processing: {'Yes' if remove_asdm else 'No'}")
+        logger.info(f"Remove intermediate files after processing: {'Yes' if remove_intermediate else 'No'}")
 
 
         for source in self._sources:
-            logging.info(f"Target source: {source}")
+            logger.info(f"Target source: {source}")
             try:
                 query = Query(source, self._band, self._cycle).query()
             except Exception as e:
-                logging.error(f"NETWORK ERROR while quering {source}: {e}")
+                logger.error(f"NETWORK ERROR while quering {source}: {e}")
                 return
             for q in query:
                 data_size = round(float(q["size_bytes"]) / (1024**3), 2)
-                logging.info(f"{q['url']} will be downloaded ({data_size} GB)")
+                logger.info(f"{q['url']} will be downloaded ({data_size} GB)")
                 url_list.append(q["url"])
 
         if len(url_list) == 0:
-            logging.warning("No data found for the specified source.")
+            logger.warning("No data found for the specified source.")
 
         # Skip previously successful tasks
         if skip_previous_successful:
@@ -209,14 +172,14 @@ class Almaqso:
                         ".asdm.sdm.tar", ""
                     )
                     if asdm_name in successful_asdms:
-                        logging.info(
+                        logger.info(
                             f"Skipping {asdm_name} as it was processed successfully before."
                         )
                     else:
                         filtered_url_list.append(url)
                 url_list = filtered_url_list
             except FileNotFoundError:
-                logging.info(
+                logger.info(
                     "No previous results file found. All tasks will be processed."
                 )
         else:
@@ -230,7 +193,7 @@ class Almaqso:
         analysis_results = []
 
         # Download and process each data with parallel processing
-        with ProcessPoolExecutor(max_workers=n_parallel) as pool:
+        with ProcessPoolExecutor(max_workers=n_parallel, initializer=_init_worker, initargs=(logger_name, log_queue)) as pool:
             future_to_url = {
                 pool.submit(
                     self._process_wrapper,
@@ -253,19 +216,20 @@ class Almaqso:
             try:
                 filename, result = fut.result()
             except Exception as e:
-                logging.error(f"Task failed for {url}: {e}")
+                logger.error(f"Task failed for {url}: {e}")
                 analysis_results.append((url, False))
             else:
                 analysis_results.append((filename, result))
 
-        logging.info("== All tasks completed ==")
+        logger.info("== All tasks completed ==")
         # Output the summary of the processing results
-        logging.info("Processing results summary:")
+        logger.info("Processing results summary:")
         for f in analysis_results:
             filename, result = f
-            logging.info(f"{filename}: {'success' if result else 'failed'}")
+            logger.info(f"{filename}: {'success' if result else 'failed'}")
 
         self._post_process()
+        stop_log_listener(log_listener)
 
     def _process_wrapper(self, url: str, **kwargs) -> tuple[str, bool]:
         """
@@ -281,13 +245,14 @@ class Almaqso:
         filename: str | None = None
         asdmname: str | None = None
         ret: bool = False
+        logger = logging.getLogger(_WORKER_LOGGER_NAME)
         try:
             filename = download(url)
-            logging.info(f"Downloaded {filename} from {url}")
+            logger.info(f"Downloaded {filename} from {url}")
             asdmname, ret = self._process(filename=filename, **kwargs)
             os.chdir(self._work_dir)
         except Exception as e:
-            logging.error(f"ERROR while processing {url}: {e}")
+            logger.error(f"ERROR while processing {url}: {e}")
 
         # if failed, remove ASDM and directory if needed.
         if not ret:
@@ -295,13 +260,13 @@ class Almaqso:
                 try:
                     os.remove(filename)
                 except Exception as e:
-                    logging.warning(f'Failed to remove "{filename}": {e}')
+                    logger.warning(f'Failed to remove "{filename}": {e}')
             if asdmname and kwargs.get("remove_intermediate", False):
                 if os.path.exists(asdmname):
                     try:
                         shutil.rmtree(asdmname)
                     except Exception as e:
-                        logging.warning(f'Failed to remove directory "{asdmname}": {e}')
+                        logger.warning(f'Failed to remove directory "{asdmname}": {e}')
 
         if not asdmname:
             asdmname = url.split("/")[-1]
@@ -312,7 +277,7 @@ class Almaqso:
                 with open(self._work_dir / "processing_successful.txt", "a") as f:
                     f.write(f"{asdmname}\n")
             except Exception as e:
-                logging.warning(
+                logger.warning(
                     f'Failed to write processing result for "{asdmname}": {e}'
                 )
 
@@ -334,7 +299,8 @@ class Almaqso:
         """
         Wrapper function for the analysis process.
         """
-        logging.info(f"Processing file: {filename}")
+        logger = logging.getLogger(_WORKER_LOGGER_NAME)
+        logger.info(f"Processing file: {filename}")
 
         # Determine the working directory
         asdmname = "uid___" + (filename.split("_uid___")[1]).replace(
@@ -345,55 +311,55 @@ class Almaqso:
             shutil.rmtree(asdmname)
         os.makedirs(asdmname)
 
-        logging.info(f"Working directory: {asdmname}")
+        logger.info(f"Working directory: {asdmname}")
         os.chdir(asdmname)
 
         # Extract the tar file
-        logging.info(f"Extracting {filename}")
+        logger.info(f"Extracting {filename}")
         try:
             subprocess.run(["tar", "-xf", f"../{filename}"], check=True)
-            logging.info("Extraction completed")
+            logger.info("Extraction completed")
         except subprocess.CalledProcessError as e:
-            logging.error(f"ERROR: Failed to extract {filename} (reason: {e})")
-            logging.error(f"Stop processing {asdmname}")
+            logger.error(f"ERROR: Failed to extract {filename} (reason: {e})")
+            logger.error(f"Stop processing {asdmname}")
             return asdmname, False
 
         analysis = Process(filename, self._casapath)
 
         # Make a CASA script
         try:
-            logging.info(f"{asdmname}: Creating a calibration script")
+            logger.info(f"{asdmname}: Creating a calibration script")
             ret = analysis.make_script()
-            logging.info(f"{asdmname}: Generated calibration script")
+            logger.info(f"{asdmname}: Generated calibration script")
             if ret is not None:
-                logging.info(f"STDOUT ({asdmname}): {ret['stdout']}")
-                logging.warning(f"STDERR ({asdmname}): {ret['stderr']}")
+                logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
+                logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
         except Exception as e:
-            logging.error(f"ERROR while creating a calibration script: {e}")
-            logging.error(f"Stop processing {asdmname}")
+            logger.error(f"ERROR while creating a calibration script: {e}")
+            logger.error(f"Stop processing {asdmname}")
             return asdmname, False
 
         # Calibration
         try:
-            logging.info(f"{asdmname}: Starting calibration")
+            logger.info(f"{asdmname}: Starting calibration")
             ret = analysis.calibrate()
-            logging.info(f"{asdmname}: Calibration completed")
+            logger.info(f"{asdmname}: Calibration completed")
             if ret is not None:
-                logging.info(f"STDOUT ({asdmname}): {ret['stdout']}")
-                logging.warning(f"STDERR ({asdmname}): {ret['stderr']}")
+                logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
+                logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
         except Exception as e:
-            logging.error(f"ERROR while calibration: {e}")
-            logging.error(f"Stop processing {asdmname}")
+            logger.error(f"ERROR while calibration: {e}")
+            logger.error(f"Stop processing {asdmname}")
             return asdmname, False
 
         # Remove target
         try:
-            logging.info(f"{asdmname}: Removing target")
+            logger.info(f"{asdmname}: Removing target")
             analysis.remove_target()
-            logging.info(f"{asdmname}: Target removed")
+            logger.info(f"{asdmname}: Target removed")
         except Exception as e:
-            logging.error(f"ERROR while removing target: {e}")
-            logging.error(f"Stop processing {asdmname}")
+            logger.error(f"ERROR while removing target: {e}")
+            logger.error(f"Stop processing {asdmname}")
             return asdmname, False
 
         # tclean
@@ -407,56 +373,56 @@ class Almaqso:
             else:
                 kw_tclean["savemodel"] = "none"
             try:
-                logging.info(f"{asdmname}: Performing imaging")
+                logger.info(f"{asdmname}: Performing imaging")
                 for mode in tclean_mode:
                     analysis.tclean(mode, kw_tclean)
-                logging.info(f"{asdmname}: Imaging completed")
+                logger.info(f"{asdmname}: Imaging completed")
             except Exception as e:
-                logging.error(f"ERROR while imaging: {e}")
-                logging.error(f"Stop processing {asdmname}")
+                logger.error(f"ERROR while imaging: {e}")
+                logger.error(f"Stop processing {asdmname}")
                 return asdmname, False
 
         # self-calibration
         if do_selfcal:
             kw_selfcal["specmode"] = kw_tclean["specmode"]
             try:
-                logging.info(f"{asdmname}: Performing self-calibration")
+                logger.info(f"{asdmname}: Performing self-calibration")
                 analysis.selfcal(kw_selfcal)
-                logging.info(f"{asdmname}: Self-calibration completed")
+                logger.info(f"{asdmname}: Self-calibration completed")
             except Exception as e:
-                logging.error(f"ERROR while self-calibration: {e}")
-                logging.error(f"Stop processing {asdmname}")
+                logger.error(f"ERROR while self-calibration: {e}")
+                logger.error(f"Stop processing {asdmname}")
                 return asdmname, False
 
         # Export to FITS
         if do_export_fits:
             try:
-                logging.info(f"{asdmname}: Exporting to FITS")
+                logger.info(f"{asdmname}: Exporting to FITS")
                 analysis.export_fits()
-                logging.info(f"{asdmname}: Exported to FITS")
+                logger.info(f"{asdmname}: Exported to FITS")
                 if remove_casa_images:
-                    logging.info(f"{asdmname}: Removing CASA images")
+                    logger.info(f"{asdmname}: Removing CASA images")
                     shutil.rmtree("dirty")
-                    logging.info(f"{asdmname}: CASA images removed")
+                    logger.info(f"{asdmname}: CASA images removed")
             except Exception as e:
-                logging.error(f"ERROR while exporting to FITS: {e}")
-                logging.error(f"Stop processing {asdmname}")
+                logger.error(f"ERROR while exporting to FITS: {e}")
+                logger.error(f"Stop processing {asdmname}")
                 return asdmname, False
 
         # Remove ASDM files
         if remove_asdm:
             try:
-                logging.info(f"{asdmname}: Removing ASDM files")
+                logger.info(f"{asdmname}: Removing ASDM files")
                 os.remove("../" + filename)
-                logging.info(f"{asdmname}: ASDM files removed")
+                logger.info(f"{asdmname}: ASDM files removed")
             except Exception as e:
-                logging.error(f"ERROR while removing ASDM files: {e}")
-                logging.warning("Continue the post-processing")
+                logger.error(f"ERROR while removing ASDM files: {e}")
+                logger.warning("Continue the post-processing")
 
         # Remove intermediate files
         if remove_intermediate:
             try:
-                logging.info(f"{asdmname}: Removed intermediate files")
+                logger.info(f"{asdmname}: Removed intermediate files")
                 keep_dirs: list[str] = analysis.get_image_dirs() + [
                     analysis.get_vis_name()
                 ]
@@ -475,10 +441,10 @@ class Almaqso:
                         ):
                             continue
                         os.remove(path)
-                logging.info(f"{asdmname}: Removing intermediate files")
+                logger.info(f"{asdmname}: Removing intermediate files")
             except Exception as e:
-                logging.error(f"ERROR while removing intermediate files: {e}")
-                logging.warning("Continue the post-processing")
+                logger.error(f"ERROR while removing intermediate files: {e}")
+                logger.warning("Continue the post-processing")
 
         # Check if `SEVERE` error is found
         log_files = glob.glob("*.log")
@@ -489,57 +455,62 @@ class Almaqso:
                 lines = f.readlines()
             for i, line in enumerate(lines):
                 if "SEVERE" in line:
-                    logging.error(
+                    logger.error(
                         f"{asdmname}: SEVERE error is found in {log_file} (line: {i+1})"
                     )
                     found_severe_error = True
 
         # Processing complete
-        logging.info(f"Processing {asdmname} is done.")
+        logger.info(f"Processing {asdmname} is done.")
         return asdmname, not found_severe_error
 
-    def analysis(self) -> None:
-        """
-        Perform the analysis.
-        """
-        os.chdir(self._work_dir)
+    # def analysis(self) -> None:
+    #     """
+    #     Perform the analysis.
+    #     """
+    #     logger_name, log_queue, log_listener = initialize_log_listener(self._work_dir)
+    #     _WORKER_LOGGER_NAME = logger_name
+    #     logger = logging.getLogger(_WORKER_LOGGER_NAME)
+    #     os.chdir(self._work_dir)
 
-        # Search directories starting with "uid___"
-        dirs = [
-            d for d in os.listdir(".") if os.path.isdir(d) and d.startswith("uid___")
-        ]
+    #     # Search directories starting with "uid___"
+    #     dirs = [
+    #         d for d in os.listdir(".") if os.path.isdir(d) and d.startswith("uid___")
+    #     ]
 
-        # For each directory, execute the analysis
-        for d in dirs:
-            logging.info(f"Analyzing {d}")
-            os.chdir(d)
-            # Perform the analysis
-            analysis = Analysis()
+    #     # For each directory, execute the analysis
+    #     for d in dirs:
+    #         logger.info(f"Analyzing {d}")
+    #         os.chdir(d)
+    #         # Perform the analysis
+    #         analysis = Analysis()
 
-            # Get the spectrum
-            try:
-                analysis.get_spectrum()
-                logging.info(f"{d}: Spectrum analysis completed")
-                analysis.plot_spectrum()
-                logging.info(f"{d}: Spectrum plot created")
-                analysis.write_spectrum_csv()
-                logging.info(f"{d}: Write spectrum CSV completed")
-            except Exception as e:
-                logging.error(f"ERROR while getting spectrum: {e}")
-                logging.error(f"Stop analyzing {d}")
-                os.chdir(self._work_dir)
-                return
+    #         # Get the spectrum
+    #         try:
+    #             analysis.get_spectrum()
+    #             logger.info(f"{d}: Spectrum analysis completed")
+    #             analysis.plot_spectrum()
+    #             logger.info(f"{d}: Spectrum plot created")
+    #             analysis.write_spectrum_csv()
+    #             logger.info(f"{d}: Write spectrum CSV completed")
+    #         except Exception as e:
+    #             logger.error(f"ERROR while getting spectrum: {e}")
+    #             logger.error(f"Stop analyzing {d}")
+    #             os.chdir(self._work_dir)
+    #             return
 
-            # Calculate the optical depth
-            # try:
-            #     analysis.calc_optical_depth()
-            #     logging.info(f"{d}: Optical depth calculation completed")
-            #     analysis.plot_optical_depth()
-            #     logging.info(f"{d}: Optical depth plot created")
-            # except Exception as e:
-            #     logging.error(f"ERROR while calculating optical depth: {e}")
-            #     logging.error(f"Stop analyzing {d}")
-            #     os.chdir(self._work_dir)
-            #     return
+    #         # Calculate the optical depth
+    #         # try:
+    #         #     analysis.calc_optical_depth()
+    #         #     logger.info(f"{d}: Optical depth calculation completed")
+    #         #     analysis.plot_optical_depth()
+    #         #     logger.info(f"{d}: Optical depth plot created")
+    #         # except Exception as e:
+    #         #     logger.error(f"ERROR while calculating optical depth: {e}")
+    #         #     logger.error(f"Stop analyzing {d}")
+    #         #     os.chdir(self._work_dir)
+    #         #     return
 
-            os.chdir(self._work_dir)
+    #         os.chdir(self._work_dir)
+
+    #     stop_log_listener(log_listener)
