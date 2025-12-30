@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 
 # class LogManager:
-def initialize_log_listener(dir: Path) -> tuple[str, multiprocessing.Queue, logging.handlers.QueueListener]:
+def initialize_log_listener(dir: Path) -> tuple[str, Queue[Any], logging.handlers.QueueListener]:
     """
     Initialize the LogManager.
 
@@ -62,7 +62,7 @@ def stop_log_listener(listener: logging.handlers.QueueListener) -> None:
     listener.stop()
 
 
-def get_logger_for_subprocess(logger_name: str, queue: multiprocessing.Queue) -> logging.Logger:
+def get_logger_for_subprocess(logger_name: str, queue: Queue[Any]) -> logging.Logger:
     """
     Get the logger for subprocesses.
 
