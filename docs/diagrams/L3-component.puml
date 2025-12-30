@@ -10,6 +10,7 @@ Container_Boundary(almaqso_lib, "ALMAQSO Library") {
     Component(download, "Download Function", "Python", "Function to download data from ALMA Science Archive")
     Component(process, "Process Class", "Python", "Class to run CASA jobs for data processing")
     Component(analysis, "Analysis Functions or Classes", "Python", "Functions or classes to analyze processed data TO BE IMPLEMENTED")
+    Component(casa_runner, "CASA Runner", "Python", "Generate scripts and run CASA as subprocesses")
 }
 
 System_Ext(casa, "CASA", "Applications for ALMA data processing and analysis developed by NRAO")
@@ -26,9 +27,10 @@ Rel(logmgr, local_fs, "Writes log files to")
 Rel(query, alma_archive, "Queries data from")
 Rel(download, alma_archive, "Downloads data from")
 Rel(download, local_fs, "Reads/Writes data to")
-Rel(process, casa, "Invokes CASA tasks via")
-Rel(process, casa_lib, "Uses AnalysisUtils library via")
 Rel(process, local_fs, "Reads/Writes data to")
+Rel(process, casa_runner, "Generates scripts and runs CASA via")
+Rel(casa_runner, casa, "Invokes CASA tasks via")
+Rel(casa_runner, casa_lib, "Uses AnalysisUtils library via")
 Rel(casa, local_fs, "Reads/Writes data to")
 Rel(casa_lib, casa, "Uses CASA tasks via")
 @enduml

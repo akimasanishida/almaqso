@@ -1,0 +1,27 @@
+@startuml L4-_process_wrapper-activity
+start
+partition "Download ASDM" {
+    :filename = download(url);
+    if (download ok?) then (yes)
+    else (no)
+        :Report failure;
+        :Remove files if required;
+        stop
+    endif
+}
+partition "Process ASDM" {
+    :_process(filename);
+    if (process ok?) then (yes)
+    else (no)
+        :Report failure;
+        :Remove files if required;
+        stop
+    endif
+}
+partition "Report" {
+    :Report success;
+    :Write to successful ASDM list;
+}
+
+stop
+@enduml

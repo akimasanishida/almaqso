@@ -1,5 +1,5 @@
 ALMAQSO Documentation and Reference
-=====================
+=======================================
 
 .. toctree::
    :maxdepth: 2

@@ -46,7 +46,7 @@ See sample code in `sample` folder and [documentation](https://akimasanishida.gi
 **You do not have to install all shown below. Please install only what you need.**
 
 - [uv](https://github.com/astral-sh/uv): *Strongly recommended*. uv will manage everything about Python.
-- `plantuml` & `graphviz`: Install if you want to re-render the `docs/diagrams`.
+- `plantuml` & `graphviz`: Install if you want to build `docs` or re-render the `docs/diagrams`.
 - `imagemagick`: Install if you want to build PDF version documentation.
 
 You can reproduce the environment with uv:
@@ -70,13 +70,15 @@ SVG files will be generated in the same directory.
 plantuml --svg docs/diagrams/
 ```
 
+This is run by documentation building scripts below.
+
 ### Build documentation
 
 If you change the files in `docs/diagrams`, please recreate the SVG files first as written in **Render diagrams** section.
 
 **HTML:**
 ```shell
-make -C docs html
+./scripts/sphinx-build-html.sh
 ```
 If you do not use uv, run with python instead:
 ```shell
