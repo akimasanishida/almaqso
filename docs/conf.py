@@ -41,6 +41,15 @@ autodoc_member_order = 'bysource'
 
 html_theme = 'sphinx_rtd_theme'
 
+latex_documents = [
+    ('index', 'almaqso.tex', 'ALMAQSO Documentation and Reference Manual',
+     'Akimasa Nishida, Yuki Yoshimura', 'howto'),
+]
+latex_elements = {
+    "printindex": "",
+}
+latex_domain_indices = False
+
 # PlantUML configuration
 plantuml = "plantuml"
 plantuml_output_format = "png"

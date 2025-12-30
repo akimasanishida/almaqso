@@ -12,7 +12,9 @@ If you find something or have questions, please refer, report or ask from [issue
 
 ### CASA
 
-Please use CASA with ALMA pipeline. I am using `CASA version 6.6.1-17-pipeline-2024.1.0.8`.
+Please use [CASA](https://casa.nrao.edu/) **with ALMA pipeline**.
+Version 6 is only supported.
+I am using `CASA version 6.6.6-17-pipeline-2025.1.0.35`.
 
 ### CASA Modules
 
@@ -89,10 +91,10 @@ The script file will build PDF file and copy it to `docs/almaqso.pdf`.
 ./scripts/sphinx-build-pdf.sh
 ```
 
-When you need to reproduce the `almaqso.rst` file with the change of codes,
+<!-- When you need to reproduce the `almaqso.rst` file with the change of codes,
 ```shell
 uv run sphinx-apidoc -o docs almaqso
-```
+``` -->
 
 ### Branches
 
