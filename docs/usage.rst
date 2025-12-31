@@ -15,17 +15,17 @@ is shown below:
     from almaqso import Almaqso
 
     if __name__ == "__main__":
-        almaqso = Almaqso(
+        with Almaqso(
             target="J2000-1748",
             band=4,
             cycle="",
             work_dir="your_work_dir/",
             casapath="/usr/local/casa/casa-6.6.6-17-pipeline-2025.1.0.35-py3.10.el8/bin/casa"
-        )
-        almaqso.process(
-            n_parallel=2,
-            do_tclean=True,
-            tclean_mode=["mfs", "cube"],
-        )
+        ) as almaqso:
+            almaqso.process(
+                n_parallel=2,
+                do_tclean=True,
+                tclean_mode=["mfs", "cube"],
+            )
 
 :meth:`almaqso.Almaqso.process` has other useful options to control the processing and data storing.

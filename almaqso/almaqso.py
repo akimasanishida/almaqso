@@ -8,20 +8,30 @@ from pathlib import Path
 import subprocess
 import numpy as np
 
-from ._logmgr import initialize_log_listener, get_logger_for_subprocess, stop_log_listener
-from ._process import Process
-from ._query import Query
+from ._logmgr import (
+    initialize_log_listener,
+    get_logger_for_subprocess,
+    stop_log_listener,
+)
+from ._process import (
+    ProcessData,
+    init_process,
+    make_calibration_script,
+    calibrate,
+    remove_target,
+    imaging,
+    selfcal_and_imaging,
+    export_fits,
+    DIRS_NAME_IMAGES,
+)
+from ._query import query
 from ._download import download
 from ._analysis import Analysis
-
-
-_WORKER_LOGGER_NAME = None
+from ._utils import parse_selection
 
 
 def _init_worker(logger_name, queue):
-    global _WORKER_LOGGER_NAME, _WORKER_QUEUE
-    _WORKER_LOGGER_NAME, _WORKER_QUEUE = logger_name, queue
-    get_logger_for_subprocess(logger_name, queue)
+    _ = get_logger_for_subprocess(logger_name, queue)
 
 
 class Almaqso:
@@ -29,32 +39,72 @@ class Almaqso:
     Public class for ALMAQSO.
     Users can call this class and its methods to use ALMAQSO's functionality.
 
+    You can specify multiple bands and cycles with using `,` or `;` and `~`.
+    For instance, `"3,6"` (3 and 6), `"3;6"` (3 and 6), `"3~5"` (3 to 5), `"3,7-9"` (3, 7 to 9).
+
     Args:
-        json_filename (str): JSON file name obtained from the ALMA Calibration Catalog.
-        target (str): Target source name.
-        band (int): Band number to work with.
-        cycle (str, optional): project name to work with. You can specify multiple cycles using `,` or `;` and `~` like `"1,2"` (Cycle 1 and 2), `"1;2"` (Cycle 1 and 2), `"1~3"` (Cycle 1 to 3), `"1,4-6,8-10"` (Cycle 1, 4 to 6, 8 to 10), etc. Default is "" (all cycles).
+        target (list[str] | str): Target source name. If empty list or empty string is given, all sources is targeted.
+        band (list[int] | int | str): Band number to work with. Default is "" (all bands).
+        cycle (list[int] | int | str): project name to work with. Default is "" (all cycles).
         work_dir (str, optional): Working directory. Default is './'.
         casapath (str, optional): Path to the CASA executable. Default is 'casa'.
     """
+
     def __init__(
         self,
-        target: list[str],
-        band: int,
+        target: list[str] | str = "",
+        band: list[int] | int | str = "",
         cycle: str = "",
         work_dir: str = "./",
         casapath: str = "casa",
     ) -> None:
-        self._band: int = band
-        self._cycle: str = cycle
+        self._band: list[int] = parse_selection(band)
+        self._cycle: list[int] = parse_selection(cycle)
         self._work_dir: Path = Path(work_dir).absolute()
         self._original_dir: str = os.getcwd()
-        self._casapath: str = casapath
+        self._casapath: Path = Path(casapath)
         self._log_file_path: Path | None = None
-        self._sources: np.ndarray = np.unique(target)
+        self._sources: list[str] = list(np.unique(target).astype(str))
 
         # Prepare working dir
         os.makedirs(self._work_dir, exist_ok=True)
+
+        # Initialize log listener
+        self._logger_name, self._log_queue, self._log_listener = (
+            initialize_log_listener(self._work_dir)
+        )
+        logger = logging.getLogger(self._logger_name)
+        logger.info("ALMAQSO started.")
+
+    def __enter__(self) -> "Almaqso":
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        self.close()
+
+    def close(self) -> None:
+        """Close the log listener and clean up resources."""
+        if self._log_listener is not None:
+            logger = logging.getLogger(self._logger_name)
+            logger.info("ALMAQSO finished.")
+            stop_log_listener(self._log_listener)
+            self._log_listener = None
+
+    def __del__(self) -> None:
+        """Failsafe cleanup when object is garbage collected."""
+        self.close()
+
+    def __getstate__(self):
+        """Exclude unpicklable objects when serializing for multiprocessing."""
+        state = self.__dict__.copy()
+        # Remove unpicklable log queue and listener
+        state["_log_queue"] = None
+        state["_log_listener"] = None
+        return state
+
+    def __setstate__(self, state):
+        """Restore state after deserialization."""
+        self.__dict__.update(state)
 
     def _pre_process(self) -> None:
         os.chdir(self._work_dir)
@@ -65,7 +115,7 @@ class Almaqso:
                 os.remove(file)
 
     def _post_process(self) -> None:
-        logger = logging.getLogger(_WORKER_LOGGER_NAME)
+        logger = logging.getLogger(self._logger_name)
         logger.info("Processing complete.")
         os.chdir(self._original_dir)
 
@@ -102,8 +152,9 @@ class Almaqso:
         Returns:
             None
         """
-        logger_name, log_queue, log_listener = initialize_log_listener(self._work_dir)
-        logger: logging.Logger = get_logger_for_subprocess(logger_name, log_queue)
+        logger: logging.Logger = get_logger_for_subprocess(
+            self._logger_name, self._log_queue
+        )
         logger.info(f"Working directory: {self._work_dir}")
 
         try:
@@ -122,10 +173,14 @@ class Almaqso:
         logger.info(f"Target band: {self._band}")
         logger.info(f"Target cycle: {self._cycle if self._cycle != '' else 'all'}")
         logger.info(
-            "I will skip previously successful projects." if skip_previous_successful else "I will process all projects."
+            "I will skip previously successful projects."
+            if skip_previous_successful
+            else "I will process all projects."
         )
         if do_tclean:
-            logger.info(f"tclean will be performed. {', '.join(tclean_mode)} images will be created, and the weighting is \"{tclean_weightings[0]}\" with robust=\"{tclean_weightings[1]}\".")
+            logger.info(
+                f"tclean will be performed. {', '.join(tclean_mode)} images will be created, and the weighting is \"{tclean_weightings[0]}\" with robust=\"{tclean_weightings[1]}\"."
+            )
         else:
             logger.info("tclean will NOT be performed.")
         if do_selfcal:
@@ -134,24 +189,26 @@ class Almaqso:
             logger.info("Self-calibration will NOT be performed.")
         if do_export_fits:
             logger.info(f"Export to FITS: Yes")
-            logger.info(f"Remove CASA images after processing: {'Yes' if remove_casa_images else 'No'}")
+            logger.info(
+                f"Remove CASA images after processing: {'Yes' if remove_casa_images else 'No'}"
+            )
         else:
             logger.info(f"Export to FITS: No")
         logger.info(f"Remove ASDM after processing: {'Yes' if remove_asdm else 'No'}")
-        logger.info(f"Remove intermediate files after processing: {'Yes' if remove_intermediate else 'No'}")
+        logger.info(
+            f"Remove intermediate files after processing: {'Yes' if remove_intermediate else 'No'}"
+        )
 
-
-        for source in self._sources:
-            logger.info(f"Target source: {source}")
-            try:
-                query = Query(source, self._band, self._cycle).query()
-            except Exception as e:
-                logger.error(f"NETWORK ERROR while quering {source}: {e}")
-                return
-            for q in query:
-                data_size = round(float(q["size_bytes"]) / (1024**3), 2)
-                logger.info(f"{q['url']} will be downloaded ({data_size} GB)")
-                url_list.append(q["url"])
+        # for source in self._sources:
+        try:
+            query_result = query(self._sources, self._band, self._cycle)
+        except Exception as e:
+            logger.error(f"NETWORK ERROR while quering data: {e}")
+            return
+        for q in query_result:
+            data_size = round(float(q["size_bytes"]) / (1024**3), 2)
+            logger.info(f"{q['url']} will be downloaded ({data_size} GB)")
+            url_list.append(q["url"])
 
         if len(url_list) == 0:
             logger.warning("No data found for the specified source.")
@@ -193,7 +250,11 @@ class Almaqso:
         analysis_results = []
 
         # Download and process each data with parallel processing
-        with ProcessPoolExecutor(max_workers=n_parallel, initializer=_init_worker, initargs=(logger_name, log_queue)) as pool:
+        with ProcessPoolExecutor(
+            max_workers=n_parallel,
+            initializer=_init_worker,
+            initargs=(self._logger_name, self._log_queue),
+        ) as pool:
             future_to_url = {
                 pool.submit(
                     self._process_wrapper,
@@ -229,7 +290,6 @@ class Almaqso:
             logger.info(f"{filename}: {'success' if result else 'failed'}")
 
         self._post_process()
-        stop_log_listener(log_listener)
 
     def _process_wrapper(self, url: str, **kwargs) -> tuple[str, bool]:
         """
@@ -245,7 +305,7 @@ class Almaqso:
         filename: str | None = None
         asdmname: str | None = None
         ret: bool = False
-        logger = logging.getLogger(_WORKER_LOGGER_NAME)
+        logger = logging.getLogger(self._logger_name)
         try:
             filename = download(url)
             logger.info(f"Downloaded {filename} from {url}")
@@ -299,7 +359,7 @@ class Almaqso:
         """
         Wrapper function for the analysis process.
         """
-        logger = logging.getLogger(_WORKER_LOGGER_NAME)
+        logger = logging.getLogger(self._logger_name)
         logger.info(f"Processing file: {filename}")
 
         # Determine the working directory
@@ -324,12 +384,12 @@ class Almaqso:
             logger.error(f"Stop processing {asdmname}")
             return asdmname, False
 
-        analysis = Process(filename, self._casapath)
+        process_data: ProcessData = init_process(filename, self._casapath)
 
         # Make a CASA script
         try:
             logger.info(f"{asdmname}: Creating a calibration script")
-            ret = analysis.make_script()
+            ret = make_calibration_script(process_data)
             logger.info(f"{asdmname}: Generated calibration script")
             if ret is not None:
                 logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
@@ -342,7 +402,7 @@ class Almaqso:
         # Calibration
         try:
             logger.info(f"{asdmname}: Starting calibration")
-            ret = analysis.calibrate()
+            ret = calibrate(process_data)
             logger.info(f"{asdmname}: Calibration completed")
             if ret is not None:
                 logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
@@ -355,8 +415,11 @@ class Almaqso:
         # Remove target
         try:
             logger.info(f"{asdmname}: Removing target")
-            analysis.remove_target()
+            ret = remove_target(process_data)
             logger.info(f"{asdmname}: Target removed")
+            if ret is not None:
+                logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
+                logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
         except Exception as e:
             logger.error(f"ERROR while removing target: {e}")
             logger.error(f"Stop processing {asdmname}")
@@ -375,7 +438,14 @@ class Almaqso:
             try:
                 logger.info(f"{asdmname}: Performing imaging")
                 for mode in tclean_mode:
-                    analysis.tclean(mode, kw_tclean)
+                    ret = imaging(process_data, mode, kw_tclean)
+                    if ret is not None:
+                        logger.info(
+                            f"STDOUT ({asdmname}, mode={mode}): {ret['stdout']}"
+                        )
+                        logger.warning(
+                            f"STDERR ({asdmname}, mode={mode}): {ret['stderr']}"
+                        )
                 logger.info(f"{asdmname}: Imaging completed")
             except Exception as e:
                 logger.error(f"ERROR while imaging: {e}")
@@ -387,8 +457,11 @@ class Almaqso:
             kw_selfcal["specmode"] = kw_tclean["specmode"]
             try:
                 logger.info(f"{asdmname}: Performing self-calibration")
-                analysis.selfcal(kw_selfcal)
+                ret = selfcal_and_imaging(process_data, kw_selfcal, kw_tclean)
                 logger.info(f"{asdmname}: Self-calibration completed")
+                if ret is not None:
+                    logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
+                    logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
             except Exception as e:
                 logger.error(f"ERROR while self-calibration: {e}")
                 logger.error(f"Stop processing {asdmname}")
@@ -398,8 +471,11 @@ class Almaqso:
         if do_export_fits:
             try:
                 logger.info(f"{asdmname}: Exporting to FITS")
-                analysis.export_fits()
+                ret = export_fits(process_data)
                 logger.info(f"{asdmname}: Exported to FITS")
+                if ret is not None:
+                    logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
+                    logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
                 if remove_casa_images:
                     logger.info(f"{asdmname}: Removing CASA images")
                     shutil.rmtree("dirty")
@@ -423,8 +499,8 @@ class Almaqso:
         if remove_intermediate:
             try:
                 logger.info(f"{asdmname}: Removed intermediate files")
-                keep_dirs: list[str] = analysis.get_image_dirs() + [
-                    analysis.get_vis_name()
+                keep_dirs: list[str] = DIRS_NAME_IMAGES + [
+                    process_data.get_vis_name(),
                 ]
                 keep_files: list[str] = [
                     "*.py",
@@ -512,5 +588,3 @@ class Almaqso:
     #         #     return
 
     #         os.chdir(self._work_dir)
-
-    #     stop_log_listener(log_listener)

@@ -42,11 +42,7 @@ def initialize_log_listener(dir: Path) -> tuple[str, Queue[Any], logging.handler
     listener.start()
 
     # --- add logger for main process ---
-    logger: logging.Logger = logging.getLogger(logger_name)
-    logger.setLevel(logging.INFO)
-    logger.propagate = False  # prevent double logging
-    logger.handlers.clear()
-    logger.addHandler(logging.handlers.QueueHandler(queue))
+    logger = get_logger_for_subprocess(logger_name, queue)
 
     logger.info(f"Log file: {path_log_file}")
 
