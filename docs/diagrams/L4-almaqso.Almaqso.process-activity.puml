@@ -1,4 +1,4 @@
-@startuml L4-process-activity
+@startuml L4-almaqso.Almaqso.process-activity
 start
 
 partition "Preprocess" #LightYellow {

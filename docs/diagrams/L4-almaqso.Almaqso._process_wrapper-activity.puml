@@ -1,4 +1,4 @@
-@startuml L4-_process_wrapper-activity
+@startuml L4-almaqso.Almaqso._process_wrapper-activity
 start
 partition "Download ASDM" #LightYellow {
     :filename = download(url);

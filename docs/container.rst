@@ -21,7 +21,11 @@ Here, we explain only new components that were not explained in the System Conte
 
 C4-Container Diagram
 --------------------
+
+:numref:`fig-L2-container` shows the container diagram of the ALMAQSO system.
+
 .. figure:: diagrams/L2-container.svg
+   :name: fig-L2-container
    :class: thumbnail
    :target: _static/L2-container.svg
    :align: center

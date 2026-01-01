@@ -22,7 +22,10 @@ Components
 C4-Context Diagram
 -------------------
 
+:numref:`fig-L1-context` shows the system context diagram of the ALMAQSO.
+
 .. figure:: ./diagrams/L1-context.svg
+   :name: fig-L1-context
    :class: thumbnail
    :target: _static/L1-context.svg
    :align: center

@@ -30,7 +30,10 @@ Here, we explain the main components of the ALMAQSO Library:
 C4-Component Diagram
 --------------------
 
+:numref:`fig-L3-component` shows the component diagram of the ALMAQSO Library.
+
 .. figure:: diagrams/L3-component.svg
+   :name: fig-L3-component
    :class: thumbnail
    :target: _static/L3-component.svg
    :align: center

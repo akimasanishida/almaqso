@@ -36,6 +36,9 @@ add_module_names = False
 
 autodoc_member_order = 'bysource'
 
+# Enable figure numbering
+numfig = True
+
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
@@ -49,7 +52,3 @@ latex_elements = {
     "printindex": "",
 }
 latex_domain_indices = False
-
-# PlantUML configuration
-plantuml = "plantuml"
-plantuml_output_format = "png"

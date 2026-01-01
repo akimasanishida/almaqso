@@ -1,4 +1,4 @@
-@startuml L4-sort_images-activity
+@startuml L4-almaqso.Almaqso.sort_images-activity
 start
 
 partition "Preparation" #LightYellow {
