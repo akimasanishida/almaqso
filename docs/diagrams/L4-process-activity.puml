@@ -1,13 +1,13 @@
 @startuml L4-process-activity
 start
 
-partition "Preprocess" {
+partition "Preprocess" #LightYellow {
     :Initialize logging;
     :Change directory to working dir;
     :Remove all *.asdm.sdm.tar files;
     :Report process settings;
 }
-partition "Query data" {
+partition "Query data" #LightYellow {
     :query = Query(source, band, cycle).query();
     if (query success?) then (yes)
     else (no)
@@ -21,7 +21,7 @@ partition "Query data" {
         :remove successful_asdms file;
     endif
 }
-partition "Download and process ASDMs" {
+partition "Download and process ASDMs" #LightYellow {
     fork
         :_process_wrapper(ASDM_1);
     fork again
@@ -30,7 +30,7 @@ partition "Download and process ASDMs" {
         :_process_wrapper(ASDM_N);
     end fork
 }
-partition "Postprocess" {
+partition "Postprocess" #LightYellow {
     :Summarize results;
     :Preprocess of logging;
 }

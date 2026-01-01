@@ -12,3 +12,4 @@ However, :doc:`context` may give researchers an overview of this library.
    context
    container
    component
+   uml-activity

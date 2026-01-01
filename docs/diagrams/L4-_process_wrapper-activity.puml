@@ -1,6 +1,6 @@
 @startuml L4-_process_wrapper-activity
 start
-partition "Download ASDM" {
+partition "Download ASDM" #LightYellow {
     :filename = download(url);
     if (download ok?) then (yes)
     else (no)
@@ -9,7 +9,7 @@ partition "Download ASDM" {
         stop
     endif
 }
-partition "Process ASDM" {
+partition "Process ASDM" #LightYellow {
     :_process(filename);
     if (process ok?) then (yes)
     else (no)
@@ -18,7 +18,7 @@ partition "Process ASDM" {
         stop
     endif
 }
-partition "Report" {
+partition "Report" #LightYellow {
     :Report success;
     :Write to successful ASDM list;
 }

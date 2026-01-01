@@ -28,4 +28,4 @@ is shown below:
                 tclean_mode=["mfs", "cube"],
             )
 
-:meth:`almaqso.Almaqso.process` has other useful options to control the processing and data storing.
+:py:meth:`almaqso.Almaqso.process` has other useful options to control the processing and data storing.
