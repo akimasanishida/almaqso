@@ -45,7 +45,7 @@ numfig = True
 html_theme = 'sphinx_rtd_theme'
 
 latex_documents = [
-    ('index', 'almaqso.tex', 'ALMAQSO Documentation and Reference Manual',
+    ('index', 'manual.tex', 'ALMAQSO Documentation and Reference Manual',
      'Akimasa Nishida, Yuki Yoshimura', 'howto'),
 ]
 latex_elements = {

@@ -10,6 +10,7 @@ Pipfile.lock
 /test_dir*/
 /invest/
 /.vscode/
+docs/manual.pdf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
