@@ -539,6 +539,70 @@ class Almaqso:
         # Processing complete
         logger.info(f"Processing {asdmname} is done.")
         return asdmname, not found_severe_error
+    
+    def sort_images(self, remove_non_target: bool = False, keep_original: bool = False) -> None:
+        """
+        Sort images in the working directory into subdirectories based on their target names.
+
+        This method only works if images are exported to FITS format.
+        `selfcal_fits` directories are prioritized to `dirty_fits` directories.
+        The images are moved to subdirectories named after their target names.
+        The image names will be renamed to include the project code.
+        For example, an image named `uid___A002_X123456_X7890/dirty_fits/J1234+5678_mfs.fits` will be moved to `J1234+5678/uid___A002_X123456_X7890_dirty_J1234+5678_mfs.fits`.
+
+        Args:
+            remove_non_target: If True, remove images that do not match any target names. Default is False.
+            keep_original: If True, keep the original images in their locations. Default is False.
+        """
+        logger = logging.getLogger(self._logger_name)
+        logger.info("Sorting FITS images into target directories.")
+        logger.info(f"Working directory: {self._work_dir}")
+        logger.info(f"Target sources: {', '.join(self._sources)}")
+        
+        # Search uid___* directories
+        dirs_in = [d.name for d in self._work_dir.iterdir() if d.is_dir() and d.name.startswith("uid___")]
+        logger.info(f"Found {len(dirs_in)} data directories to sort images from: {', '.join(dirs_in)}")
+        
+        # Create target directories
+        for source in self._sources:
+            (self._work_dir / source).mkdir(exist_ok=True)
+        
+        # Move images to target directories
+        for d in dirs_in:
+            # Search FITS directories
+            project_dir = self._work_dir / d
+            selfcal_fits_dir = project_dir / "selfcal_fits"
+            dirty_fits_dir = project_dir / "dirty_fits"
+            
+            if selfcal_fits_dir.exists():
+                fits_dir = selfcal_fits_dir
+                prefix_name = d + "_selfcal_"
+            elif dirty_fits_dir.exists():
+                fits_dir = dirty_fits_dir
+                prefix_name = d + "_dirty_"
+            else:
+                logger.warning(f"No FITS directory found in {d}. Skipping.")
+                continue
+            
+            fits_files = list(fits_dir.glob("*.fits"))
+            for fits_file in fits_files:
+                # Get target name from file name
+                # image format: target_<mfs/spwNN_mfs/spwNN_cube>.fits
+                target_name = fits_file.stem.split("_")[0]
+                
+                if target_name in self._sources:
+                    new_path = self._work_dir / target_name / (prefix_name + fits_file.name)
+                    if keep_original:
+                        shutil.copy(fits_file, new_path)
+                        logger.info(f"Copied {fits_file} to {new_path}")
+                    else:
+                        shutil.move(str(fits_file), str(new_path))
+                        logger.info(f"Moved {fits_file} to {new_path}")
+                elif remove_non_target:
+                    fits_file.unlink()
+                    logger.info(f"Removed {fits_file} as it does not match any target.")
+                else:
+                    logger.debug(f"Skipping {fits_file} (target '{target_name}' not in sources)")
 
     # def analysis(self) -> None:
     #     """
