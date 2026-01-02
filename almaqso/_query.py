@@ -18,6 +18,9 @@ def _create_query(source_names: list[str], bands: list[int], cycles: list[int]) 
     """
     conditions = []
 
+    # Remove empty source names "" from the list
+    source_names = [name for name in source_names if name.strip()]
+
     if source_names:
         query_sources = " OR ".join(
             [f"target_name = '{source_name}'" for source_name in source_names]
@@ -44,7 +47,7 @@ def _create_query(source_names: list[str], bands: list[int], cycles: list[int]) 
         WHERE {where_clause}
     """
 
-    return query
+    return query.strip() + "\n"
 
 
 @retry(

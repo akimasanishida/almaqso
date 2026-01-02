@@ -22,7 +22,7 @@ class TestCreateQueryExactMatch:
           AND data_rights = 'Public'
     """
 
-        assert result == expected
+        assert result.strip() == expected.strip()
 
     def test_exact_query_multiple_sources(self):
         """Test exact query with multiple sources."""
@@ -41,7 +41,7 @@ class TestCreateQueryExactMatch:
           AND data_rights = 'Public'
     """
 
-        assert result == expected
+        assert result.strip() == expected.strip()
 
     def test_exact_query_multiple_bands(self):
         """Test exact query with multiple bands."""
@@ -60,7 +60,7 @@ class TestCreateQueryExactMatch:
           AND data_rights = 'Public'
     """
 
-        assert result == expected
+        assert result.strip() == expected.strip()
 
     def test_exact_query_multiple_cycles(self):
         """Test exact query with multiple cycles."""
@@ -79,7 +79,7 @@ class TestCreateQueryExactMatch:
           AND data_rights = 'Public'
     """
 
-        assert result == expected
+        assert result.strip() == expected.strip()
 
     def test_exact_query_no_sources(self):
         """Test exact query with empty sources."""
@@ -97,7 +97,7 @@ class TestCreateQueryExactMatch:
           AND data_rights = 'Public'
     """
 
-        assert result == expected
+        assert result.strip() == expected.strip()
 
     def test_exact_query_no_bands(self):
         """Test exact query with empty bands."""
@@ -115,7 +115,7 @@ class TestCreateQueryExactMatch:
           AND data_rights = 'Public'
     """
 
-        assert result == expected
+        assert result.strip() == expected.strip()
 
     def test_exact_query_no_cycles(self):
         """Test exact query with empty cycles."""
@@ -133,7 +133,7 @@ class TestCreateQueryExactMatch:
           AND data_rights = 'Public'
     """
 
-        assert result == expected
+        assert result.strip() == expected.strip()
 
     def test_exact_query_all_empty(self):
         """Test exact query with all empty lists."""
@@ -149,7 +149,7 @@ class TestCreateQueryExactMatch:
         WHERE data_rights = 'Public'
     """
 
-        assert result == expected
+        assert result.strip() == expected.strip()
 
     def test_exact_query_complex(self):
         """Test exact query with complex combination."""
@@ -168,7 +168,7 @@ class TestCreateQueryExactMatch:
           AND data_rights = 'Public'
     """
 
-        assert result == expected
+        assert result.strip() == expected.strip()
 
     def test_query_sql_injection_safety(self):
         """Test that special SQL characters are properly handled."""
@@ -201,7 +201,7 @@ class TestCreateQueryExactMatch:
           AND data_rights = 'Public'
     """
 
-        assert result == expected
+        assert result.strip() == expected.strip()
 
     def test_exact_query_large_cycle_number(self):
         """Test exact query with large cycle number (cycle 10 = year 2021)."""
@@ -220,7 +220,7 @@ class TestCreateQueryExactMatch:
           AND data_rights = 'Public'
     """
 
-        assert result == expected
+        assert result.strip() == expected.strip()
 
     def test_exact_query_all_alma_bands(self):
         """Test exact query with all ALMA bands (3-10)."""
@@ -239,4 +239,41 @@ class TestCreateQueryExactMatch:
           AND data_rights = 'Public'
     """
 
-        assert result == expected
+        assert result.strip() == expected.strip()
+
+    def test_empty_target_name(self):
+        """Test exact query with empty target name."""
+        source_names = [""]
+        bands = [7]
+        cycles = [0]
+
+        result = _create_query(source_names, bands, cycles)
+
+        expected = """
+        SELECT *
+        FROM ivoa.obscore
+        WHERE (band_list = '7')
+          AND (proposal_id LIKE '2011.%')
+          AND data_rights = 'Public'
+    """
+
+        assert result.strip() == expected.strip()
+
+    def test_contain_empty_target_name(self):
+        """Test exact query with a list containing an empty target name."""
+        source_names = ["NGC1097", ""]
+        bands = [7]
+        cycles = [0]
+
+        result = _create_query(source_names, bands, cycles)
+
+        expected = """
+        SELECT *
+        FROM ivoa.obscore
+        WHERE (target_name = 'NGC1097')
+          AND (band_list = '7')
+          AND (proposal_id LIKE '2011.%')
+          AND data_rights = 'Public'
+    """
+
+        assert result.strip() == expected.strip()
