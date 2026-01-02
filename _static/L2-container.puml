@@ -1,5 +1,5 @@
 @startuml L2-container
-!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include c4/C4_Container.puml
 
 LAYOUT_LEFT_RIGHT()
 
