@@ -11,7 +11,7 @@ permissions:
   pages: write
 
 jobs:
-  build:
+  deploy_docs:
     runs-on: ubuntu-latest
 
     steps:
@@ -35,4 +35,4 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/html
+          publish_dir: ./docs/_build/html
