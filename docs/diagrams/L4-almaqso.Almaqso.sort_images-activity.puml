@@ -3,7 +3,7 @@ start
 
 partition "Preparation" #LightYellow {
     :Search project directories in the working directory, e.g., uid___A002_X123456_X7890`;
-    :Create directories for target images, e.g., J1234+5678;
+    :Create directories for target images, e.g., working_dir/uid___A002_X123456_X7890/J1234+5678/fits;
 }
 partition "Sort images" #LightYellow {
     while (more project directories?) is (yes)
