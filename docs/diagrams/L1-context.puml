@@ -1,5 +1,5 @@
 @startuml L1-context
-!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include c4/C4_Context.puml
 
 LAYOUT_LEFT_RIGHT()
 
