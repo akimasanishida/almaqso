@@ -1,4 +1,5 @@
 from glob import glob
+from pathlib import Path
 from astropy.io import fits
 import numpy as np
 import os
@@ -6,149 +7,126 @@ import csv
 import matplotlib.pyplot as plt
 
 
-class Analysis:
-    def __init__(self):
-        self._dir_plot = "plots"
-        self._frequencies = {}
-        self._spectrums = {}
-        self._optical_depths = {}
+SPECTRUM_DIR = "spectrum"
 
-    def get_spectrum(self):
-        """
-        Get the spectrum of the target from the cube FITS image.
-        """
-        # Search "dirty_fits/*.fits" files
-        fits_files = glob("dirty_fits/*_cube.fits")
 
+def _get_spectrum(fits_file: Path) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Extract frequency and spectrum data from a cube FITS file.
+
+    Args:
+        fits_file (Path): Path to the cube FITS file.
+    
+    Returns:
+        tuple[np.ndarray, np.ndarray]: Frequencies (GHz) and corresponding spectrum (Jy).
+    """
+    with fits.open(fits_file) as hdul:
+        data_header = hdul[0].header  # pyright: ignore[reportAttributeAccessIssue]
+        data = hdul[0].data  # pyright: ignore[reportAttributeAccessIssue]
+        data = np.squeeze(data)  # (stokes, chan, y, x) -> (chan, y, x)
+
+        # Frequency axis
+        CRVAL3 = data_header["CRVAL3"]
+        CRPIX3 = data_header["CRPIX3"]
+        CDELT3 = data_header["CDELT3"]
+
+    frequencies = (
+        CRVAL3 + (np.arange(data.shape[0]) - (CRPIX3 - 1)) * CDELT3
+    ) / 1e9  # in GHz
+
+    spectrums = np.nanmax(data, axis=(1, 2))  # Jy
+
+    return frequencies, spectrums
+
+
+def _plot_spectrum(
+    frequencies: np.ndarray, spectrums: np.ndarray, fits_name: str, output_png: Path
+) -> None:
+    """
+    Plot the spectrum of the target.
+
+    Args:
+        frequencies (np.ndarray): Frequencies (GHz).
+        spectrums (np.ndarray): Corresponding spectrum (Jy).
+        fits_name (str): Name of the FITS file.
+        output_png (Path): Path to save the output PNG file.
+
+    Returns:
+        None
+    """
+    # index that values are 0 will be removed
+    mask = spectrums > 0
+    frequencies = frequencies[mask]
+    spectrums = spectrums[mask]
+
+    # Calculate y-axis limits based on the standard deviation
+    y_mean = np.mean(spectrums)
+    y_std = np.std(spectrums)
+    y_min = y_mean - 5 * y_std
+    y_max = y_mean + 5 * y_std
+
+    # Get the minimun larger than y_min and maximum smaller than y_max
+    y_min_data = np.min(spectrums[spectrums > y_min])
+    y_max_data = np.max(spectrums[spectrums < y_max])
+
+    y_min_lim = y_mean - (y_mean - y_min_data) * 1.2
+    y_max_lim = y_mean + (y_max_data - y_mean) * 1.2
+
+    # Plot the spectrum
+    fig, ax = plt.subplots()
+    ax.plot(frequencies, spectrums)
+    ax.set_xlabel("Frequency (GHz)")
+    ax.set_ylabel("Flux (Jy)")
+    ax.set_ylim(y_min_lim, y_max_lim)
+    ax.set_title(f"Spectrum from {fits_name}")
+    ax.grid()
+    fig.tight_layout()
+    fig.savefig(output_png, dpi=300)
+
+
+def _write_spectrum_csv(frequencies: np.ndarray, spectrums: np.ndarray, output_csv: Path) -> None:
+    """
+    Write the spectrum data to CSV files.
+
+    Args:
+        frequencies (np.ndarray): Frequencies (GHz).
+        spectrums (np.ndarray): Corresponding spectrum (Jy).
+        output_csv (Path): Path to save the output CSV file.
+
+    Returns:
+        None
+    """
+    with open(output_csv, mode="w", newline="") as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow(["Frequency (GHz)", "Flux (Jy)"])
+        for freq, flux in zip(frequencies, spectrums):
+            writer.writerow([freq, flux])
+
+
+def calc_spectrum(working_dir: Path, sources: list[str]):
+    """
+    Calculate the spectrum of the target sources from the cube FITS image.
+
+    Args:
+        working_dir (Path): The working directory containing source subdirectories.
+        sources (list[str]): List of source names to process.
+
+    Returns:
+        None
+    """
+    # Search for cube FITS files
+    for source in sources:
+        source_dir: Path = working_dir / source
+        fits_files = list((source_dir / "fits").glob("*_cube.fits"))
         # Create the output directory
-        os.makedirs(self._dir_plot, exist_ok=True)
+        (source_dir / SPECTRUM_DIR).mkdir(exist_ok=True)
 
         for fits_file in fits_files:
-            with fits.open(fits_file) as hdul:
-                # Get the beam size in pixels
-                data_header = hdul[0].header
-                data = hdul[0].data
-                data = np.squeeze(data)  # (stokes, chan, y, x) -> (chan, y, x)
-
-                # Frequency axis
-                CRVAL3 = data_header["CRVAL3"]
-                CRPIX3 = data_header["CRPIX3"]
-                CDELT3 = data_header["CDELT3"]
-
-            freqs = (
-                CRVAL3 + (np.arange(data.shape[0]) - (CRPIX3 - 1)) * CDELT3
-            ) / 1e9  # in GHz
-
-            fits_name = os.path.basename(fits_file)
-            self._frequencies[fits_name] = freqs
-            self._spectrums[fits_name] = np.nanmax(data, axis=(1, 2))  # Jy
-            # print(freqs)
-            # print(data)
-
-    def plot_spectrum(self):
-        """
-        Plot the spectrum of the target.
-        """
-        for fits_name, spectrum in self._spectrums.items():
-            freqs = self._frequencies[fits_name]
-
-            # index that values are 0 will be removed
-            mask = spectrum > 0
-            freqs = freqs[mask]
-            spectrum = spectrum[mask]
-
-            # Calculate y-axis limits based on the standard deviation
-            y_mean = np.mean(spectrum)
-            y_std = np.std(spectrum)
-            y_min = y_mean - 5 * y_std
-            y_max = y_mean + 5 * y_std
-
-            # Get the minimun larger than y_min and maximum smaller than y_max
-            y_min_data = np.min(spectrum[spectrum > y_min])
-            y_max_data = np.max(spectrum[spectrum < y_max])
-
-            y_min_lim = y_mean - (y_mean - y_min_data) * 1.2
-            y_max_lim = y_mean + (y_max_data - y_mean) * 1.2
-
+            frequencies, spectrums = _get_spectrum(fits_file)
+            fits_name = fits_file.name
             # Plot the spectrum
-            fig, ax = plt.subplots()
-            ax.plot(freqs, spectrum)
-            ax.set_xlabel("Frequency (GHz)")
-            ax.set_ylabel("Flux (Jy)")
-            ax.set_ylim(y_min_lim, y_max_lim)
-            ax.set_title(f"Spectrum from {fits_name}")
-            ax.grid()
-            fig.tight_layout()
-            fig.savefig(
-                os.path.join(self._dir_plot, f"{fits_name}_spectrum.png"), dpi=300
-            )
-
-    def write_spectrum_csv(self):
-        """
-        Write the spectrum data to CSV files.
-        """
-        for fits_name, spectrum in self._spectrums.items():
-            freqs = self._frequencies[fits_name]
-
-            csv_name = os.path.join(
-                self._dir_plot, f"{fits_name.replace('.fits', '')}_spectrum.csv"
-            )
-            with open(csv_name, mode="w", newline="") as csv_file:
-                writer = csv.writer(csv_file)
-                writer.writerow(["Frequency (GHz)", "Flux (Jy)"])
-                for freq, flux in zip(freqs, spectrum):
-                    writer.writerow([freq, flux])
-
-    def calc_optical_depth(self):
-        """
-        Calculate the optical depth from the spectrum data.
-        TODO: Need to correct! The method is wrong.
-        """
-        for fits_name, spectrum in self._spectrums.items():
-            # Calculate the base intensity
-            intensity_base_prev = np.mean(spectrum)
-            intensity_std_prev = np.std(spectrum)
-            for i in range(100):
-                # Eliminate the outliers (3 sigma)
-                mask = np.abs(spectrum - intensity_base_prev) < 3 * intensity_std_prev
-                filtered_intensity = spectrum[mask]
-
-                # Calculate the mean and standard deviation
-                intensity_base = np.mean(filtered_intensity)
-                intensity_std = np.std(filtered_intensity)
-
-                if abs(intensity_base_prev - intensity_base) < 1e-6 and i > 5:
-                    break
-
-                if i == 99:
-                    raise RuntimeError(
-                        f"Failed to calculate the base intensity for {fits_name}."
-                    )
-
-                intensity_base_prev = intensity_base
-                intensity_std_prev = intensity_std
-
-            # Calculate the optical depth
-            optical_depth = -np.log(spectrum / intensity_base)
-
-            self._optical_depths[fits_name] = optical_depth
-
-    def plot_optical_depth(self):
-        """
-        Plot the optical depth of the target.
-        """
-        for fits_name, optical_depth in self._optical_depths.items():
-            freqs = self._frequencies[fits_name]
-
-            # Plot the optical depth
-            fig, ax = plt.subplots()
-            ax.plot(freqs, optical_depth)
-            ax.set_xlabel("Frequency (GHz)")
-            ax.set_ylabel("Optical Depth")
-            ax.set_title(f"Optical Depth from {fits_name}")
-            ax.grid()
-            fig.tight_layout()
-            fig.savefig(
-                os.path.join(self._dir_plot, f"{fits_name}_optical_depth.png"), dpi=300
-            )
-            plt.close(fig)
+            output_png = source_dir / SPECTRUM_DIR / f"{fits_name.replace('.fits', '_spectrum.png')}"
+            _plot_spectrum(frequencies, spectrums, fits_name, output_png)
+            # Write the spectrum to CSV
+            output_csv = source_dir / SPECTRUM_DIR / f"{fits_name.replace('.fits', '_spectrum.csv')}"
+            _write_spectrum_csv(frequencies, spectrums, output_csv)

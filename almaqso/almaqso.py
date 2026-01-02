@@ -3,6 +3,7 @@ import glob
 import logging
 import os
 import shutil
+from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 import subprocess
@@ -26,7 +27,7 @@ from ._process import (
 )
 from ._query import query
 from ._download import download
-from ._analysis import Analysis
+from ._analysis import calc_spectrum
 from ._utils import parse_selection
 
 
@@ -168,10 +169,10 @@ class Almaqso:
 
         # Log the processing settings
         logger.info("== Processing settings ==")
-        logger.info(f"Target sources: {', '.join(self._sources)}")
+        logger.info(f"Target sources: {', '.join(self._sources) if self._sources != [] else 'all'}")
+        logger.info(f"Target band: {self._band if self._band != [] else 'all'}")
+        logger.info(f"Target cycle: {self._cycle if self._cycle != [] else 'all'}")
         logger.info(f"Number of parallel processes: {n_parallel}")
-        logger.info(f"Target band: {self._band}")
-        logger.info(f"Target cycle: {self._cycle if self._cycle != '' else 'all'}")
         logger.info(
             "I will skip previously successful projects."
             if skip_previous_successful
@@ -565,7 +566,7 @@ class Almaqso:
         
         # Create target directories
         for source in self._sources:
-            (self._work_dir / source).mkdir(exist_ok=True)
+            (self._work_dir / source / "fits").mkdir(exist_ok=True)
         
         # Move images to target directories
         for d in dirs_in:
@@ -604,51 +605,18 @@ class Almaqso:
                 else:
                     logger.debug(f"Skipping {fits_file} (target '{target_name}' not in sources)")
 
-    # def analysis(self) -> None:
-    #     """
-    #     Perform the analysis.
-    #     """
-    #     logger_name, log_queue, log_listener = initialize_log_listener(self._work_dir)
-    #     _WORKER_LOGGER_NAME = logger_name
-    #     logger = logging.getLogger(_WORKER_LOGGER_NAME)
-    #     os.chdir(self._work_dir)
+    def analysis_calc_spectrum(self) -> None:
+        """
+        Perform the spectrum analysis.
 
-    #     # Search directories starting with "uid___"
-    #     dirs = [
-    #         d for d in os.listdir(".") if os.path.isdir(d) and d.startswith("uid___")
-    #     ]
+        This method only works if cube FITS images are exported and `self.sort_images()` has been called.
+        """
+        logger = logging.getLogger(self._logger_name)
+        logger.info("Starting spectrum analysis.")
 
-    #     # For each directory, execute the analysis
-    #     for d in dirs:
-    #         logger.info(f"Analyzing {d}")
-    #         os.chdir(d)
-    #         # Perform the analysis
-    #         analysis = Analysis()
-
-    #         # Get the spectrum
-    #         try:
-    #             analysis.get_spectrum()
-    #             logger.info(f"{d}: Spectrum analysis completed")
-    #             analysis.plot_spectrum()
-    #             logger.info(f"{d}: Spectrum plot created")
-    #             analysis.write_spectrum_csv()
-    #             logger.info(f"{d}: Write spectrum CSV completed")
-    #         except Exception as e:
-    #             logger.error(f"ERROR while getting spectrum: {e}")
-    #             logger.error(f"Stop analyzing {d}")
-    #             os.chdir(self._work_dir)
-    #             return
-
-    #         # Calculate the optical depth
-    #         # try:
-    #         #     analysis.calc_optical_depth()
-    #         #     logger.info(f"{d}: Optical depth calculation completed")
-    #         #     analysis.plot_optical_depth()
-    #         #     logger.info(f"{d}: Optical depth plot created")
-    #         # except Exception as e:
-    #         #     logger.error(f"ERROR while calculating optical depth: {e}")
-    #         #     logger.error(f"Stop analyzing {d}")
-    #         #     os.chdir(self._work_dir)
-    #         #     return
-
-    #         os.chdir(self._work_dir)
+        try:
+            calc_spectrum(self._work_dir, self._sources)
+            logger.info("Spectrum analysis completed.")
+        except Exception as e:
+            logger.error(f"ERROR during spectrum analysis: {e}")
+            return
