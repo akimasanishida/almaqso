@@ -1,0 +1,97 @@
+@startuml L4-almaqso.Almaqso._process-activity
+start
+partition "Preprocess" #LightYellow {
+    :Extract name of ASDM from downloaded tarball;
+    :Create working directory for the ASDM. If exists, remove it first;
+}
+partition "Extract ASDM" #LightYellow {
+    :Extract ASDM tarball into working directory;
+    if (extraction success?) then (yes)
+    else (no)
+        stop
+    endif
+}
+partition "Process ASDM" #LightYellow {
+    :Create calibration script with make_calibration_script();
+    if (script creation success?) then (yes)
+    else (no)
+        stop
+    endif
+
+    :Run calibration script;
+    if (processing success?) then (yes)
+    else (no)
+        stop
+    endif
+
+    :Remove target source of project (keep calibration sources only);
+    if (removal success?) then (yes)
+    else (no)
+        stop
+    endif
+
+    if (Required imaging?: `do_tlcean`?) then (yes)
+        partition "Imaging" #Moccasin {
+            if (Required self-calibration later?: `do_selfcal`?) then (yes)
+                :savemodel = 'modelcolumn';
+            else (no)
+                :savemodel = 'none';
+            endif
+            :Run tclean;
+            if (imaging success?) then (yes)
+            else (no)
+                stop
+            endif
+        }
+    else (no)
+    endif
+
+    if (Required self-calibration?: `do_selfcal`?) then (yes)
+        partition "Self-calibration and generate 2nd images" #Moccasin {
+            :Perform self-calibration;
+            if (self-calibration success?) then (yes)
+            else (no)
+                stop
+            endif
+        }
+    else (no)
+    endif
+
+    if (Required exporting images to FITS?: `export_fits`?) then (yes)
+        partition "Export images to FITS" #Moccasin {
+            :Export images to FITS format;
+            if (Required to remove CASA images after export?: `remove_casa_images`?) then (yes)
+                :Remove CASA images;
+            else (no)
+            endif
+            if (export and remove success?) then (yes)
+            else (no)
+                stop
+            endif
+        }
+    else (no)
+    endif
+
+    partition "Cleanup" #Moccasin {
+        if (Required to remove ASDM?: `remove_asdm`?) then (yes)
+            :Remove ASDM working directory;
+        else (no)
+        endif
+
+        if (Required to remove intermediate files?: `remove_intermediate`?) then (yes)
+            :Remove intermediate files. Only keep images dirs, MS and *.py and *.log files;
+        else (no)
+        endif
+    }
+
+    partition "Check success" #Moccasin {
+        while (more log files?) is (yes)
+            if (log files contains "SEVERE"?) then (yes)
+                :Mark ASDM process as failed;
+            else (no)
+            endif
+        endwhile
+    }
+}
+stop
+@enduml

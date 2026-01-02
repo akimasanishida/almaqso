@@ -1,14 +1,10 @@
-name: Build and Deploy Docs
+name: Check and Test code
 
 on:
   push:
     branches: ["main"]
-  workflow_dispatch:
-
-permissions:
-  contents: write
-  id-token: write
-  pages: write
+  pull_request:
+    branches: ["main"]
 
 jobs:
   build:
@@ -27,12 +23,10 @@ jobs:
       - name: Install the project
         run: uv sync --locked --all-extras --dev
 
-      - name: Build documentation
+      - name: Check code formatting
         run: |
-          ./scripts/sphinx-build-html.sh
+          uv run ruff check almaqso --exclude _templates
+          uv run black --check --diff --color almaqso --exclude _templates
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/html
+      - name: Run tests
+        run: uv run pytest -q --maxfail=1 --disable-warnings

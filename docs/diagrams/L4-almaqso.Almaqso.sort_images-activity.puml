@@ -1,0 +1,47 @@
+@startuml L4-almaqso.Almaqso.sort_images-activity
+start
+
+partition "Preparation" #LightYellow {
+    :Search project directories in the working directory, e.g., uid___A002_X123456_X7890`;
+    :Create directories for target images, e.g., working_dir/uid___A002_X123456_X7890/J1234+5678/fits;
+}
+partition "Sort images" #LightYellow {
+    while (more project directories?) is (yes)
+        if (`selfcal_fits` or `dirty_fits` exists?) then (yes)
+            partition "Select target image directory" #Moccasin {
+                if (`selfcal_fits` exists?) then (yes)
+                    :Images in `selfcal_fits` will be sorted;
+                elseif (`dirty_fits` exists?) then (yes)
+                    :Images in `dirty_fits` will be sorted;
+                else (no)
+                    ' Skip this project directory
+                    ' How to express "continue" in PlantUML?
+                endif
+            }
+            partition "Move/Copy/Remove images" #Moccasin {
+                while (more images in the selected directory?) is (yes)
+                    :Extract target name from filename (part before first underscore);
+                    if (This is target source?) then (yes)
+                        if (`keep_original`?) then (yes)
+                            :Copy image to target directory;
+                        else (no)
+                            :Move image to target directory;
+                        endif
+                    else (no)
+                        if (`remove_non_target`?) then (yes)
+                            :Remove image;
+                        else (no)
+                            ' Do nothing
+                        endif
+                    endif
+                endwhile
+            }
+        else (no)
+            ' No images to sort in this project directory
+        endif
+    endwhile
+                
+}
+
+end
+@enduml

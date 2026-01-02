@@ -1,0 +1,20 @@
+@startuml L1-context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_LEFT_RIGHT()
+
+Person(user, "User", "Researcher working with calibration source of ALMA")
+System(system, "ALMAQSO", "Software for automatically analyzing ALMA calibration sources")
+System_Ext(casa, "CASA", "Applications for ALMA data processing and analysis developed by NRAO")
+System_Ext(casa_lib, "AnalysisUtils", "External library for CASA")
+System_Ext(alma_archive, "ALMA Science Archive", "Archive for ALMA data")
+System_Ext(local_fs, "Local File System", "User's local file system")
+
+Rel(user, system, "Uses")
+Rel(system, casa, "Uses CASA tasks")
+Rel(system, casa_lib, "Uses AnalysisUtils library")
+Rel(casa_lib, casa, "Uses CASA tasks")
+Rel(system, alma_archive, "Queries and downloads data from")
+Rel(system, local_fs, "Reads/Writes data")
+Rel(casa, local_fs, "reads/writes data to")
+@enduml
