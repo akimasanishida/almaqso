@@ -6,7 +6,7 @@ from tqdm import tqdm
 def download(url: str) -> str:
     """
     Download ALMA data from the specified URL and save it to a local file.
-    
+
     Args:
         url (str): URL of the data to download.
     """
@@ -17,14 +17,17 @@ def download(url: str) -> str:
 
         total_size = int(response.headers.get("content-length", 0))
 
-        with open(filename, "wb") as file, tqdm(
-            desc=filename,
-            total=total_size,
-            unit="iB",
-            unit_scale=True,
-            unit_divisor=1024,
-            leave=False,
-        ) as bar:
+        with (
+            open(filename, "wb") as file,
+            tqdm(
+                desc=filename,
+                total=total_size,
+                unit="iB",
+                unit_scale=True,
+                unit_divisor=1024,
+                leave=False,
+            ) as bar,
+        ):
             for chunk in response.iter_content(chunk_size=1024):
                 if chunk:
                     file.write(chunk)

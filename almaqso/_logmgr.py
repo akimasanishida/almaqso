@@ -10,7 +10,9 @@ from tqdm import tqdm
 
 
 # class LogManager:
-def initialize_log_listener(dir: Path) -> tuple[str, Queue[Any], logging.handlers.QueueListener]:
+def initialize_log_listener(
+    dir: Path,
+) -> tuple[str, Queue[Any], logging.handlers.QueueListener]:
     """
     Initialize the LogManager.
 
@@ -38,7 +40,9 @@ def initialize_log_listener(dir: Path) -> tuple[str, Queue[Any], logging.handler
     file_handler.setFormatter(formatter)
 
     # --- queue listener ---
-    listener = logging.handlers.QueueListener(queue, console_handler, file_handler, respect_handler_level=True)
+    listener = logging.handlers.QueueListener(
+        queue, console_handler, file_handler, respect_handler_level=True
+    )
     listener.start()
 
     # --- add logger for main process ---

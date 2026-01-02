@@ -16,6 +16,7 @@ DIRS_NAME_IMAGES = [
     DIR_NAME_SELFCAL + "_fits",
 ]
 
+
 @dataclass
 class ProcessData:
     _project_id: str
@@ -78,6 +79,7 @@ def make_calibration_script(process_data: ProcessData) -> dict[str, str]:
 
     return ret
 
+
 def calibrate(process_data: ProcessData) -> dict[str, str]:
     """
     Run the calibration steps.
@@ -103,9 +105,7 @@ def calibrate(process_data: ProcessData) -> dict[str, str]:
                 syscalcheck.split(":")[1].split("'")[1]
                 == "Application of the bandpass and gain cal tables"
             ):
-                f.write(
-                    "mysteps = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]" + "\n"
-                )
+                f.write("mysteps = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]" + "\n")
             else:
                 f.write(
                     "mysteps = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]" + "\n"
@@ -143,7 +143,9 @@ def remove_target(process_data: ProcessData) -> dict[str, str]:
     return ret
 
 
-def imaging(process_data: ProcessData, mode: str, kw_tclean: dict[str, Any]) -> dict[str, str]:
+def imaging(
+    process_data: ProcessData, mode: str, kw_tclean: dict[str, Any]
+) -> dict[str, str]:
     """
     Create dirty images.
 
@@ -174,7 +176,9 @@ def imaging(process_data: ProcessData, mode: str, kw_tclean: dict[str, Any]) -> 
     return ret
 
 
-def selfcal_and_imaging(process_data: ProcessData, kw_selfcal: dict[str, Any], kw_tclean: dict[str, Any]) -> dict[str, str]:
+def selfcal_and_imaging(
+    process_data: ProcessData, kw_selfcal: dict[str, Any], kw_tclean: dict[str, Any]
+) -> dict[str, str]:
     """
     Run self-calibration and create second dirty images.
 

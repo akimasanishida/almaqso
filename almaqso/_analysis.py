@@ -14,7 +14,7 @@ def _get_spectrum(fits_file: Path) -> tuple[np.ndarray, np.ndarray]:
 
     Args:
         fits_file (Path): Path to the cube FITS file.
-    
+
     Returns:
         tuple[np.ndarray, np.ndarray]: Frequencies (GHz) and corresponding spectrum (Jy).
     """
@@ -82,7 +82,9 @@ def _plot_spectrum(
     fig.savefig(output_png, dpi=300)
 
 
-def _write_spectrum_csv(frequencies: np.ndarray, spectrums: np.ndarray, output_csv: Path) -> None:
+def _write_spectrum_csv(
+    frequencies: np.ndarray, spectrums: np.ndarray, output_csv: Path
+) -> None:
     """
     Write the spectrum data to CSV files.
 
@@ -123,8 +125,16 @@ def calc_spectrum(working_dir: Path, sources: list[str]):
             frequencies, spectrums = _get_spectrum(fits_file)
             fits_name = fits_file.name
             # Plot the spectrum
-            output_png = source_dir / SPECTRUM_DIR / f"{fits_name.replace('.fits', '_spectrum.png')}"
+            output_png = (
+                source_dir
+                / SPECTRUM_DIR
+                / f"{fits_name.replace('.fits', '_spectrum.png')}"
+            )
             _plot_spectrum(frequencies, spectrums, fits_name, output_png)
             # Write the spectrum to CSV
-            output_csv = source_dir / SPECTRUM_DIR / f"{fits_name.replace('.fits', '_spectrum.csv')}"
+            output_csv = (
+                source_dir
+                / SPECTRUM_DIR
+                / f"{fits_name.replace('.fits', '_spectrum.csv')}"
+            )
             _write_spectrum_csv(frequencies, spectrums, output_csv)
