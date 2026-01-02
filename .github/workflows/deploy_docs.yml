@@ -20,10 +20,15 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install PlantUML
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Download PlantUML jar (pinned)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y plantuml graphviz
+          curl -L -o plantuml.jar https://github.com/plantuml/plantuml/releases/download/v1.2025.10/plantuml-1.2025.10.jar
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -37,6 +42,8 @@ jobs:
       - name: Build documentation
         run: |
           ./scripts/sphinx-build-html.sh
+        env:
+          PLANTUML_JAR: ${{ github.workspace }}/plantuml.jar
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
