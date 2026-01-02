@@ -30,4 +30,5 @@ if __name__ == "__main__":
             remove_asdm=True,
             remove_intermediate=True,
         )
-        # almaqso.analysis()
+        almaqso.sort_images(keep_original=False, remove_non_target=True)
+        almaqso.analysis_calc_spectrum()
