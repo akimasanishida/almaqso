@@ -1,0 +1,22 @@
+@startuml L2-container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_LEFT_RIGHT()
+
+Person(user, "User", "Researcher working with calibration source of ALMA")
+System_Boundary(almaqso, "ALMAQSO") {
+    Container(lib, "ALMAQSO Library", "Python", "Library for downloading, processing and analyzing ALMA calibration source data")
+}
+System_Ext(casa, "CASA", "Applications for ALMA data processing and analysis developed by NRAO")
+System_Ext(casa_lib, "AnalysisUtils", "External library for CASA")
+System_Ext(alma_archive, "ALMA Science Archive", "Archive for ALMA data")
+System_Ext(local_fs, "Local File System", "User's local file system")
+
+Rel(user, lib, "Uses")
+Rel(lib, casa, "Uses CASA tasks")
+Rel(lib, casa_lib, "Uses AnalysisUtils library")
+Rel(casa_lib, casa, "Uses CASA tasks")
+Rel(lib, alma_archive, "Queries and downloads data from")
+Rel(lib, local_fs, "Reads/Writes data")
+Rel(casa, local_fs, "reads/writes data to")
+@enduml

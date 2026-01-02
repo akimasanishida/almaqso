@@ -1,0 +1,27 @@
+@startuml L4-almaqso.Almaqso._process_wrapper-activity
+start
+partition "Download ASDM" #LightYellow {
+    :filename = download(url);
+    if (download ok?) then (yes)
+    else (no)
+        :Report failure;
+        :Remove files if required;
+        stop
+    endif
+}
+partition "Process ASDM" #LightYellow {
+    :_process(filename);
+    if (process ok?) then (yes)
+    else (no)
+        :Report failure;
+        :Remove files if required;
+        stop
+    endif
+}
+partition "Report" #LightYellow {
+    :Report success;
+    :Write to successful ASDM list;
+}
+
+stop
+@enduml

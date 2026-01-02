@@ -1,0 +1,161 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Component &mdash; ALMAQSO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Activity Diagrams" href="uml-activity.html" />
+    <link rel="prev" title="Container" href="container.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            ALMAQSO
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Basic usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="architecture.html">Architecture</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="context.html">System context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="container.html">Container</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Component</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#purpose">Purpose</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#audience">Audience</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#components">Components</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#c4-component-diagram">C4-Component Diagram</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="uml-activity.html">Activity Diagrams</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ALMAQSO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="architecture.html">Architecture</a></li>
+      <li class="breadcrumb-item active">Component</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/component.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="component">
+<h1>Component<a class="headerlink" href="#component" title="Link to this heading"></a></h1>
+<p>This section provides a detailed overview of the internal structure of the ALMAQSO Library container, breaking it down into its modules and classes.
+This section may be updated frequently since the development phase is moving from PoC (Proof of Concept) to a well-structured library.</p>
+<section id="purpose">
+<h2>Purpose<a class="headerlink" href="#purpose" title="Link to this heading"></a></h2>
+<p>This diagram explains how the ALMAQSO Library is structured internally, showing the main components and their interactions.</p>
+</section>
+<section id="audience">
+<h2>Audience<a class="headerlink" href="#audience" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Developers working on ALMAQSO</p></li>
+<li><p>New contributors</p></li>
+</ul>
+</section>
+<section id="components">
+<h2>Components<a class="headerlink" href="#components" title="Link to this heading"></a></h2>
+<p>Here, we explain the main components of the ALMAQSO Library:</p>
+<ul class="simple">
+<li><p><strong>Almaqso Class</strong>: The main class that provides the public API for users to interact with the library.</p></li>
+<li><p><strong>Logger Manager</strong>: A component responsible for initializing and configuring logging within the library.</p></li>
+<li><p><strong>Query Class</strong>: A class that handles querying the ALMA Science Archive for calibration source data.</p></li>
+<li><p><strong>Download Function</strong>: A function that manages the downloading of data from the ALMA Science Archive.</p></li>
+<li><p><strong>Process Class</strong>: A class that encapsulates the logic for processing downloaded data using CASA tasks.</p></li>
+<li><p><strong>Analysis Functions or Classes</strong>: Components that provide functionalities for analyzing the processed data. This is not yet implemented.</p></li>
+</ul>
+</section>
+<section id="c4-component-diagram">
+<h2>C4-Component Diagram<a class="headerlink" href="#c4-component-diagram" title="Link to this heading"></a></h2>
+<p><a class="reference internal" href="#fig-l3-component"><span class="std std-numref">Fig. 3</span></a> shows the component diagram of the ALMAQSO Library.</p>
+<figure class="align-center" id="fig-l3-component">
+<a class="reference external image-reference" href="_static/L3-component.svg"><img alt="C4-Component Diagram" class="thumbnail" src="diagrams/L3-component.svg" />
+</a>
+<figcaption>
+<p><span class="caption-number">Fig. 3 </span><span class="caption-text">C4-Component Diagram. (Web version: Click to show full-size diagram.)</span><a class="headerlink" href="#fig-l3-component" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="container.html" class="btn btn-neutral float-left" title="Container" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="uml-activity.html" class="btn btn-neutral float-right" title="Activity Diagrams" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Akimasa Nishida, Yuki Yoshimura.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

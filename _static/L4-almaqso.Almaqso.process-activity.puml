@@ -1,0 +1,39 @@
+@startuml L4-almaqso.Almaqso.process-activity
+start
+
+partition "Preprocess" #LightYellow {
+    :Initialize logging;
+    :Change directory to working dir;
+    :Remove all *.asdm.sdm.tar files;
+    :Report process settings;
+}
+partition "Query data" #LightYellow {
+    :query = Query(source, band, cycle).query();
+    if (query success?) then (yes)
+    else (no)
+        stop
+    endif
+
+    if (skip_previous_successful) then (yes)
+        :load successful_asdms;
+        :filter to process only new asdms;
+    else (no)
+        :remove successful_asdms file;
+    endif
+}
+partition "Download and process ASDMs" #LightYellow {
+    fork
+        :_process_wrapper(ASDM_1);
+    fork again
+        :_process_wrapper(ASDM_2);
+    fork again
+        :_process_wrapper(ASDM_N);
+    end fork
+}
+partition "Postprocess" #LightYellow {
+    :Summarize results;
+    :Preprocess of logging;
+}
+
+stop
+@enduml
