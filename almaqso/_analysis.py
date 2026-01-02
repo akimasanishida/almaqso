@@ -1,8 +1,6 @@
-from glob import glob
 from pathlib import Path
 from astropy.io import fits
 import numpy as np
-import os
 import csv
 import matplotlib.pyplot as plt
 
@@ -65,7 +63,7 @@ def _plot_spectrum(
     y_min = y_mean - 5 * y_std
     y_max = y_mean + 5 * y_std
 
-    # Get the minimun larger than y_min and maximum smaller than y_max
+    # Get the minimum larger than y_min and maximum smaller than y_max
     y_min_data = np.min(spectrums[spectrums > y_min])
     y_max_data = np.max(spectrums[spectrums < y_max])
 

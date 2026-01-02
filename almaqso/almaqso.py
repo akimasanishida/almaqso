@@ -3,7 +3,6 @@ import glob
 import logging
 import os
 import shutil
-from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 import subprocess
@@ -169,7 +168,9 @@ class Almaqso:
 
         # Log the processing settings
         logger.info("== Processing settings ==")
-        logger.info(f"Target sources: {', '.join(self._sources) if self._sources != [] else 'all'}")
+        logger.info(
+            f"Target sources: {', '.join(self._sources) if self._sources != [] else 'all'}"
+        )
         logger.info(f"Target band: {self._band if self._band != [] else 'all'}")
         logger.info(f"Target cycle: {self._cycle if self._cycle != [] else 'all'}")
         logger.info(f"Number of parallel processes: {n_parallel}")
@@ -189,12 +190,12 @@ class Almaqso:
         else:
             logger.info("Self-calibration will NOT be performed.")
         if do_export_fits:
-            logger.info(f"Export to FITS: Yes")
+            logger.info("Export to FITS: Yes")
             logger.info(
                 f"Remove CASA images after processing: {'Yes' if remove_casa_images else 'No'}"
             )
         else:
-            logger.info(f"Export to FITS: No")
+            logger.info("Export to FITS: No")
         logger.info(f"Remove ASDM after processing: {'Yes' if remove_asdm else 'No'}")
         logger.info(
             f"Remove intermediate files after processing: {'Yes' if remove_intermediate else 'No'}"
@@ -540,8 +541,10 @@ class Almaqso:
         # Processing complete
         logger.info(f"Processing {asdmname} is done.")
         return asdmname, not found_severe_error
-    
-    def sort_images(self, remove_non_target: bool = False, keep_original: bool = False) -> None:
+
+    def sort_images(
+        self, remove_non_target: bool = False, keep_original: bool = False
+    ) -> None:
         """
         Sort images in the working directory into subdirectories based on their target names.
 
@@ -559,22 +562,28 @@ class Almaqso:
         logger.info("Sorting FITS images into target directories.")
         logger.info(f"Working directory: {self._work_dir}")
         logger.info(f"Target sources: {', '.join(self._sources)}")
-        
+
         # Search uid___* directories
-        dirs_in = [d.name for d in self._work_dir.iterdir() if d.is_dir() and d.name.startswith("uid___")]
-        logger.info(f"Found {len(dirs_in)} data directories to sort images from: {', '.join(dirs_in)}")
-        
+        dirs_in = [
+            d.name
+            for d in self._work_dir.iterdir()
+            if d.is_dir() and d.name.startswith("uid___")
+        ]
+        logger.info(
+            f"Found {len(dirs_in)} data directories to sort images from: {', '.join(dirs_in)}"
+        )
+
         # Create target directories
         for source in self._sources:
-            (self._work_dir / source / "fits").mkdir(exist_ok=True)
-        
+            (self._work_dir / source / "fits").mkdir(parents=True, exist_ok=True)
+
         # Move images to target directories
         for d in dirs_in:
             # Search FITS directories
             project_dir = self._work_dir / d
             selfcal_fits_dir = project_dir / "selfcal_fits"
             dirty_fits_dir = project_dir / "dirty_fits"
-            
+
             if selfcal_fits_dir.exists():
                 fits_dir = selfcal_fits_dir
                 prefix_name = d + "_selfcal_"
@@ -584,15 +593,17 @@ class Almaqso:
             else:
                 logger.warning(f"No FITS directory found in {d}. Skipping.")
                 continue
-            
+
             fits_files = list(fits_dir.glob("*.fits"))
             for fits_file in fits_files:
                 # Get target name from file name
                 # image format: target_<mfs/spwNN_mfs/spwNN_cube>.fits
                 target_name = fits_file.stem.split("_")[0]
-                
+
                 if target_name in self._sources:
-                    new_path = self._work_dir / target_name / (prefix_name + fits_file.name)
+                    new_path = (
+                        self._work_dir / target_name / (prefix_name + fits_file.name)
+                    )
                     if keep_original:
                         shutil.copy(fits_file, new_path)
                         logger.info(f"Copied {fits_file} to {new_path}")
@@ -603,7 +614,9 @@ class Almaqso:
                     fits_file.unlink()
                     logger.info(f"Removed {fits_file} as it does not match any target.")
                 else:
-                    logger.debug(f"Skipping {fits_file} (target '{target_name}' not in sources)")
+                    logger.debug(
+                        f"Skipping {fits_file} (target '{target_name}' not in sources)"
+                    )
 
     def analysis_calc_spectrum(self) -> None:
         """
