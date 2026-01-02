@@ -1,5 +1,5 @@
 @startuml L3-component
-!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+!include c4/C4_Component.puml
 
 LAYOUT_LEFT_RIGHT()
 
