@@ -7,10 +7,8 @@ robust = float({robust})
 
 cell, imsize, _ = aU.pickCellSize(vis, imsize=True, cellstring=True)
 fields = aU.getFields(vis)
-fields_target = aU.getTargetsForIntent(vis)
-fields_cal = list(set(fields) - set(fields_target))
 
-for field in fields_cal:
+for field in fields:
     msmd.open(vis)
     spws = msmd.spwsforfield(field)
     msmd.close()
