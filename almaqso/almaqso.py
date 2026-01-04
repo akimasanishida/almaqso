@@ -389,43 +389,28 @@ class Almaqso:
         process_data: ProcessData = init_process(filename, self._casapath)
 
         # Make a CASA script
-        try:
-            logger.info(f"{asdmname}: Creating a calibration script")
-            ret = make_calibration_script(process_data)
-            logger.info(f"{asdmname}: Generated calibration script")
-            if ret is not None:
-                logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
-                logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
-        except Exception as e:
-            logger.error(f"ERROR while creating a calibration script: {e}")
-            logger.error(f"Stop processing {asdmname}")
-            return asdmname, False
+        logger.info(f"{asdmname}: Creating a calibration script")
+        ret = make_calibration_script(process_data)
+        logger.info(f"{asdmname}: Generated calibration script")
+        if ret is not None:
+            logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
+            logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
 
         # Calibration
-        try:
-            logger.info(f"{asdmname}: Starting calibration")
-            ret = calibrate(process_data)
-            logger.info(f"{asdmname}: Calibration completed")
-            if ret is not None:
-                logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
-                logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
-        except Exception as e:
-            logger.error(f"ERROR while calibration: {e}")
-            logger.error(f"Stop processing {asdmname}")
-            return asdmname, False
+        logger.info(f"{asdmname}: Starting calibration")
+        ret = calibrate(process_data)
+        logger.info(f"{asdmname}: Calibration completed")
+        if ret is not None:
+            logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
+            logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
 
         # Remove target
-        try:
-            logger.info(f"{asdmname}: Removing target")
-            ret = remove_target(process_data)
-            logger.info(f"{asdmname}: Target removed")
-            if ret is not None:
-                logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
-                logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
-        except Exception as e:
-            logger.error(f"ERROR while removing target: {e}")
-            logger.error(f"Stop processing {asdmname}")
-            return asdmname, False
+        logger.info(f"{asdmname}: Removing target")
+        ret = remove_target(process_data)
+        logger.info(f"{asdmname}: Target removed")
+        if ret is not None:
+            logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
+            logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
 
         # tclean
         kw_tclean: dict[str, object] = {
@@ -461,21 +446,17 @@ class Almaqso:
 
         # Export to FITS
         if do_export_fits:
-            try:
-                logger.info(f"{asdmname}: Exporting to FITS")
-                ret = export_fits(process_data)
-                logger.info(f"{asdmname}: Exported to FITS")
-                if ret is not None:
-                    logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
-                    logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
-                if remove_casa_images:
-                    logger.info(f"{asdmname}: Removing CASA images")
-                    shutil.rmtree("dirty")
-                    logger.info(f"{asdmname}: CASA images removed")
-            except Exception as e:
-                logger.error(f"ERROR while exporting to FITS: {e}")
-                logger.error(f"Stop processing {asdmname}")
-                return asdmname, False
+            logger.info(f"{asdmname}: Exporting to FITS")
+            ret = export_fits(process_data)
+            logger.info(f"{asdmname}: Exported to FITS")
+            if ret is not None:
+                logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
+                logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
+            if remove_casa_images:
+                logger.info(f"{asdmname}: Removing CASA images")
+                shutil.rmtree("dirty")
+                logger.info(f"{asdmname}: CASA images removed")
+            logger.info(f"{asdmname}: FITS export completed")
 
         # Remove ASDM files
         if remove_asdm:
@@ -486,6 +467,7 @@ class Almaqso:
             except Exception as e:
                 logger.error(f"ERROR while removing ASDM files: {e}")
                 logger.warning("Continue the post-processing")
+            logger.info(f"{asdmname}: ASDM removal completed")
 
         # Remove intermediate files
         if remove_intermediate:
@@ -509,10 +491,10 @@ class Almaqso:
                         ):
                             continue
                         os.remove(path)
-                logger.info(f"{asdmname}: Removing intermediate files")
             except Exception as e:
                 logger.error(f"ERROR while removing intermediate files: {e}")
                 logger.warning("Continue the post-processing")
+            logger.info(f"{asdmname}: Intermediate files removal completed")
 
         # Check if `SEVERE` error is found
         log_files = glob.glob("*.log")

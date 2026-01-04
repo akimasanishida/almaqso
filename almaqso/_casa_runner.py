@@ -17,21 +17,17 @@ def run_casa_script(casa_path: Path | str, script_name: Path | str) -> dict:
         dict: Dictionary containing 'stdout' and 'stderr' from the CASA run.
     """
     cmd = [str(casa_path), "--nologger", "--nogui", "-c", str(script_name)]
-    try:
-        result = subprocess.run(
-            cmd,
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        ret = {
-            "stdout": result.stdout,
-            "stderr": result.stderr,
-        }
-        return ret
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"stdout: {e.stdout}, stderr:{e.stderr}") from e
+    result = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    ret = {
+        "stdout": result.stdout,
+        "stderr": result.stderr,
+    }
+    return ret
 
 
 def create_script_from_template(
