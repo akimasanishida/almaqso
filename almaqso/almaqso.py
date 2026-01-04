@@ -426,12 +426,8 @@ class Almaqso:
             for mode in tclean_mode:
                 ret = imaging(process_data, mode, kw_tclean)
                 if ret is not None:
-                    logger.info(
-                        f"STDOUT ({asdmname}, mode={mode}): {ret['stdout']}"
-                    )
-                    logger.warning(
-                        f"STDERR ({asdmname}, mode={mode}): {ret['stderr']}"
-                    )
+                    logger.info(f"STDOUT ({asdmname}, mode={mode}): {ret['stdout']}")
+                    logger.warning(f"STDERR ({asdmname}, mode={mode}): {ret['stderr']}")
             logger.info(f"{asdmname}: Imaging completed")
 
         # self-calibration
