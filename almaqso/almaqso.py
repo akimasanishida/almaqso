@@ -437,37 +437,27 @@ class Almaqso:
                 kw_tclean["savemodel"] = "modelcolumn"
             else:
                 kw_tclean["savemodel"] = "none"
-            try:
-                logger.info(f"{asdmname}: Performing imaging")
-                for mode in tclean_mode:
-                    ret = imaging(process_data, mode, kw_tclean)
-                    if ret is not None:
-                        logger.info(
-                            f"STDOUT ({asdmname}, mode={mode}): {ret['stdout']}"
-                        )
-                        logger.warning(
-                            f"STDERR ({asdmname}, mode={mode}): {ret['stderr']}"
-                        )
-                logger.info(f"{asdmname}: Imaging completed")
-            except Exception as e:
-                logger.error(f"ERROR while imaging: {e}")
-                logger.error(f"Stop processing {asdmname}")
-                return asdmname, False
+            logger.info(f"{asdmname}: Performing imaging")
+            for mode in tclean_mode:
+                ret = imaging(process_data, mode, kw_tclean)
+                if ret is not None:
+                    logger.info(
+                        f"STDOUT ({asdmname}, mode={mode}): {ret['stdout']}"
+                    )
+                    logger.warning(
+                        f"STDERR ({asdmname}, mode={mode}): {ret['stderr']}"
+                    )
+            logger.info(f"{asdmname}: Imaging completed")
 
         # self-calibration
         if do_selfcal:
             kw_selfcal["specmode"] = kw_tclean["specmode"]
-            try:
-                logger.info(f"{asdmname}: Performing self-calibration")
-                ret = selfcal_and_imaging(process_data, kw_selfcal, kw_tclean)
-                logger.info(f"{asdmname}: Self-calibration completed")
-                if ret is not None:
-                    logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
-                    logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
-            except Exception as e:
-                logger.error(f"ERROR while self-calibration: {e}")
-                logger.error(f"Stop processing {asdmname}")
-                return asdmname, False
+            logger.info(f"{asdmname}: Performing self-calibration")
+            ret = selfcal_and_imaging(process_data, kw_selfcal, kw_tclean)
+            if ret is not None:
+                logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
+                logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
+            logger.info(f"{asdmname}: Self-calibration completed")
 
         # Export to FITS
         if do_export_fits:
