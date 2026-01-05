@@ -4,6 +4,7 @@ vis = "{vis}"
 dir = "{dir}"
 weighting = "{weighting}"
 robust = float({robust})
+savemodel = "{savemodel}"
 
 cell, imsize, _ = aU.pickCellSize(vis, imsize=True, cellstring=True)
 fields = aU.getFields(vis)
@@ -13,6 +14,13 @@ for field in fields:
     spws = msmd.spwsforfield(field)
     msmd.close()
     for spw in spws:
+        ms.open(vis)
+        ms.reset()
+        ret_select = ms.msselect({{'field': str(field), 'spw': str(spw)}})
+        num_row = ms.nrow()
+        ms.close()
+        if (not ret_select) or (num_row == 0):
+            continue
         tclean(
             vis=vis,
             imagename=f"{{dir}}/{{field}}_spw{{spw}}_mfs",
@@ -28,5 +36,5 @@ for field in fields:
             niter=0,
             pbcor=True,
             interactive=False,
-            savemodel="{savemodel}",
+            savemodel=savemodel,
         )
