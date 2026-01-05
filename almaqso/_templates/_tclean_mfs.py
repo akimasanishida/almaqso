@@ -4,6 +4,7 @@ vis = "{vis}"
 dir = "{dir}"
 weighting = "{weighting}"
 robust = float({robust})
+savemodel = "{savemodel}"
 
 cell, imsize, _ = aU.pickCellSize(vis, imsize=True, cellstring=True)
 fields = aU.getFields(vis)
@@ -23,5 +24,5 @@ for field in fields:
         niter=0,
         pbcor=True,
         interactive=False,
-        savemodel="{savemodel}",
+        savemodel=savemodel,
     )
