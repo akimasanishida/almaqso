@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def parse_selection_string(selection_string: str) -> list[int]:
     """
     Parses a CASA-style selection string and returns a sorted list of integers.
@@ -85,3 +88,19 @@ def in_source_list(source_name: str, source_list: list[str]) -> bool:
 
     # Check case-insensitively
     return source_name.lower() in (s.lower() for s in source_list)
+
+
+def parse_source_list(source_input: str | list[str]) -> list[str]:
+    """
+    Parses a source input that can be either a comma-separated string or a list of strings.
+
+    Args:
+        source_input: The source input.
+
+    Returns:
+        list[str]: A list of source names.
+    """
+    ret: list[str] = list(np.unique(source_input).astype(str))
+    # Remove "" entries
+    ret = [s for s in ret if s != ""]
+    return ret
