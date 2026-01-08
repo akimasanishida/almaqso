@@ -6,7 +6,6 @@ import shutil
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 import subprocess
-import numpy as np
 
 from ._logmgr import (
     initialize_log_listener,
@@ -27,7 +26,7 @@ from ._process import (
 from ._query import query
 from ._download import download
 from ._analysis import calc_spectrum
-from ._utils import parse_selection, in_source_list
+from ._utils import parse_selection, in_source_list, parse_source_list
 
 
 def _init_worker(logger_name, queue):
@@ -64,7 +63,7 @@ class Almaqso:
         self._original_dir: str = os.getcwd()
         self._casapath: Path = Path(casapath)
         self._log_file_path: Path | None = None
-        self._sources: list[str] = list(np.unique(target).astype(str))
+        self._sources: list[str] = parse_source_list(target)
 
         # Prepare working dir
         os.makedirs(self._work_dir, exist_ok=True)
@@ -566,11 +565,11 @@ class Almaqso:
 
                 if in_source_list(target_name, self._sources):
                     # Create target directory if not exists
-                    target_dir = self._work_dir / target_name
+                    target_dir = self._work_dir / "fits" / target_name
                     target_dir.mkdir(parents=True, exist_ok=True)
                     # Move or copy the FITS file
                     new_path = (
-                        self._work_dir / target_name / (prefix_name + fits_file.name)
+                        target_dir / (prefix_name + fits_file.name)
                     )
                     if keep_original:
                         shutil.copy(fits_file, new_path)

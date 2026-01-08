@@ -4,6 +4,7 @@ import numpy as np
 import csv
 import matplotlib.pyplot as plt
 
+from ._utils import in_source_list
 
 SPECTRUM_DIR = "spectrum"
 
@@ -115,26 +116,22 @@ def calc_spectrum(working_dir: Path, sources: list[str]):
         None
     """
     # Search for cube FITS files
-    for source in sources:
-        source_dir: Path = working_dir / source
-        fits_files = list((source_dir / "fits").glob("*_cube.fits"))
+    fits_dir = working_dir / "fits"
+    source_dirs = [d for d in fits_dir.iterdir() if d.is_dir()]
+    for source in source_dirs:
+        if not in_source_list(source.name, sources):
+            continue
+        fits_files = list(source.glob("*_cube.fits"))
         # Create the output directory
-        (source_dir / SPECTRUM_DIR).mkdir(exist_ok=True)
+        spectrum_dir = working_dir / SPECTRUM_DIR / source.name
+        spectrum_dir.mkdir(exist_ok=True, parents=True)
 
         for fits_file in fits_files:
             frequencies, spectrums = _get_spectrum(fits_file)
             fits_name = fits_file.name
             # Plot the spectrum
-            output_png = (
-                source_dir
-                / SPECTRUM_DIR
-                / f"{fits_name.replace('.fits', '_spectrum.png')}"
-            )
+            output_png = spectrum_dir / f"{fits_name.replace('.fits', '_spectrum.png')}"
             _plot_spectrum(frequencies, spectrums, fits_name, output_png)
             # Write the spectrum to CSV
-            output_csv = (
-                source_dir
-                / SPECTRUM_DIR
-                / f"{fits_name.replace('.fits', '_spectrum.csv')}"
-            )
+            output_csv = spectrum_dir / f"{fits_name.replace('.fits', '_spectrum.csv')}"
             _write_spectrum_csv(frequencies, spectrums, output_csv)
