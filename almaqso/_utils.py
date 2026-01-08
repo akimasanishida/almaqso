@@ -75,7 +75,7 @@ def in_source_list(source_name: str, source_list: list[str]) -> bool:
     Args:
         source_name: The source name to check.
         source_list: The list of source names.
-    
+
     Returns:
         bool: True if the source name is in the list, False otherwise.
     """
