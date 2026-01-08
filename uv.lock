@@ -13,7 +13,7 @@ wheels = [
 
 [[package]]
 name = "almaqso"
-version = "1.6.0b3"
+version = "1.6.0b4"
 source = { editable = "." }
 dependencies = [
     { name = "astroquery" },
