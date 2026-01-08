@@ -10,6 +10,11 @@ cell, imsize, _ = aU.pickCellSize(vis, imsize=True, cellstring=True)
 fields = aU.getFields(vis)
 
 for field in fields:
+    ms.open(vis)
+    ret_select = ms.msselect({{'field': str(field)}})
+    ms.close()
+    if not ret_select:
+        continue
     tclean(
         vis=vis,
         imagename=f"{{dir}}/{{field}}_mfs",
