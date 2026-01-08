@@ -8,6 +8,12 @@ Bugs are being removed and some new feature is being implemented.
 
 If you find something or have questions, please refer, report or ask from [issue](https://github.com/akimasanishida/almaqso/issues)
 
+## About
+
+`almaqso` is an automated tool for downloading and analyzing ALMA calibration sources (quasars).
+Originally developed for analyzing absorption lines, this package addresses a limitation of the standard calibration scripts attached to ALMA archive data, which often mask absorption lines.
+By generating calibration scripts that preserve these lines, this package ensures accurate analysis of absorption features.
+
 ## Pre-requisites
 
 ### CASA
@@ -37,7 +43,26 @@ import almaqso
 
 ## Usage
 
-See sample code in `sample` folder and [documentation](https://akimasanishida.github.io/almaqso/).
+See sample code in `sample` folder and [documentation](https://akimasanishida.github.io/almaqso/usage.html).
+
+## Citation
+
+Please cite this package (software) if it helps your work!
+
+```
+@software{nishida_2025_18181096,
+  author       = {Nishida, Akimasa and
+                  Yoshimura, Yuki and
+                  Narita, Kanako},
+  title        = {almaqso},
+  month        = apr,
+  year         = 2025,
+  publisher    = {Zenodo},
+  version      = {1.5.1},
+  doi          = {10.5281/zenodo.18181096},
+  url          = {https://doi.org/10.5281/zenodo.18181096},
+}
+```
 
 ## Developer Guide
 
@@ -97,8 +122,3 @@ The script file will build PDF file and copy it to `docs/almaqso.pdf`.
 ```shell
 uv run sphinx-apidoc -o docs almaqso
 ``` -->
-
-### Branches
-
-- `main`: The main branch.
-- `with-old-codes`: The branch with old codes (created by original editor). This is for the reference.
