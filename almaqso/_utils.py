@@ -66,3 +66,22 @@ def parse_selection(selection_input: list[int] | int | str) -> list[int]:
         return parse_selection_string(selection_input)
     else:
         raise ValueError("Invalid selection input type.")
+
+
+def in_source_list(source_name: str, source_list: list[str]) -> bool:
+    """
+    Checks if a source name is in the provided source list, case-insensitively.
+
+    Args:
+        source_name: The source name to check.
+        source_list: The list of source names.
+    
+    Returns:
+        bool: True if the source name is in the list, False otherwise.
+    """
+    # if source_list is empty, return True (all sources are included)
+    if not source_list:
+        return True
+
+    # Check case-insensitively
+    return source_name.lower() in (s.lower() for s in source_list)

@@ -1,5 +1,5 @@
 import pytest
-from almaqso._utils import parse_selection_string, parse_selection
+from almaqso._utils import parse_selection_string, parse_selection, in_source_list
 
 
 class TestParseSelectionString:
@@ -192,3 +192,72 @@ class TestParseSelection:
     def test_list_single_element(self):
         """Test list with single element."""
         assert parse_selection([42]) == [42]
+
+
+class TestInSourceList:
+    """Tests for in_source_list function."""
+
+    def test_empty_list_returns_true(self):
+        """Test that empty source list returns True for any source."""
+        assert in_source_list("J2000-1748", []) is True
+        assert in_source_list("AnySource", []) is True
+        assert in_source_list("", []) is True
+
+    def test_exact_match(self):
+        """Test exact match (same case)."""
+        source_list = ["J2000-1748", "3C273", "NGC1068"]
+        assert in_source_list("J2000-1748", source_list) is True
+        assert in_source_list("3C273", source_list) is True
+        assert in_source_list("NGC1068", source_list) is True
+
+    def test_case_insensitive_match(self):
+        """Test case-insensitive matching."""
+        source_list = ["J2000-1748", "3C273", "NGC1068"]
+        assert in_source_list("j2000-1748", source_list) is True
+        assert in_source_list("J2000-1748", source_list) is True
+        assert in_source_list("3c273", source_list) is True
+        assert in_source_list("3C273", source_list) is True
+        assert in_source_list("ngc1068", source_list) is True
+        assert in_source_list("NGC1068", source_list) is True
+
+    def test_mixed_case_in_list(self):
+        """Test case-insensitive matching with mixed case in source list."""
+        source_list = ["j2000-1748", "3c273", "NgC1068"]
+        assert in_source_list("J2000-1748", source_list) is True
+        assert in_source_list("3C273", source_list) is True
+        assert in_source_list("NGC1068", source_list) is True
+        assert in_source_list("ngc1068", source_list) is True
+
+    def test_not_in_list(self):
+        """Test source name not in list."""
+        source_list = ["J2000-1748", "3C273", "NGC1068"]
+        assert in_source_list("UnknownSource", source_list) is False
+        assert in_source_list("J2000-1749", source_list) is False
+        assert in_source_list("3C274", source_list) is False
+
+    def test_single_element_list(self):
+        """Test with single element in list."""
+        source_list = ["J2000-1748"]
+        assert in_source_list("J2000-1748", source_list) is True
+        assert in_source_list("j2000-1748", source_list) is True
+        assert in_source_list("OtherSource", source_list) is False
+
+    def test_partial_match_not_found(self):
+        """Test that partial matches are not found."""
+        source_list = ["J2000-1748", "3C273"]
+        assert in_source_list("J2000", source_list) is False
+        assert in_source_list("1748", source_list) is False
+        assert in_source_list("3C", source_list) is False
+
+    def test_empty_string_source_name(self):
+        """Test with empty string as source name."""
+        source_list = ["J2000-1748", "3C273"]
+        assert in_source_list("", source_list) is False
+
+    def test_whitespace_in_names(self):
+        """Test with whitespace in source names."""
+        source_list = ["Source A", "Source B"]
+        assert in_source_list("Source A", source_list) is True
+        assert in_source_list("source a", source_list) is True
+        assert in_source_list("SOURCE A", source_list) is True
+        assert in_source_list("Source C", source_list) is False
