@@ -568,9 +568,7 @@ class Almaqso:
                     target_dir = self._work_dir / "fits" / target_name
                     target_dir.mkdir(parents=True, exist_ok=True)
                     # Move or copy the FITS file
-                    new_path = (
-                        target_dir / (prefix_name + fits_file.name)
-                    )
+                    new_path = target_dir / (prefix_name + fits_file.name)
                     if keep_original:
                         shutil.copy(fits_file, new_path)
                         logger.info(f"Copied {fits_file} to {new_path}")
