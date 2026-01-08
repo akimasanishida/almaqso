@@ -27,7 +27,7 @@ from ._process import (
 from ._query import query
 from ._download import download
 from ._analysis import calc_spectrum
-from ._utils import parse_selection
+from ._utils import parse_selection, in_source_list
 
 
 def _init_worker(logger_name, queue):
@@ -541,10 +541,6 @@ class Almaqso:
             f"Found {len(dirs_in)} data directories to sort images from: {', '.join(dirs_in)}"
         )
 
-        # Create target directories
-        for source in self._sources:
-            (self._work_dir / source / "fits").mkdir(parents=True, exist_ok=True)
-
         # Move images to target directories
         for d in dirs_in:
             # Search FITS directories
@@ -568,7 +564,11 @@ class Almaqso:
                 # image format: target_<mfs/spwNN_mfs/spwNN_cube>.fits
                 target_name = fits_file.stem.split("_")[0]
 
-                if target_name in self._sources:
+                if in_source_list(target_name, self._sources):
+                    # Create target directory if not exists
+                    target_dir = self._work_dir / target_name
+                    target_dir.mkdir(parents=True, exist_ok=True)
+                    # Move or copy the FITS file
                     new_path = (
                         self._work_dir / target_name / (prefix_name + fits_file.name)
                     )
