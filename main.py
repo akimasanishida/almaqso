@@ -25,10 +25,8 @@ if __name__ == "__main__":
             tclean_mode=["mfs", "mfs_spw", "cube"],
             # do_selfcal=True,
             # kw_selfcal={},
-            do_export_fits=True,
             remove_casa_images=True,
             remove_asdm=True,
             remove_intermediate=True,
         )
-        almaqso.sort_images(keep_original=False, remove_non_target=True)
         almaqso.analysis_calc_spectrum()
