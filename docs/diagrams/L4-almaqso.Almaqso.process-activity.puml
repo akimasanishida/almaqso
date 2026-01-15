@@ -31,6 +31,7 @@ partition "Download and process ASDMs" #LightYellow {
     end fork
 }
 partition "Postprocess" #LightYellow {
+    :Sort images with sort_images();
     :Summarize results;
     :Preprocess of logging;
 }
