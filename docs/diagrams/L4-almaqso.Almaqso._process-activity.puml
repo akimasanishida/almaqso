@@ -57,20 +57,17 @@ partition "Process ASDM" #LightYellow {
     else (no)
     endif
 
-    if (Required exporting images to FITS?: `export_fits`?) then (yes)
-        partition "Export images to FITS" #Moccasin {
-            :Export images to FITS format;
-            if (Required to remove CASA images after export?: `remove_casa_images`?) then (yes)
-                :Remove CASA images;
-            else (no)
-            endif
-            if (export and remove success?) then (yes)
-            else (no)
-                stop
-            endif
-        }
-    else (no)
-    endif
+    partition "Export images to FITS" #Moccasin {
+        :Export images to FITS format;
+        if (Required to remove CASA images after export?: `remove_casa_images`?) then (yes)
+            :Remove CASA images;
+        else (no)
+        endif
+        if (export and remove success?) then (yes)
+        else (no)
+            stop
+        endif
+    }
 
     partition "Cleanup" #Moccasin {
         if (Required to remove ASDM?: `remove_asdm`?) then (yes)
