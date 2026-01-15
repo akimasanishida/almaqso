@@ -127,7 +127,6 @@ class Almaqso:
         tclean_weightings: tuple[str, str] = ("natural", ""),
         do_selfcal: bool = False,
         kw_selfcal: dict[str, object] = {},
-        do_export_fits: bool = False,
         remove_casa_images: bool = False,
         remove_asdm: bool = False,
         remove_intermediate: bool = False,
@@ -143,7 +142,6 @@ class Almaqso:
             tclean_weightings (tuple[str, str]): Weighting scheme and robust parameter for tclean. Second element is the robust parameter for briggs weighting. Default is ("natural", "").
             do_selfcal (bool): Perform self-calibration. Default is False.
             kw_selfcal (dict[str, object]): Parameters for the self-calibration and `tclean` task.
-            do_export_fits (bool): Export the final image to FITS format. Default is False.
             remove_casa_images (bool): Remove the CASA images after processing. This option only works if do_tclean is True. Default is False.
             remove_asdm (bool): Remove the ASDM files after processing. Default is False.
             remove_intermediate (bool): Remove the intermediate files after processing. Log of CASA will be retained. Default is False.
@@ -188,13 +186,10 @@ class Almaqso:
             logger.warning("Self-calibration is specified but NOT IMPLEMENTED YET.")
         else:
             logger.info("Self-calibration will NOT be performed.")
-        if do_export_fits:
-            logger.info("Export to FITS: Yes")
-            logger.info(
-                f"Remove CASA images after processing: {'Yes' if remove_casa_images else 'No'}"
-            )
+        if remove_casa_images:
+            logger.info("CASA images will be removed after processing.")
         else:
-            logger.info("Export to FITS: No")
+            logger.info("CASA images will be kept after processing.")
         logger.info(f"Remove ASDM after processing: {'Yes' if remove_asdm else 'No'}")
         logger.info(
             f"Remove intermediate files after processing: {'Yes' if remove_intermediate else 'No'}"
@@ -265,7 +260,6 @@ class Almaqso:
                     tclean_weightings=tclean_weightings,
                     do_selfcal=do_selfcal,
                     kw_selfcal=kw_selfcal,
-                    do_export_fits=do_export_fits,
                     remove_casa_images=remove_casa_images,
                     remove_asdm=remove_asdm,
                     remove_intermediate=remove_intermediate,
@@ -289,6 +283,8 @@ class Almaqso:
         for f in analysis_results:
             filename, result = f
             logger.info(f"{filename}: {'success' if result else 'failed'}")
+
+        self.sort_images(remove_non_target=True, keep_original=False)
 
         self._post_process()
 
@@ -352,7 +348,6 @@ class Almaqso:
         tclean_weightings: tuple[str, str],
         do_selfcal: bool,
         kw_selfcal: dict[str, object],
-        do_export_fits: bool,
         remove_casa_images: bool,
         remove_asdm: bool,
         remove_intermediate: bool,
@@ -440,18 +435,17 @@ class Almaqso:
             logger.info(f"{asdmname}: Self-calibration completed")
 
         # Export to FITS
-        if do_export_fits:
-            logger.info(f"{asdmname}: Exporting to FITS")
-            ret = export_fits(process_data)
-            logger.info(f"{asdmname}: Exported to FITS")
-            if ret is not None:
-                logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
-                logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
-            if remove_casa_images:
-                logger.info(f"{asdmname}: Removing CASA images")
-                shutil.rmtree("dirty")
-                logger.info(f"{asdmname}: CASA images removed")
-            logger.info(f"{asdmname}: FITS export completed")
+        logger.info(f"{asdmname}: Exporting to FITS")
+        ret = export_fits(process_data)
+        logger.info(f"{asdmname}: Exported to FITS")
+        if ret is not None:
+            logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
+            logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
+        if remove_casa_images:
+            logger.info(f"{asdmname}: Removing CASA images")
+            shutil.rmtree("dirty")
+            logger.info(f"{asdmname}: CASA images removed")
+        logger.info(f"{asdmname}: FITS export completed")
 
         # Remove ASDM files
         if remove_asdm:
@@ -514,6 +508,7 @@ class Almaqso:
     ) -> None:
         """
         Sort images in the working directory into subdirectories based on their target names.
+        This will be automatically done by `Almaqso.process()`.
 
         This method only works if images are exported to FITS format.
         `selfcal_fits` directories are prioritized to `dirty_fits` directories.
