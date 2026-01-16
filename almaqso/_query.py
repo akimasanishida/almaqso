@@ -33,7 +33,7 @@ def _create_query(source_names: list[str], bands: list[int], cycles: list[int]) 
 
     if cycles:
         query_cycles = " OR ".join(
-            [f"proposal_id LIKE '{cycle + 2011}.%'" for cycle in cycles]
+            [f"proposal_id LIKE '{cycle + 2013}.%'" for cycle in cycles]
         )
         conditions.append(f"({query_cycles})")
 

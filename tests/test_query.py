@@ -18,7 +18,7 @@ class TestCreateQueryExactMatch:
         FROM ivoa.obscore
         WHERE (target_name = 'NGC1097')
           AND (band_list = '7')
-          AND (proposal_id LIKE '2011.%')
+          AND (proposal_id LIKE '2013.%')
           AND data_rights = 'Public'
     """
 
@@ -37,7 +37,7 @@ class TestCreateQueryExactMatch:
         FROM ivoa.obscore
         WHERE (target_name = 'NGC1097' OR target_name = 'NGC4945')
           AND (band_list = '7')
-          AND (proposal_id LIKE '2011.%')
+          AND (proposal_id LIKE '2013.%')
           AND data_rights = 'Public'
     """
 
@@ -56,7 +56,7 @@ class TestCreateQueryExactMatch:
         FROM ivoa.obscore
         WHERE (target_name = 'NGC1097')
           AND (band_list = '3' OR band_list = '7')
-          AND (proposal_id LIKE '2011.%')
+          AND (proposal_id LIKE '2013.%')
           AND data_rights = 'Public'
     """
 
@@ -75,7 +75,7 @@ class TestCreateQueryExactMatch:
         FROM ivoa.obscore
         WHERE (target_name = 'NGC1097')
           AND (band_list = '7')
-          AND (proposal_id LIKE '2011.%' OR proposal_id LIKE '2012.%')
+          AND (proposal_id LIKE '2013.%' OR proposal_id LIKE '2014.%')
           AND data_rights = 'Public'
     """
 
@@ -93,7 +93,7 @@ class TestCreateQueryExactMatch:
         SELECT *
         FROM ivoa.obscore
         WHERE (band_list = '7')
-          AND (proposal_id LIKE '2011.%')
+          AND (proposal_id LIKE '2013.%')
           AND data_rights = 'Public'
     """
 
@@ -111,7 +111,7 @@ class TestCreateQueryExactMatch:
         SELECT *
         FROM ivoa.obscore
         WHERE (target_name = 'NGC1097')
-          AND (proposal_id LIKE '2011.%')
+          AND (proposal_id LIKE '2013.%')
           AND data_rights = 'Public'
     """
 
@@ -164,7 +164,7 @@ class TestCreateQueryExactMatch:
         FROM ivoa.obscore
         WHERE (target_name = 'NGC1097' OR target_name = 'NGC4945' OR target_name = 'M82')
           AND (band_list = '3' OR band_list = '6' OR band_list = '7')
-          AND (proposal_id LIKE '2011.%' OR proposal_id LIKE '2012.%' OR proposal_id LIKE '2013.%')
+          AND (proposal_id LIKE '2013.%' OR proposal_id LIKE '2014.%' OR proposal_id LIKE '2015.%')
           AND data_rights = 'Public'
     """
 
@@ -197,7 +197,7 @@ class TestCreateQueryExactMatch:
         FROM ivoa.obscore
         WHERE (target_name = 'J2000-1748')
           AND (band_list = '4')
-          AND (proposal_id LIKE '2011.%')
+          AND (proposal_id LIKE '2013.%')
           AND data_rights = 'Public'
     """
 
@@ -216,7 +216,7 @@ class TestCreateQueryExactMatch:
         FROM ivoa.obscore
         WHERE (target_name = 'NGC1097')
           AND (band_list = '7')
-          AND (proposal_id LIKE '2021.%')
+          AND (proposal_id LIKE '2023.%')
           AND data_rights = 'Public'
     """
 
@@ -235,7 +235,7 @@ class TestCreateQueryExactMatch:
         FROM ivoa.obscore
         WHERE (target_name = 'NGC1097')
           AND (band_list = '3' OR band_list = '4' OR band_list = '5' OR band_list = '6' OR band_list = '7' OR band_list = '8' OR band_list = '9' OR band_list = '10')
-          AND (proposal_id LIKE '2011.%')
+          AND (proposal_id LIKE '2013.%')
           AND data_rights = 'Public'
     """
 
@@ -253,7 +253,7 @@ class TestCreateQueryExactMatch:
         SELECT *
         FROM ivoa.obscore
         WHERE (band_list = '7')
-          AND (proposal_id LIKE '2011.%')
+          AND (proposal_id LIKE '2013.%')
           AND data_rights = 'Public'
     """
 
@@ -272,7 +272,7 @@ class TestCreateQueryExactMatch:
         FROM ivoa.obscore
         WHERE (target_name = 'NGC1097')
           AND (band_list = '7')
-          AND (proposal_id LIKE '2011.%')
+          AND (proposal_id LIKE '2013.%')
           AND data_rights = 'Public'
     """
 
