@@ -5,6 +5,7 @@ from pathlib import Path
 from dataclasses import dataclass
 from typing import Any
 from ._casa_runner import run_casa_script, create_script_from_template
+from ._utils import in_source_list
 
 
 DIR_NAME_TCLEAN: str = "dirty"
@@ -23,6 +24,7 @@ class ProcessData:
     _asdm_path: Path
     _vis_name: str
     _casapath: Path
+    _retain_fields: list[str]
 
     def get_vis_name(self) -> str:
         """
@@ -55,7 +57,52 @@ def init_process(tarfile_name: str, casapath: Path) -> ProcessData:
         _asdm_path=_asdm_path,
         _vis_name=str(_vis_name),
         _casapath=_casapath,
+        _retain_fields=[],
     )
+
+
+def import_asdm(process_data: ProcessData) -> dict[str, str]:
+    """
+    Import ASDM into measurement set.
+    
+    Args:
+        process_data (ProcessData): ProcessData object.
+
+    Returns:
+        dict[str, str]: STDOUT and STDERR of the CASA command.
+    """
+    script_name = create_script_from_template(
+        "_importasdm_and_get_field_names.py",
+        {
+            "asdm": process_data._asdm_path,
+            "vis": process_data._vis_name,
+        },
+    )
+    ret = run_casa_script(process_data._casapath, script_name)
+
+    return ret
+
+
+def check_contains_target(process_data: ProcessData, targets: list[str]) -> bool:
+    """
+    Check if the measurement set contains the user's target fields.
+
+    Args:
+        process_data (ProcessData): ProcessData object.
+        targets (list[str]): List of user's target field names.
+
+    Returns:
+        bool: True if the measurement set contains the user's target fields, False otherwise.
+    """
+    try:
+        with open(f"{process_data._vis_name}_field_names.temp", "r") as f:
+            field_names = [line.strip() for line in f.readlines()]
+    except FileNotFoundError as e:
+        return False
+    
+    process_data._retain_fields = [field for field in field_names if in_source_list(field, targets)]
+
+    return len(process_data._retain_fields) > 0
 
 
 def make_calibration_script(process_data: ProcessData) -> dict[str, str]:
@@ -71,7 +118,6 @@ def make_calibration_script(process_data: ProcessData) -> dict[str, str]:
     script_name = create_script_from_template(
         "_make_script.py",
         {
-            "asdm": process_data._asdm_path,
             "vis": process_data._vis_name,
         },
     )
@@ -135,6 +181,7 @@ def remove_target(process_data: ProcessData) -> dict[str, str]:
         "_remove_target.py",
         {
             "vis": process_data._vis_name,
+            "retain_fields": process_data._retain_fields,
         },
     )
     ret = run_casa_script(process_data._casapath, script_name)
