@@ -15,6 +15,8 @@ from ._logmgr import (
 from ._process import (
     ProcessData,
     init_process,
+    import_asdm,
+    check_contains_target,
     make_calibration_script,
     calibrate,
     remove_target,
@@ -381,6 +383,24 @@ class Almaqso:
             return asdmname, False
 
         process_data: ProcessData = init_process(filename, self._casapath)
+
+        # Import ASDM
+        logger.info(f"{asdmname}: Importing ASDM into measurement set")
+        ret = import_asdm(process_data)
+        logger.info(f"{asdmname}: Imported ASDM")
+        if ret is not None:
+            logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
+            logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
+
+        # Check if the measurement set contains the user's target fields
+        logger.info(f"{asdmname}: Checking target fields in the measurement set")
+        contains_target = check_contains_target(process_data, self._sources)
+        if not contains_target:
+            logger.warning(
+                f"{asdmname}: The measurement set does not contain the target fields. Skipping the processing."
+            )
+            return asdmname, True
+        logger.info(f"{asdmname}: Field check completed")
 
         # Make a CASA script
         logger.info(f"{asdmname}: Creating a calibration script")
