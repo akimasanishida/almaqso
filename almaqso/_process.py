@@ -64,7 +64,7 @@ def init_process(tarfile_name: str, casapath: Path) -> ProcessData:
 def import_asdm(process_data: ProcessData) -> dict[str, str]:
     """
     Import ASDM into measurement set.
-    
+
     Args:
         process_data (ProcessData): ProcessData object.
 
@@ -96,11 +96,13 @@ def check_contains_target(process_data: ProcessData, targets: list[str]) -> bool
     """
     try:
         with open(f"{process_data._vis_name}_field_names.temp", "r") as f:
-            field_names = [line.strip() for line in f.readlines()]
-    except FileNotFoundError as e:
+            field_names_found = [line.strip() for line in f.readlines()]
+    except FileNotFoundError as _:
         return False
-    
-    process_data._retain_fields = [field for field in field_names if in_source_list(field, targets)]
+
+    process_data._retain_fields = [
+        field for field in field_names_found if in_source_list(field, targets)
+    ]
 
     return len(process_data._retain_fields) > 0
 
