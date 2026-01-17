@@ -1,15 +1,14 @@
 import analysisUtils as aU
 
 
-fields = aU.getFields("{vis}")
-fields_target = aU.getTargetsForIntent("{vis}")
-fields_cal = list(set(fields) - set(fields_target))
-print(fields_cal)
+fields = {retain_fields}  # Target fields
+fields_science = aU.getTargetsForIntent("{vis}")  # Science target fields
+fields_selected = [f for f in fields if f not in fields_science]  # Remove science targets
 
 kw_split = {{
     "vis": "{vis}",
     "outputvis": "{vis}.split",
-    "field": ", ".join(fields_cal),
+    "field": ", ".join(fields_selected),
     "datacolumn": "all",
 }}
 
