@@ -28,7 +28,13 @@ from ._process import (
 from ._query import query
 from ._download import download
 from ._analysis import calc_spectrum
-from ._utils import parse_selection, in_source_list, parse_source_list
+from ._utils import (
+    parse_selection,
+    in_source_list,
+    parse_source_list,
+    get_asdm_name_from_tarball,
+    get_asdm_tarball_name_from_url,
+)
 
 
 def _init_worker(logger_name, queue):
@@ -301,34 +307,23 @@ class Almaqso:
         Returns:
             tuple[str, bool]: ASDM name and the result of the processing.
         """
-        filename: str | None = None
-        asdmname: str | None = None
         ret: bool = False
         logger = logging.getLogger(self._logger_name)
         try:
             filename = download(url)
             logger.info(f"Downloaded {filename} from {url}")
-            asdmname, ret = self._process(filename=filename, **kwargs)
+            ret = self._process(filename=filename, **kwargs)
             os.chdir(self._work_dir)
         except Exception as e:
+            filename = get_asdm_tarball_name_from_url(url)
             logger.error(f"ERROR while processing {url}: {e}")
 
-        # if failed, remove ASDM and directory if needed.
-        if not ret:
-            if filename and kwargs.get("remove_asdm", False):
-                try:
-                    os.remove(filename)
-                except Exception as e:
-                    logger.warning(f'Failed to remove "{filename}": {e}')
-            if asdmname and kwargs.get("remove_intermediate", False):
-                if os.path.exists(asdmname):
-                    try:
-                        shutil.rmtree(asdmname)
-                    except Exception as e:
-                        logger.warning(f'Failed to remove directory "{asdmname}": {e}')
+        asdmname = get_asdm_name_from_tarball(filename)
 
-        if not asdmname:
-            asdmname = url.split("/")[-1]
+        # if failed, remove imaging dirs
+        if not ret:
+            for dir_name in DIRS_NAME_IMAGES:
+                shutil.rmtree(asdmname + "/" + dir_name, ignore_errors=True)
 
         # Write successful processing to file
         if ret:
@@ -353,7 +348,7 @@ class Almaqso:
         remove_casa_images: bool,
         remove_asdm: bool,
         remove_intermediate: bool,
-    ) -> tuple[str, bool]:
+    ) -> bool:
         """
         Wrapper function for the analysis process.
         """
@@ -380,7 +375,7 @@ class Almaqso:
         except subprocess.CalledProcessError as e:
             logger.error(f"ERROR: Failed to extract {filename} (reason: {e})")
             logger.error(f"Stop processing {asdmname}")
-            return asdmname, False
+            return False
 
         process_data: ProcessData = init_process(filename, self._casapath)
 
@@ -399,7 +394,7 @@ class Almaqso:
             logger.warning(
                 f"{asdmname}: The measurement set does not contain the target fields. Skipping the processing."
             )
-            return asdmname, True
+            return True
         logger.info(f"{asdmname}: Field check completed")
 
         # Make a CASA script
@@ -521,7 +516,7 @@ class Almaqso:
 
         # Processing complete
         logger.info(f"Processing {asdmname} is done.")
-        return asdmname, not found_severe_error
+        return not found_severe_error
 
     def sort_images(
         self, remove_non_target: bool = False, keep_original: bool = False
