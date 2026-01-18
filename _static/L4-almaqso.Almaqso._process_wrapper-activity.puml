@@ -14,7 +14,7 @@ partition "Process ASDM" #LightYellow {
     if (process ok?) then (yes)
     else (no)
         :Report failure;
-        :Remove files if required;
+        :Remove imaging dirs;
         stop
     endif
 }
