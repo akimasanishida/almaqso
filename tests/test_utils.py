@@ -1,5 +1,6 @@
+from click import Path
 import pytest
-from almaqso._utils import parse_selection_string, parse_selection, in_source_list, parse_source_list
+from almaqso._utils import parse_selection_string, parse_selection, in_source_list, parse_source_list, get_asdm_name_from_tarball, get_asdm_tarball_name_from_url
 
 
 class TestParseSelectionString:
@@ -347,3 +348,39 @@ class TestParseSourceList:
         result = parse_source_list(["Zebra", "Apple", "Mango", "Banana"])
         # np.unique sorts the output
         assert result == sorted(["Apple", "Banana", "Mango", "Zebra"])
+
+
+class TestGetAsdmNameFromTarball:
+    """
+    Tests for get_asdm_name_from_tarball function.
+    """
+
+    def test_valid_tarball_path(self):
+        """Test with a valid tarball path."""
+        tarball_path = "path/to/2018.1.01575.S_uid___A002_Xd68367_X9885.asdm.sdm.tar"
+        expected_asdm_name = "uid___A002_Xd68367_X9885"
+        assert get_asdm_name_from_tarball(tarball_path) == expected_asdm_name
+
+    def test_empty_tarball_path(self):
+        """Test with an empty tarball path."""
+        tarball_path = ""
+        with pytest.raises(IndexError):
+            get_asdm_name_from_tarball(tarball_path)
+
+
+class TestGetAsdmTarballNameFromUrl:
+    """
+    Tests for get_asdm_tarball_name_from_url function.
+    """
+
+    def test_valid_url(self):
+        """Test with a valid URL."""
+        url = "https://almascience.nao.ac.jp/dataPortal/2018.1.01575.S_uid___A002_Xd68367_X9885.asdm.sdm.tar"
+        expected_tarball_name = "2018.1.01575.S_uid___A002_Xd68367_X9885.asdm.sdm.tar"
+        assert get_asdm_tarball_name_from_url(url) == expected_tarball_name
+
+    def test_empty_url(self):
+        """Test with an invalid URL."""
+        url = ""
+        expected_tarball_name = ""
+        assert get_asdm_tarball_name_from_url(url) == expected_tarball_name
