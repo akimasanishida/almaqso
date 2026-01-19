@@ -5,6 +5,7 @@ ALMAQSO Documentation and Reference
    :maxdepth: 2
    :caption: Contents:
 
+   introduction
    install
    usage
    architecture
