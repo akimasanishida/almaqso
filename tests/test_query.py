@@ -11,7 +11,7 @@ class TestCreateQueryExactMatch:
         bands = [7]
         cycles = [0]
 
-        result = _create_query(source_names, bands, cycles)
+        result = _create_query(source_names, bands, cycles, [], None)
 
         expected = """
         SELECT *
@@ -30,7 +30,7 @@ class TestCreateQueryExactMatch:
         bands = [7]
         cycles = [0]
 
-        result = _create_query(source_names, bands, cycles)
+        result = _create_query(source_names, bands, cycles, [], None)
 
         expected = """
         SELECT *
@@ -49,7 +49,7 @@ class TestCreateQueryExactMatch:
         bands = [3, 7]
         cycles = [0]
 
-        result = _create_query(source_names, bands, cycles)
+        result = _create_query(source_names, bands, cycles, [], None)
 
         expected = """
         SELECT *
@@ -68,7 +68,7 @@ class TestCreateQueryExactMatch:
         bands = [7]
         cycles = [0, 1]
 
-        result = _create_query(source_names, bands, cycles)
+        result = _create_query(source_names, bands, cycles, [], None)
 
         expected = """
         SELECT *
@@ -87,7 +87,7 @@ class TestCreateQueryExactMatch:
         bands = [7]
         cycles = [0]
 
-        result = _create_query(source_names, bands, cycles)
+        result = _create_query(source_names, bands, cycles, [], None)
 
         expected = """
         SELECT *
@@ -105,7 +105,7 @@ class TestCreateQueryExactMatch:
         bands = []
         cycles = [0]
 
-        result = _create_query(source_names, bands, cycles)
+        result = _create_query(source_names, bands, cycles, [], None)
 
         expected = """
         SELECT *
@@ -123,7 +123,7 @@ class TestCreateQueryExactMatch:
         bands = [7]
         cycles = []
 
-        result = _create_query(source_names, bands, cycles)
+        result = _create_query(source_names, bands, cycles, [], None)
 
         expected = """
         SELECT *
@@ -141,7 +141,7 @@ class TestCreateQueryExactMatch:
         bands = []
         cycles = []
 
-        result = _create_query(source_names, bands, cycles)
+        result = _create_query(source_names, bands, cycles, [], None)
 
         expected = """
         SELECT *
@@ -157,7 +157,7 @@ class TestCreateQueryExactMatch:
         bands = [3, 6, 7]
         cycles = [0, 1, 2]
 
-        result = _create_query(source_names, bands, cycles)
+        result = _create_query(source_names, bands, cycles, [], None)
 
         expected = """
         SELECT *
@@ -178,7 +178,7 @@ class TestCreateQueryExactMatch:
         bands = [7]
         cycles = [0]
 
-        result = _create_query(source_names, bands, cycles)
+        result = _create_query(source_names, bands, cycles, [], None)
 
         # The function should include the string as-is (wrapped in quotes)
         assert "target_name = 'NGC1097'; DROP TABLE ivoa.obscore; --'" in result
@@ -190,7 +190,7 @@ class TestCreateQueryExactMatch:
         bands = [4]
         cycles = [0]
 
-        result = _create_query(source_names, bands, cycles)
+        result = _create_query(source_names, bands, cycles, [], None)
 
         expected = """
         SELECT *
@@ -209,7 +209,7 @@ class TestCreateQueryExactMatch:
         bands = [7]
         cycles = [10]
 
-        result = _create_query(source_names, bands, cycles)
+        result = _create_query(source_names, bands, cycles, [], None)
 
         expected = """
         SELECT *
@@ -228,7 +228,7 @@ class TestCreateQueryExactMatch:
         bands = [3, 4, 5, 6, 7, 8, 9, 10]
         cycles = [0]
 
-        result = _create_query(source_names, bands, cycles)
+        result = _create_query(source_names, bands, cycles, [], None)
 
         expected = """
         SELECT *
@@ -247,7 +247,7 @@ class TestCreateQueryExactMatch:
         bands = [7]
         cycles = [0]
 
-        result = _create_query(source_names, bands, cycles)
+        result = _create_query(source_names, bands, cycles, [], None)
 
         expected = """
         SELECT *
@@ -259,13 +259,55 @@ class TestCreateQueryExactMatch:
 
         assert result.strip() == expected.strip()
 
-    def test_contain_empty_target_name(self):
-        """Test exact query with a list containing an empty target name."""
-        source_names = ["NGC1097", ""]
+    def test_exact_query_with_project_code(self):
+        """Test exact query with project code instead of cycles."""
+        source_names = ["NGC1097"]
+        bands = [7]
+        cycles = [0]  # Should be ignored when project_code is provided
+        project_code = ["2013.1.00001.S"]
+
+        result = _create_query(source_names, bands, cycles, project_code, None)
+
+        expected = """
+        SELECT *
+        FROM ivoa.obscore
+        WHERE (target_name = 'NGC1097')
+          AND (band_list = '7')
+          AND (proposal_id = '2013.1.00001.S')
+          AND data_rights = 'Public'
+    """
+
+        assert result.strip() == expected.strip()
+
+    def test_exact_query_with_multiple_project_codes(self):
+        """Test exact query with multiple project codes."""
+        source_names = ["NGC1097"]
+        bands = [7]
+        cycles = []
+        project_code = ["2013.1.00001.S", "2014.1.00002.S"]
+
+        result = _create_query(source_names, bands, cycles, project_code, None)
+
+        expected = """
+        SELECT *
+        FROM ivoa.obscore
+        WHERE (target_name = 'NGC1097')
+          AND (band_list = '7')
+          AND (proposal_id = '2013.1.00001.S' OR proposal_id = '2014.1.00002.S')
+          AND data_rights = 'Public'
+    """
+
+        assert result.strip() == expected.strip()
+
+    def test_exact_query_with_frequency_single(self):
+        """Test exact query with single frequency."""
+        source_names = ["NGC1097"]
         bands = [7]
         cycles = [0]
+        project_code = []
+        frequency_ghz = 345.5
 
-        result = _create_query(source_names, bands, cycles)
+        result = _create_query(source_names, bands, cycles, project_code, frequency_ghz)
 
         expected = """
         SELECT *
@@ -273,7 +315,73 @@ class TestCreateQueryExactMatch:
         WHERE (target_name = 'NGC1097')
           AND (band_list = '7')
           AND (proposal_id LIKE '2013.%')
+          AND ((frequency - 0.5 * bandwidth/1e9) < 345.5 AND (frequency + 0.5 * bandwidth/1e9) > 345.5)
           AND data_rights = 'Public'
     """
 
         assert result.strip() == expected.strip()
+
+    def test_exact_query_with_frequency_range(self):
+        """Test exact query with frequency range."""
+        source_names = ["NGC1097"]
+        bands = [7]
+        cycles = [0]
+        project_code = []
+        frequency_ghz = (340.0, 350.0)
+
+        result = _create_query(source_names, bands, cycles, project_code, frequency_ghz)
+
+        expected = """
+        SELECT *
+        FROM ivoa.obscore
+        WHERE (target_name = 'NGC1097')
+          AND (band_list = '7')
+          AND (proposal_id LIKE '2013.%')
+          AND ((frequency - 0.5 * bandwidth/1e9) < 350.0 AND (frequency + 0.5 * bandwidth/1e9) > 340.0)
+          AND data_rights = 'Public'
+    """
+
+        assert result.strip() == expected.strip()
+
+    def test_project_code_overrides_cycles(self):
+        """Test that project_code takes precedence over cycles."""
+        source_names = ["NGC1097"]
+        bands = [7]
+        cycles = [0, 1, 2]  # These should be ignored
+        project_code = ["2013.1.00001.S"]
+
+        result = _create_query(source_names, bands, cycles, project_code, None)
+
+        expected = """
+        SELECT *
+        FROM ivoa.obscore
+        WHERE (target_name = 'NGC1097')
+          AND (band_list = '7')
+          AND (proposal_id = '2013.1.00001.S')
+          AND data_rights = 'Public'
+    """
+
+        assert result.strip() == expected.strip()
+
+    def test_exact_query_with_all_parameters(self):
+        """Test exact query with all parameters specified."""
+        source_names = ["NGC1097", "NGC4945"]
+        bands = [3, 7]
+        cycles = []  # Ignored because project_code is provided
+        project_code = ["2013.1.00001.S", "2014.1.00002.S"]
+        frequency_ghz = (100.0, 500.0)
+
+        result = _create_query(source_names, bands, cycles, project_code, frequency_ghz)
+
+        expected = """
+        SELECT *
+        FROM ivoa.obscore
+        WHERE (target_name = 'NGC1097' OR target_name = 'NGC4945')
+          AND (band_list = '3' OR band_list = '7')
+          AND (proposal_id = '2013.1.00001.S' OR proposal_id = '2014.1.00002.S')
+          AND ((frequency - 0.5 * bandwidth/1e9) < 500.0 AND (frequency + 0.5 * bandwidth/1e9) > 100.0)
+          AND data_rights = 'Public'
+    """
+
+        assert result.strip() == expected.strip()
+

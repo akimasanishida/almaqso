@@ -63,7 +63,7 @@ def _create_query(
 
     conditions.append("data_rights = 'Public'")
 
-    where_clause = "\nAND ".join(conditions)
+    where_clause = "\n          AND ".join(conditions)
 
     query = f"""
         SELECT *
