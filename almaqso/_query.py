@@ -79,7 +79,13 @@ def _create_query(
     stop=stop_after_attempt(5),
     wait=wait_fixed(3),
 )
-def query(source_names: list[str], bands: list[int], cycles: list[int], project_code: list[str], frequency_ghz: float | tuple[float, float] | None) -> list[dict]:
+def query(
+    source_names: list[str],
+    bands: list[int],
+    cycles: list[int],
+    project_code: list[str],
+    frequency_ghz: float | tuple[float, float] | None,
+) -> list[dict]:
     """
     Query ALMA data and get the URLs of the data, the size of the data, and the total size of the data.
 

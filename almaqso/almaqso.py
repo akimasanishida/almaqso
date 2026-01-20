@@ -211,7 +211,13 @@ class Almaqso:
 
         # for source in self._sources:
         try:
-            query_result = query(self._sources, self._band, self._cycle, self._project_code, self._frequency_ghz)
+            query_result = query(
+                self._sources,
+                self._band,
+                self._cycle,
+                self._project_code,
+                self._frequency_ghz,
+            )
         except Exception as e:
             logger.error(f"NETWORK ERROR while quering data: {e}")
             return
