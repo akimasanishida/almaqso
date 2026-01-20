@@ -8,7 +8,7 @@ partition "Preprocess" #LightYellow {
     :Report process settings;
 }
 partition "Query data" #LightYellow {
-    :query = Query(source, band, cycle).query();
+    :Query ASDM data;
     if (query success?) then (yes)
     else (no)
         stop
