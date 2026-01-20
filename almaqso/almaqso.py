@@ -31,7 +31,7 @@ from ._analysis import calc_spectrum
 from ._utils import (
     parse_selection,
     in_source_list,
-    parse_source_list,
+    parse_str_list,
     get_asdm_name_from_tarball,
     get_asdm_tarball_name_from_url,
 )
@@ -52,7 +52,9 @@ class Almaqso:
     Args:
         target (list[str] | str): Target source name. If empty list or empty string is given, all sources is targeted.
         band (list[int] | int | str): Band number to work with. Default is "" (all bands).
-        cycle (list[int] | int | str): project name to work with. Default is "" (all cycles).
+        cycle (list[int] | int | str): project name to work with. Default is "" (all cycles). If project_code is given, this parameter is ignored.
+        project_code (list[str] | str): ALMA project code to work with. Default is "" (all projects). If given, cycle parameter is ignored.
+        frequency_ghz (float | tuple[float, float] | None): A single frequency in GHz or a tuple of (min_frequency, max_frequency) in GHz. Data covering the specified frequency range completely will be targeted. Default is None.
         work_dir (str, optional): Working directory. Default is './'.
         casapath (str, optional): Path to the CASA executable. Default is 'casa'.
     """
@@ -62,6 +64,8 @@ class Almaqso:
         target: list[str] | str = "",
         band: list[int] | int | str = "",
         cycle: str = "",
+        project_code: list[str] | str = "",
+        frequency_ghz: float | tuple[float, float] | None = None,
         work_dir: str = "./",
         casapath: str = "casa",
     ) -> None:
@@ -71,7 +75,9 @@ class Almaqso:
         self._original_dir: str = os.getcwd()
         self._casapath: Path = Path(casapath)
         self._log_file_path: Path | None = None
-        self._sources: list[str] = parse_source_list(target)
+        self._sources: list[str] = parse_str_list(target)
+        self._project_code: list[str] = parse_str_list(project_code)
+        self._frequency_ghz: float | tuple[float, float] | None = frequency_ghz
 
         # Prepare working dir
         os.makedirs(self._work_dir, exist_ok=True)
@@ -205,10 +211,17 @@ class Almaqso:
 
         # for source in self._sources:
         try:
-            query_result = query(self._sources, self._band, self._cycle)
+            query_result = query(
+                self._sources,
+                self._band,
+                self._cycle,
+                self._project_code,
+                self._frequency_ghz,
+            )
         except Exception as e:
             logger.error(f"NETWORK ERROR while quering data: {e}")
             return
+        logger.info(f"Found {len(query_result)} data entries from the query.")
         for q in query_result:
             data_size = round(float(q["size_bytes"]) / (1024**3), 2)
             logger.info(f"{q['url']} will be downloaded ({data_size} GB)")

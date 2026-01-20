@@ -4,14 +4,22 @@ from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_t
 from pyvo.dal.exceptions import DALServiceError
 
 
-def _create_query(source_names: list[str], bands: list[int], cycles: list[int]) -> str:
+def _create_query(
+    source_names: list[str],
+    bands: list[int],
+    cycles: list[int],
+    project_code: list[str],
+    frequency_ghz: float | tuple[float, float] | None,
+) -> str:
     """
     Create a TAP query string for the given source names, bands, and cycles.
 
     Args:
         source_names: List of source names.
         bands: List of band numbers.
-        cycles: List of cycle numbers.
+        cycles: List of cycle numbers. When project_code is given, this parameter is ignored.
+        project_code: List of project codes. If given, cycles parameter is ignored.
+        frequency_ghz: A single frequency in GHz or a tuple of (min_frequency, max_frequency) in GHz. Data covering
 
     Returns:
         str: The constructed TAP query string.
@@ -31,11 +39,27 @@ def _create_query(source_names: list[str], bands: list[int], cycles: list[int]) 
         query_bands = " OR ".join([f"band_list = '{band}'" for band in bands])
         conditions.append(f"({query_bands})")
 
-    if cycles:
+    if cycles and not project_code:
         query_cycles = " OR ".join(
             [f"proposal_id LIKE '{cycle + 2013}.%'" for cycle in cycles]
         )
         conditions.append(f"({query_cycles})")
+
+    if project_code:
+        query_projects = " OR ".join(
+            [f"proposal_id = '{code}'" for code in project_code]
+        )
+        conditions.append(f"({query_projects})")
+
+    if frequency_ghz is not None:
+        if isinstance(frequency_ghz, (int, float)):
+            frequency_ghz_min = frequency_ghz
+            frequency_ghz_max = frequency_ghz
+        else:
+            frequency_ghz_min = min(frequency_ghz)
+            frequency_ghz_max = max(frequency_ghz)
+        query_frequency = f"(frequency - 0.5 * bandwidth/1e9) < {frequency_ghz_max} AND (frequency + 0.5 * bandwidth/1e9) > {frequency_ghz_min}"
+        conditions.append(f"({query_frequency})")
 
     conditions.append("data_rights = 'Public'")
 
@@ -55,7 +79,13 @@ def _create_query(source_names: list[str], bands: list[int], cycles: list[int]) 
     stop=stop_after_attempt(5),
     wait=wait_fixed(3),
 )
-def query(source_names: list[str], bands: list[int], cycles: list[int]) -> list[dict]:
+def query(
+    source_names: list[str],
+    bands: list[int],
+    cycles: list[int],
+    project_code: list[str],
+    frequency_ghz: float | tuple[float, float] | None,
+) -> list[dict]:
     """
     Query ALMA data and get the URLs of the data, the size of the data, and the total size of the data.
 
@@ -72,7 +102,7 @@ def query(source_names: list[str], bands: list[int], cycles: list[int]) -> list[
     alma = Alma()
     alma.archive_url = "https://almascience.nao.ac.jp"
 
-    query = _create_query(source_names, bands, cycles)
+    query = _create_query(source_names, bands, cycles, project_code, frequency_ghz)
 
     mous_list_pd = alma.query_tap(query).to_table().to_pandas()
     mous_list_pd_only_12m = mous_list_pd[

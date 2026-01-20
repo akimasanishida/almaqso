@@ -91,7 +91,7 @@ def in_source_list(source_name: str, source_list: list[str]) -> bool:
     return source_name.lower() in (s.lower() for s in source_list)
 
 
-def parse_source_list(source_input: str | list[str]) -> list[str]:
+def parse_str_list(source_input: str | list[str]) -> list[str]:
     """
     Parses a source input that can be either a comma-separated string or a list of strings.
 
