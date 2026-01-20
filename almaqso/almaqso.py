@@ -52,7 +52,9 @@ class Almaqso:
     Args:
         target (list[str] | str): Target source name. If empty list or empty string is given, all sources is targeted.
         band (list[int] | int | str): Band number to work with. Default is "" (all bands).
-        cycle (list[int] | int | str): project name to work with. Default is "" (all cycles).
+        cycle (list[int] | int | str): project name to work with. Default is "" (all cycles). If project_code is given, this parameter is ignored.
+        project_code (list[str] | str): ALMA project code to work with. Default is "" (all projects). If given, cycle parameter is ignored.
+        frequency_ghz (float | tuple[float, float] | None): A single frequency in GHz or a tuple of (min_frequency, max_frequency) in GHz. Data covering the specified frequency range completely will be targeted. Default is None.
         work_dir (str, optional): Working directory. Default is './'.
         casapath (str, optional): Path to the CASA executable. Default is 'casa'.
     """
