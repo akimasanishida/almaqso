@@ -81,6 +81,7 @@ def _plot_spectrum(
     ax.grid()
     fig.tight_layout()
     fig.savefig(output_png, dpi=300)
+    plt.close(fig)
 
 
 def _write_spectrum_csv(
