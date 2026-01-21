@@ -28,6 +28,7 @@ from ._process import (
 from ._query import query
 from ._download import download
 from ._analysis import calc_spectrum
+from ._casa_runner import can_import_analysisUtils
 from ._utils import (
     parse_selection,
     in_source_list,
@@ -88,6 +89,21 @@ class Almaqso:
         )
         logger = logging.getLogger(self._logger_name)
         logger.info("ALMAQSO started.")
+
+        # Check analysisUtils availability
+        os.chdir(self._work_dir)
+        result_can_import_au = can_import_analysisUtils(self._casapath)
+        os.chdir(self._original_dir)
+        # If analysisUtils cannot be imported, raise an error and exit
+        if not result_can_import_au:
+            logger.error(
+                "analysisUtils cannot be imported in CASA. Some functionalities may not work properly."
+            )
+            self.close()
+            os.chdir(self._original_dir)
+            raise RuntimeError(
+                "analysisUtils cannot be imported in CASA. Please check your CASA installation."
+            )
 
     def __enter__(self) -> "Almaqso":
         return self
