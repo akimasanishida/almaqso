@@ -83,7 +83,6 @@ def can_import_analysisUtils(casa_path: Path | str) -> bool:
     Returns:
         bool: True if analysisUtils can be imported, False otherwise.
     """
-    script_file = Path("import_analysisUtils.py")
     script_path = create_script_from_template("_import_analysisUtils.py", params={})
     run_casa_script(casa_path, script_path)
 
