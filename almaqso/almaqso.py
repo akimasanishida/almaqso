@@ -512,6 +512,7 @@ class Almaqso:
                 keep_files: list[str] = [
                     "*.py",
                     "*.log",
+                    "*.listobs",
                 ]
                 for path in os.listdir("."):
                     if os.path.isdir(path):
