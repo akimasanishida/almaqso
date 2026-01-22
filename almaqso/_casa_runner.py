@@ -71,3 +71,31 @@ def create_script_from_template(
         raise RuntimeError(f"Failed to write script {script_name}: {e}")
 
     return script_path
+
+
+def can_import_analysisUtils(casa_path: Path | str) -> bool:
+    """
+    Check if analysisUtils can be imported in CASA.
+
+    Args:
+        casa_path (Path | str): Path to the CASA executable.
+
+    Returns:
+        bool: True if analysisUtils can be imported, False otherwise.
+    """
+    script_path = create_script_from_template("_import_analysisUtils.py", params={})
+    run_casa_script(casa_path, script_path)
+
+    # Check if the temporary file indicates success
+    success_file = Path("import_analysisUtils_success.temp")
+    try:
+        with open(success_file, "r") as f:
+            result = f.read().strip()
+        return result == "True"
+    except FileNotFoundError:
+        return False
+    finally:
+        if success_file.exists():
+            success_file.unlink()  # Clean up temporary file
+        if script_path.exists():
+            script_path.unlink()  # Clean up script file

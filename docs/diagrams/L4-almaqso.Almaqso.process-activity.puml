@@ -8,7 +8,7 @@ partition "Preprocess" #LightYellow {
     :Report process settings;
 }
 partition "Query data" #LightYellow {
-    :query = Query(source, band, cycle).query();
+    :Query ASDM data;
     if (query success?) then (yes)
     else (no)
         stop
@@ -31,6 +31,7 @@ partition "Download and process ASDMs" #LightYellow {
     end fork
 }
 partition "Postprocess" #LightYellow {
+    :Sort images with sort_images();
     :Summarize results;
     :Preprocess of logging;
 }

@@ -1,3 +1,4 @@
+from pathlib import Path
 import numpy as np
 
 
@@ -90,7 +91,7 @@ def in_source_list(source_name: str, source_list: list[str]) -> bool:
     return source_name.lower() in (s.lower() for s in source_list)
 
 
-def parse_source_list(source_input: str | list[str]) -> list[str]:
+def parse_str_list(source_input: str | list[str]) -> list[str]:
     """
     Parses a source input that can be either a comma-separated string or a list of strings.
 
@@ -104,3 +105,31 @@ def parse_source_list(source_input: str | list[str]) -> list[str]:
     # Remove "" entries
     ret = [s for s in ret if s != ""]
     return ret
+
+
+def get_asdm_name_from_tarball(tarball_path: str | Path) -> str:
+    """
+    Extracts the ASDM name from a given tarball path.
+
+    Args:
+        tarball_path: The path to the tarball file.
+    Returns:
+        The ASDM name extracted from the tarball path.
+    """
+    asdmname = "uid___" + (str(tarball_path).split("_uid___")[1]).replace(
+        ".asdm.sdm.tar", ""
+    )
+    return asdmname
+
+
+def get_asdm_tarball_name_from_url(url: str) -> str:
+    """
+    Extracts the ASDM tarball name from a given URL.
+
+    Args:
+        url: The URL of the tarball file.
+    Returns:
+        The ASDM tarball name extracted from the URL.
+    """
+    tarball_name = url.split("/")[-1]
+    return tarball_name

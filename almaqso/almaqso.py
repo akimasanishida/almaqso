@@ -15,6 +15,8 @@ from ._logmgr import (
 from ._process import (
     ProcessData,
     init_process,
+    import_asdm,
+    check_contains_target,
     make_calibration_script,
     calibrate,
     remove_target,
@@ -26,7 +28,14 @@ from ._process import (
 from ._query import query
 from ._download import download
 from ._analysis import calc_spectrum
-from ._utils import parse_selection, in_source_list, parse_source_list
+from ._casa_runner import can_import_analysisUtils
+from ._utils import (
+    parse_selection,
+    in_source_list,
+    parse_str_list,
+    get_asdm_name_from_tarball,
+    get_asdm_tarball_name_from_url,
+)
 
 
 def _init_worker(logger_name, queue):
@@ -44,7 +53,9 @@ class Almaqso:
     Args:
         target (list[str] | str): Target source name. If empty list or empty string is given, all sources is targeted.
         band (list[int] | int | str): Band number to work with. Default is "" (all bands).
-        cycle (list[int] | int | str): project name to work with. Default is "" (all cycles).
+        cycle (list[int] | int | str): project name to work with. Default is "" (all cycles). If project_code is given, this parameter is ignored.
+        project_code (list[str] | str): ALMA project code to work with. Default is "" (all projects). If given, cycle parameter is ignored.
+        frequency_ghz (float | tuple[float, float] | None): A single frequency in GHz or a tuple of (min_frequency, max_frequency) in GHz. Data covering the specified frequency range completely will be targeted. Default is None.
         work_dir (str, optional): Working directory. Default is './'.
         casapath (str, optional): Path to the CASA executable. Default is 'casa'.
     """
@@ -54,6 +65,8 @@ class Almaqso:
         target: list[str] | str = "",
         band: list[int] | int | str = "",
         cycle: str = "",
+        project_code: list[str] | str = "",
+        frequency_ghz: float | tuple[float, float] | None = None,
         work_dir: str = "./",
         casapath: str = "casa",
     ) -> None:
@@ -63,7 +76,9 @@ class Almaqso:
         self._original_dir: str = os.getcwd()
         self._casapath: Path = Path(casapath)
         self._log_file_path: Path | None = None
-        self._sources: list[str] = parse_source_list(target)
+        self._sources: list[str] = parse_str_list(target)
+        self._project_code: list[str] = parse_str_list(project_code)
+        self._frequency_ghz: float | tuple[float, float] | None = frequency_ghz
 
         # Prepare working dir
         os.makedirs(self._work_dir, exist_ok=True)
@@ -74,6 +89,21 @@ class Almaqso:
         )
         logger = logging.getLogger(self._logger_name)
         logger.info("ALMAQSO started.")
+
+        # Check analysisUtils availability
+        os.chdir(self._work_dir)
+        result_can_import_au = can_import_analysisUtils(self._casapath)
+        os.chdir(self._original_dir)
+        # If analysisUtils cannot be imported, raise an error and exit
+        if not result_can_import_au:
+            logger.error(
+                "analysisUtils cannot be imported in CASA. Some functionalities may not work properly."
+            )
+            self.close()
+            os.chdir(self._original_dir)
+            raise RuntimeError(
+                "analysisUtils cannot be imported in CASA. Please check your CASA installation."
+            )
 
     def __enter__(self) -> "Almaqso":
         return self
@@ -127,7 +157,6 @@ class Almaqso:
         tclean_weightings: tuple[str, str] = ("natural", ""),
         do_selfcal: bool = False,
         kw_selfcal: dict[str, object] = {},
-        do_export_fits: bool = False,
         remove_casa_images: bool = False,
         remove_asdm: bool = False,
         remove_intermediate: bool = False,
@@ -143,7 +172,6 @@ class Almaqso:
             tclean_weightings (tuple[str, str]): Weighting scheme and robust parameter for tclean. Second element is the robust parameter for briggs weighting. Default is ("natural", "").
             do_selfcal (bool): Perform self-calibration. Default is False.
             kw_selfcal (dict[str, object]): Parameters for the self-calibration and `tclean` task.
-            do_export_fits (bool): Export the final image to FITS format. Default is False.
             remove_casa_images (bool): Remove the CASA images after processing. This option only works if do_tclean is True. Default is False.
             remove_asdm (bool): Remove the ASDM files after processing. Default is False.
             remove_intermediate (bool): Remove the intermediate files after processing. Log of CASA will be retained. Default is False.
@@ -188,13 +216,10 @@ class Almaqso:
             logger.warning("Self-calibration is specified but NOT IMPLEMENTED YET.")
         else:
             logger.info("Self-calibration will NOT be performed.")
-        if do_export_fits:
-            logger.info("Export to FITS: Yes")
-            logger.info(
-                f"Remove CASA images after processing: {'Yes' if remove_casa_images else 'No'}"
-            )
+        if remove_casa_images:
+            logger.info("CASA images will be removed after processing.")
         else:
-            logger.info("Export to FITS: No")
+            logger.info("CASA images will be kept after processing.")
         logger.info(f"Remove ASDM after processing: {'Yes' if remove_asdm else 'No'}")
         logger.info(
             f"Remove intermediate files after processing: {'Yes' if remove_intermediate else 'No'}"
@@ -202,10 +227,17 @@ class Almaqso:
 
         # for source in self._sources:
         try:
-            query_result = query(self._sources, self._band, self._cycle)
+            query_result = query(
+                self._sources,
+                self._band,
+                self._cycle,
+                self._project_code,
+                self._frequency_ghz,
+            )
         except Exception as e:
             logger.error(f"NETWORK ERROR while quering data: {e}")
             return
+        logger.info(f"Found {len(query_result)} data entries from the query.")
         for q in query_result:
             data_size = round(float(q["size_bytes"]) / (1024**3), 2)
             logger.info(f"{q['url']} will be downloaded ({data_size} GB)")
@@ -265,7 +297,6 @@ class Almaqso:
                     tclean_weightings=tclean_weightings,
                     do_selfcal=do_selfcal,
                     kw_selfcal=kw_selfcal,
-                    do_export_fits=do_export_fits,
                     remove_casa_images=remove_casa_images,
                     remove_asdm=remove_asdm,
                     remove_intermediate=remove_intermediate,
@@ -290,6 +321,8 @@ class Almaqso:
             filename, result = f
             logger.info(f"{filename}: {'success' if result else 'failed'}")
 
+        self.sort_images(remove_non_target=True, keep_original=False)
+
         self._post_process()
 
     def _process_wrapper(self, url: str, **kwargs) -> tuple[str, bool]:
@@ -303,34 +336,23 @@ class Almaqso:
         Returns:
             tuple[str, bool]: ASDM name and the result of the processing.
         """
-        filename: str | None = None
-        asdmname: str | None = None
         ret: bool = False
         logger = logging.getLogger(self._logger_name)
         try:
             filename = download(url)
             logger.info(f"Downloaded {filename} from {url}")
-            asdmname, ret = self._process(filename=filename, **kwargs)
+            ret = self._process(filename=filename, **kwargs)
             os.chdir(self._work_dir)
         except Exception as e:
+            filename = get_asdm_tarball_name_from_url(url)
             logger.error(f"ERROR while processing {url}: {e}")
 
-        # if failed, remove ASDM and directory if needed.
-        if not ret:
-            if filename and kwargs.get("remove_asdm", False):
-                try:
-                    os.remove(filename)
-                except Exception as e:
-                    logger.warning(f'Failed to remove "{filename}": {e}')
-            if asdmname and kwargs.get("remove_intermediate", False):
-                if os.path.exists(asdmname):
-                    try:
-                        shutil.rmtree(asdmname)
-                    except Exception as e:
-                        logger.warning(f'Failed to remove directory "{asdmname}": {e}')
+        asdmname = get_asdm_name_from_tarball(filename)
 
-        if not asdmname:
-            asdmname = url.split("/")[-1]
+        # if failed, remove imaging dirs
+        if not ret:
+            for dir_name in DIRS_NAME_IMAGES:
+                shutil.rmtree(asdmname + "/" + dir_name, ignore_errors=True)
 
         # Write successful processing to file
         if ret:
@@ -352,11 +374,10 @@ class Almaqso:
         tclean_weightings: tuple[str, str],
         do_selfcal: bool,
         kw_selfcal: dict[str, object],
-        do_export_fits: bool,
         remove_casa_images: bool,
         remove_asdm: bool,
         remove_intermediate: bool,
-    ) -> tuple[str, bool]:
+    ) -> bool:
         """
         Wrapper function for the analysis process.
         """
@@ -383,9 +404,27 @@ class Almaqso:
         except subprocess.CalledProcessError as e:
             logger.error(f"ERROR: Failed to extract {filename} (reason: {e})")
             logger.error(f"Stop processing {asdmname}")
-            return asdmname, False
+            return False
 
         process_data: ProcessData = init_process(filename, self._casapath)
+
+        # Import ASDM
+        logger.info(f"{asdmname}: Importing ASDM into measurement set")
+        ret = import_asdm(process_data)
+        logger.info(f"{asdmname}: Imported ASDM")
+        if ret is not None:
+            logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
+            logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
+
+        # Check if the measurement set contains the user's target fields
+        logger.info(f"{asdmname}: Checking target fields in the measurement set")
+        contains_target = check_contains_target(process_data, self._sources)
+        if not contains_target:
+            logger.warning(
+                f"{asdmname}: The measurement set does not contain the target fields. Skipping the processing."
+            )
+            return True
+        logger.info(f"{asdmname}: Field check completed")
 
         # Make a CASA script
         logger.info(f"{asdmname}: Creating a calibration script")
@@ -440,18 +479,17 @@ class Almaqso:
             logger.info(f"{asdmname}: Self-calibration completed")
 
         # Export to FITS
-        if do_export_fits:
-            logger.info(f"{asdmname}: Exporting to FITS")
-            ret = export_fits(process_data)
-            logger.info(f"{asdmname}: Exported to FITS")
-            if ret is not None:
-                logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
-                logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
-            if remove_casa_images:
-                logger.info(f"{asdmname}: Removing CASA images")
-                shutil.rmtree("dirty")
-                logger.info(f"{asdmname}: CASA images removed")
-            logger.info(f"{asdmname}: FITS export completed")
+        logger.info(f"{asdmname}: Exporting to FITS")
+        ret = export_fits(process_data)
+        logger.info(f"{asdmname}: Exported to FITS")
+        if ret is not None:
+            logger.info(f"STDOUT ({asdmname}): {ret['stdout']}")
+            logger.warning(f"STDERR ({asdmname}): {ret['stderr']}")
+        if remove_casa_images:
+            logger.info(f"{asdmname}: Removing CASA images")
+            shutil.rmtree("dirty")
+            logger.info(f"{asdmname}: CASA images removed")
+        logger.info(f"{asdmname}: FITS export completed")
 
         # Remove ASDM files
         if remove_asdm:
@@ -507,13 +545,14 @@ class Almaqso:
 
         # Processing complete
         logger.info(f"Processing {asdmname} is done.")
-        return asdmname, not found_severe_error
+        return not found_severe_error
 
     def sort_images(
         self, remove_non_target: bool = False, keep_original: bool = False
     ) -> None:
         """
         Sort images in the working directory into subdirectories based on their target names.
+        This will be automatically done by `Almaqso.process()`.
 
         This method only works if images are exported to FITS format.
         `selfcal_fits` directories are prioritized to `dirty_fits` directories.

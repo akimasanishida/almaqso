@@ -1,5 +1,6 @@
+from click import Path
 import pytest
-from almaqso._utils import parse_selection_string, parse_selection, in_source_list, parse_source_list
+from almaqso._utils import parse_selection_string, parse_selection, in_source_list, parse_str_list, get_asdm_name_from_tarball, get_asdm_tarball_name_from_url
 
 
 class TestParseSelectionString:
@@ -263,39 +264,39 @@ class TestInSourceList:
         assert in_source_list("Source C", source_list) is False
 
 
-class TestParseSourceList:
-    """Tests for parse_source_list function."""
+class TestParseStrList:
+    """Tests for parse_str_list function."""
 
     def test_list_of_strings(self):
         """Test with a simple list of strings."""
-        result = parse_source_list(["J2000-1748", "3C273", "NGC1068"])
+        result = parse_str_list(["J2000-1748", "3C273", "NGC1068"])
         assert sorted(result) == sorted(["3C273", "J2000-1748", "NGC1068"])
 
     def test_list_with_duplicates(self):
         """Test that duplicates are removed."""
-        result = parse_source_list(["J2000-1748", "3C273", "J2000-1748", "NGC1068"])
+        result = parse_str_list(["J2000-1748", "3C273", "J2000-1748", "NGC1068"])
         assert sorted(result) == sorted(["3C273", "J2000-1748", "NGC1068"])
         assert len(result) == 3
 
     def test_empty_list(self):
         """Test with empty list."""
-        result = parse_source_list([])
+        result = parse_str_list([])
         assert result == []
 
     def test_list_with_empty_strings(self):
         """Test that empty strings are removed."""
-        result = parse_source_list(["J2000-1748", "", "3C273", ""])
+        result = parse_str_list(["J2000-1748", "", "3C273", ""])
         assert sorted(result) == sorted(["3C273", "J2000-1748"])
         assert "" not in result
 
     def test_single_element_list(self):
         """Test with single element list."""
-        result = parse_source_list(["J2000-1748"])
+        result = parse_str_list(["J2000-1748"])
         assert result == ["J2000-1748"]
 
     def test_list_preserves_case(self):
         """Test that case is preserved in list input."""
-        result = parse_source_list(["J2000-1748", "j2000-1748"])
+        result = parse_str_list(["J2000-1748", "j2000-1748"])
         # Both should be present as they are different strings
         assert len(result) == 2
         assert "J2000-1748" in result
@@ -303,47 +304,83 @@ class TestParseSourceList:
 
     def test_list_with_whitespace(self):
         """Test list with strings containing whitespace."""
-        result = parse_source_list(["Source A", "Source B", "Source C"])
+        result = parse_str_list(["Source A", "Source B", "Source C"])
         assert sorted(result) == sorted(["Source A", "Source B", "Source C"])
 
     def test_single_string_input(self):
         """Test with single string input (not comma-separated)."""
-        result = parse_source_list("J2000-1748")
+        result = parse_str_list("J2000-1748")
         # np.unique on a string treats it as array of characters
         assert isinstance(result, list)
         assert all(isinstance(s, str) for s in result)
 
     def test_list_only_empty_strings(self):
         """Test with list containing only empty strings."""
-        result = parse_source_list(["", "", ""])
+        result = parse_str_list(["", "", ""])
         assert result == []
 
     def test_list_mixed_duplicates_and_empty(self):
         """Test with mix of duplicates and empty strings."""
-        result = parse_source_list(["3C273", "", "J2000-1748", "3C273", "", "NGC1068"])
+        result = parse_str_list(["3C273", "", "J2000-1748", "3C273", "", "NGC1068"])
         assert sorted(result) == sorted(["3C273", "J2000-1748", "NGC1068"])
         assert "" not in result
         assert len(result) == 3
 
     def test_list_with_numeric_strings(self):
         """Test with numeric strings."""
-        result = parse_source_list(["123", "456", "123"])
+        result = parse_str_list(["123", "456", "123"])
         assert sorted(result) == ["123", "456"]
 
     def test_list_with_special_characters(self):
         """Test with special characters in source names."""
-        result = parse_source_list(["J2000+1748", "3C273", "NGC-1068"])
+        result = parse_str_list(["J2000+1748", "3C273", "NGC-1068"])
         assert sorted(result) == sorted(["3C273", "J2000+1748", "NGC-1068"])
 
     def test_large_list(self):
         """Test with large list."""
         sources = [f"Source{i}" for i in range(100)]
-        result = parse_source_list(sources)
+        result = parse_str_list(sources)
         assert len(result) == 100
         assert all(f"Source{i}" in result for i in range(100))
 
     def test_list_sorted_output(self):
         """Test that output is sorted alphabetically."""
-        result = parse_source_list(["Zebra", "Apple", "Mango", "Banana"])
+        result = parse_str_list(["Zebra", "Apple", "Mango", "Banana"])
         # np.unique sorts the output
         assert result == sorted(["Apple", "Banana", "Mango", "Zebra"])
+
+
+class TestGetAsdmNameFromTarball:
+    """
+    Tests for get_asdm_name_from_tarball function.
+    """
+
+    def test_valid_tarball_path(self):
+        """Test with a valid tarball path."""
+        tarball_path = "path/to/2018.1.01575.S_uid___A002_Xd68367_X9885.asdm.sdm.tar"
+        expected_asdm_name = "uid___A002_Xd68367_X9885"
+        assert get_asdm_name_from_tarball(tarball_path) == expected_asdm_name
+
+    def test_empty_tarball_path(self):
+        """Test with an empty tarball path."""
+        tarball_path = ""
+        with pytest.raises(IndexError):
+            get_asdm_name_from_tarball(tarball_path)
+
+
+class TestGetAsdmTarballNameFromUrl:
+    """
+    Tests for get_asdm_tarball_name_from_url function.
+    """
+
+    def test_valid_url(self):
+        """Test with a valid URL."""
+        url = "https://almascience.nao.ac.jp/dataPortal/2018.1.01575.S_uid___A002_Xd68367_X9885.asdm.sdm.tar"
+        expected_tarball_name = "2018.1.01575.S_uid___A002_Xd68367_X9885.asdm.sdm.tar"
+        assert get_asdm_tarball_name_from_url(url) == expected_tarball_name
+
+    def test_empty_url(self):
+        """Test with an invalid URL."""
+        url = ""
+        expected_tarball_name = ""
+        assert get_asdm_tarball_name_from_url(url) == expected_tarball_name
