@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "almaqso"
 version = "1.6.0"
-description = "Add your description here"
+description = "Automation for downloading and processing ALMA calibration target observations."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

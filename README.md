@@ -1,5 +1,7 @@
 <a href='https://github.com/akimasanishida/almaqso' target="_blank"><img alt='GitHub' src='https://img.shields.io/badge/GitHub_Repository-100000?style=flat&logo=GitHub&logoColor=white&labelColor=black&color=FFFFFF'/></a>
 [![Static Badge](https://img.shields.io/badge/docs-GitHub%20Pages-blue?logo=GitHub)](https://akimasanishida.github.io/almaqso/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14752250.svg)](https://doi.org/10.5281/zenodo.14752250)
+[![Check and Test code](https://github.com/akimasanishida/almaqso/actions/workflows/check_and_test.yml/badge.svg)](https://github.com/akimasanishida/almaqso/actions/workflows/check_and_test.yml)
 
 # almaqso
 
@@ -10,7 +12,7 @@ If you find something or have questions, please refer, report or ask from [issue
 
 ## About
 
-`almaqso` is an automated tool for downloading and analyzing ALMA calibration sources (quasars).
+`almaqso` is an automated package for downloading and analyzing ALMA calibration sources (quasars).
 Originally developed for analyzing absorption lines, this package addresses a limitation of the standard calibration scripts attached to ALMA archive data, which often mask absorption lines.
 By generating calibration scripts that preserve these lines, this package ensures accurate analysis of absorption features.
 
@@ -50,17 +52,24 @@ See sample code in `sample` folder and [documentation](https://akimasanishida.gi
 Please cite this package (software) if it helps your work!
 
 ```
-@software{nishida_2025_18181096,
+@software{nishida_2026_18334952,
   author       = {Nishida, Akimasa and
+                  Ryo, Kishikawa and
                   Yoshimura, Yuki and
                   Narita, Kanako},
   title        = {almaqso},
-  month        = apr,
-  year         = 2025,
+  month        = jan,
+  year         = 2026,
   publisher    = {Zenodo},
-  version      = {1.5.1},
-  doi          = {10.5281/zenodo.18181096},
-  url          = {https://doi.org/10.5281/zenodo.18181096},
+  version      = {1.6.0},
+  doi          = {10.5281/zenodo.18334952},
+  url          = {https://doi.org/10.5281/zenodo.18334952},
+  swhid        = {swh:1:dir:ad33568ee7a116c4377820a5ddc87ec3aa0545ce
+                   ;origin=https://doi.org/10.5281/zenodo.14752250;vi
+                   sit=swh:1:snp:3931013c0f76f5ddc4a12e857819b7522897
+                   d68c;anchor=swh:1:rel:2e78a89c6a5fd103e5a5081e988b
+                   3e7eb7ecb1b6;path=almaqso-1.6.0
+                  },
 }
 ```
 
