@@ -89,6 +89,7 @@ class Almaqso:
         )
         logger = logging.getLogger(self._logger_name)
         logger.info("ALMAQSO started.")
+        logger.info(f"Working directory: {self._work_dir}")
 
         # Check analysisUtils availability
         os.chdir(self._work_dir)
@@ -100,7 +101,6 @@ class Almaqso:
                 "analysisUtils cannot be imported in CASA. Some functionalities may not work properly."
             )
             self.close()
-            os.chdir(self._original_dir)
             raise RuntimeError(
                 "analysisUtils cannot be imported in CASA. Please check your CASA installation."
             )
@@ -182,16 +182,12 @@ class Almaqso:
         logger: logging.Logger = get_logger_for_subprocess(
             self._logger_name, self._log_queue
         )
-        logger.info(f"Working directory: {self._work_dir}")
 
         try:
             self._pre_process()
         except Exception as e:
             logger.error(f"ERROR: {e}")
             return
-
-        # Search for ALMA data
-        url_list = []
 
         # Log the processing settings
         logger.info("== Processing settings ==")
@@ -225,7 +221,7 @@ class Almaqso:
             f"Remove intermediate files after processing: {'Yes' if remove_intermediate else 'No'}"
         )
 
-        # for source in self._sources:
+        # Query ALMA data
         try:
             query_result = query(
                 self._sources,
@@ -235,14 +231,16 @@ class Almaqso:
                 self._frequency_ghz,
             )
         except Exception as e:
-            logger.error(f"NETWORK ERROR while quering data: {e}")
+            logger.error(f"Network error while querying data: {e}")
             return
         logger.info(f"Found {len(query_result)} data entries from the query.")
-        for q in query_result:
-            data_size = round(float(q["size_bytes"]) / (1024**3), 2)
-            logger.info(f"{q['url']} will be downloaded ({data_size} GB)")
-            url_list.append(q["url"])
 
+        # List URLs to download
+        url_list = []
+        for q in query_result:
+            data_size_gb = round(float(q["size_bytes"]) / (1024**3), 2)
+            logger.info(f"{q['url']} will be downloaded ({data_size_gb} GB)")
+            url_list.append(q["url"])
         if len(url_list) == 0:
             logger.warning("No data found for the specified source.")
 
@@ -254,7 +252,7 @@ class Almaqso:
                     lines = f.readlines()
                 successful_asdms = [line.strip() for line in lines]
                 # Filter url_list
-                filtered_url_list = []
+                process_url_list = []
                 for url in url_list:
                     # url: .../2019.1.00195.L_uid___A002_Xe230a1_X142.asdm.sdm.tar
                     # asdm_name: uid___A002_Xe230a1_X142
@@ -266,8 +264,8 @@ class Almaqso:
                             f"Skipping {asdm_name} as it was processed successfully before."
                         )
                     else:
-                        filtered_url_list.append(url)
-                url_list = filtered_url_list
+                        process_url_list.append(url)
+                url_list = process_url_list
             except FileNotFoundError:
                 logger.info(
                     "No previous results file found. All tasks will be processed."
@@ -279,8 +277,6 @@ class Almaqso:
                     os.remove(self._work_dir / "processing_successful.txt")
             except Exception as _:
                 pass
-
-        analysis_results = []
 
         # Download and process each data with parallel processing
         with ProcessPoolExecutor(
@@ -304,6 +300,7 @@ class Almaqso:
                 for url in url_list
             }
 
+        analysis_results = []
         for fut in as_completed(future_to_url):
             url = future_to_url[fut]
             try:

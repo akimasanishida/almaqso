@@ -131,4 +131,10 @@ def query(
 
         files.extend(url_size_list)
 
-    return files
+    # Only retain unique URLs
+    unique_files_dict = {}
+    for file in files:
+        unique_files_dict[file["url"]] = file
+    unique_files = list(unique_files_dict.values())
+
+    return unique_files
