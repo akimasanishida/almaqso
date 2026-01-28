@@ -52,7 +52,6 @@
 <li class="toctree-l3"><a class="reference internal" href="#almaqso.Almaqso.analysis_calc_spectrum"><code class="docutils literal notranslate"><span class="pre">Almaqso.analysis_calc_spectrum()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#almaqso.Almaqso.close"><code class="docutils literal notranslate"><span class="pre">Almaqso.close()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#almaqso.Almaqso.process"><code class="docutils literal notranslate"><span class="pre">Almaqso.process()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#almaqso.Almaqso.sort_images"><code class="docutils literal notranslate"><span class="pre">Almaqso.sort_images()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -140,26 +139,6 @@ For instance, <cite>“3,6”</cite> (3 and 6), <cite>“3;6”</cite> (3 and 6)
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="almaqso.Almaqso.sort_images">
-<span class="sig-name descname"><span class="pre">sort_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remove_non_target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_original</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#almaqso.Almaqso.sort_images" title="Link to this definition"></a></dt>
-<dd><p>Sort images in the working directory into subdirectories based on their target names.
-This will be automatically done by <cite>Almaqso.process()</cite>.</p>
-<p>This method only works if images are exported to FITS format.
-<cite>selfcal_fits</cite> directories are prioritized to <cite>dirty_fits</cite> directories.
-The images are moved to subdirectories named after their target names.
-The image names will be renamed to include the project code.
-For example, an image named <cite>uid___A002_X123456_X7890/dirty_fits/J1234+5678_mfs.fits</cite> will be moved to <cite>J1234+5678/uid___A002_X123456_X7890_dirty_J1234+5678_mfs.fits</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>remove_non_target</strong> – If True, remove images that do not match any target names. Default is False.</p></li>
-<li><p><strong>keep_original</strong> – If True, keep the original images in their locations. Default is False.</p></li>
-</ul>
 </dd>
 </dl>
 </dd></dl>

@@ -1,4 +1,4 @@
-@startuml L4-almaqso.Almaqso.sort_images-activity
+@startuml L4-almaqso.Almaqso._sort_images-activity
 start
 
 partition "Preparation" #LightYellow {
@@ -18,22 +18,10 @@ partition "Sort images" #LightYellow {
                     ' How to express "continue" in PlantUML?
                 endif
             }
-            partition "Move/Copy/Remove images" #Moccasin {
+            partition "Move images" #Moccasin {
                 while (more images in the selected directory?) is (yes)
-                    :Extract target name from filename (part before first underscore);
-                    if (This is target source?) then (yes)
-                        if (`keep_original`?) then (yes)
-                            :Copy image to target directory;
-                        else (no)
-                            :Move image to target directory;
-                        endif
-                    else (no)
-                        if (`remove_non_target`?) then (yes)
-                            :Remove image;
-                        else (no)
-                            ' Do nothing
-                        endif
-                    endif
+                    :Extract target name from filename;
+                    :Move image to target directory;
                 endwhile
             }
         else (no)
