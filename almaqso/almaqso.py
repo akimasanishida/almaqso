@@ -31,7 +31,6 @@ from ._analysis import calc_spectrum
 from ._casa_runner import can_import_analysisUtils
 from ._utils import (
     parse_selection,
-    in_source_list,
     parse_str_list,
     get_asdm_name_from_tarball,
     get_asdm_tarball_name_from_url,
@@ -89,6 +88,7 @@ class Almaqso:
         )
         logger = logging.getLogger(self._logger_name)
         logger.info("ALMAQSO started.")
+        logger.info(f"Working directory: {self._work_dir}")
 
         # Check analysisUtils availability
         os.chdir(self._work_dir)
@@ -100,7 +100,6 @@ class Almaqso:
                 "analysisUtils cannot be imported in CASA. Some functionalities may not work properly."
             )
             self.close()
-            os.chdir(self._original_dir)
             raise RuntimeError(
                 "analysisUtils cannot be imported in CASA. Please check your CASA installation."
             )
@@ -182,16 +181,12 @@ class Almaqso:
         logger: logging.Logger = get_logger_for_subprocess(
             self._logger_name, self._log_queue
         )
-        logger.info(f"Working directory: {self._work_dir}")
 
         try:
             self._pre_process()
         except Exception as e:
             logger.error(f"ERROR: {e}")
             return
-
-        # Search for ALMA data
-        url_list = []
 
         # Log the processing settings
         logger.info("== Processing settings ==")
@@ -225,7 +220,7 @@ class Almaqso:
             f"Remove intermediate files after processing: {'Yes' if remove_intermediate else 'No'}"
         )
 
-        # for source in self._sources:
+        # Query ALMA data
         try:
             query_result = query(
                 self._sources,
@@ -235,14 +230,16 @@ class Almaqso:
                 self._frequency_ghz,
             )
         except Exception as e:
-            logger.error(f"NETWORK ERROR while quering data: {e}")
+            logger.error(f"Network error while querying data: {e}")
             return
         logger.info(f"Found {len(query_result)} data entries from the query.")
-        for q in query_result:
-            data_size = round(float(q["size_bytes"]) / (1024**3), 2)
-            logger.info(f"{q['url']} will be downloaded ({data_size} GB)")
-            url_list.append(q["url"])
 
+        # List URLs to download
+        url_list = []
+        for q in query_result:
+            data_size_gb = round(float(q["size_bytes"]) / (1024**3), 2)
+            logger.info(f"{q['url']} will be downloaded ({data_size_gb} GB)")
+            url_list.append(q["url"])
         if len(url_list) == 0:
             logger.warning("No data found for the specified source.")
 
@@ -254,7 +251,7 @@ class Almaqso:
                     lines = f.readlines()
                 successful_asdms = [line.strip() for line in lines]
                 # Filter url_list
-                filtered_url_list = []
+                process_url_list = []
                 for url in url_list:
                     # url: .../2019.1.00195.L_uid___A002_Xe230a1_X142.asdm.sdm.tar
                     # asdm_name: uid___A002_Xe230a1_X142
@@ -266,8 +263,8 @@ class Almaqso:
                             f"Skipping {asdm_name} as it was processed successfully before."
                         )
                     else:
-                        filtered_url_list.append(url)
-                url_list = filtered_url_list
+                        process_url_list.append(url)
+                url_list = process_url_list
             except FileNotFoundError:
                 logger.info(
                     "No previous results file found. All tasks will be processed."
@@ -279,8 +276,6 @@ class Almaqso:
                     os.remove(self._work_dir / "processing_successful.txt")
             except Exception as _:
                 pass
-
-        analysis_results = []
 
         # Download and process each data with parallel processing
         with ProcessPoolExecutor(
@@ -304,6 +299,7 @@ class Almaqso:
                 for url in url_list
             }
 
+        analysis_results = []
         for fut in as_completed(future_to_url):
             url = future_to_url[fut]
             try:
@@ -321,7 +317,7 @@ class Almaqso:
             filename, result = f
             logger.info(f"{filename}: {'success' if result else 'failed'}")
 
-        self.sort_images(remove_non_target=True, keep_original=False)
+        self._sort_images()
 
         self._post_process()
 
@@ -506,51 +502,53 @@ class Almaqso:
         if remove_intermediate:
             try:
                 logger.info(f"{asdmname}: Removed intermediate files")
-                keep_dirs: list[str] = DIRS_NAME_IMAGES + [
-                    process_data.get_vis_name(),
-                ]
-                keep_files: list[str] = [
-                    "*.py",
-                    "*.log",
-                    "*.listobs",
-                ]
-                for path in os.listdir("."):
-                    if os.path.isdir(path):
-                        if path in keep_dirs:
-                            continue
-                        shutil.rmtree(path)
-                    else:
-                        if any(
-                            fnmatch.fnmatch(path, pattern) for pattern in keep_files
-                        ):
-                            continue
-                        os.remove(path)
+                self._remove_intermediates(visName=process_data.get_vis_name())
             except Exception as e:
                 logger.error(f"ERROR while removing intermediate files: {e}")
                 logger.warning("Continue the post-processing")
             logger.info(f"{asdmname}: Intermediate files removal completed")
 
-        # Check if `SEVERE` error is found
-        log_files = glob.glob("*.log")
-
-        found_severe_error = False
-        for log_file in log_files:
-            with open(log_file, "r") as f:
-                lines = f.readlines()
-            for i, line in enumerate(lines):
-                if "SEVERE" in line:
-                    logger.error(
-                        f"{asdmname}: SEVERE error is found in {log_file} (line: {i+1})"
-                    )
-                    found_severe_error = True
+        # Check if `SEVERE` error is found in log files
+        found_severe_error = self._find_severe_in_logs()
 
         # Processing complete
         logger.info(f"Processing {asdmname} is done.")
         return not found_severe_error
 
-    def sort_images(
-        self, remove_non_target: bool = False, keep_original: bool = False
-    ) -> None:
+    def _remove_intermediates(self, visName: str) -> None:
+        keep_dirs: list[str] = DIRS_NAME_IMAGES + [
+            visName,
+        ]
+        keep_files: list[str] = [
+            "*.py",
+            "*.log",
+            "*.listobs",
+        ]
+        for path in os.listdir("."):
+            if os.path.isdir(path):
+                if path in keep_dirs:
+                    continue
+                shutil.rmtree(path)
+            else:
+                if any(fnmatch.fnmatch(path, pattern) for pattern in keep_files):
+                    continue
+                os.remove(path)
+
+    def _find_severe_in_logs(self) -> bool:
+        logger = logging.getLogger(self._logger_name)
+        found_severe_error = False
+        # Search for "SEVERE" in log files
+        log_files = glob.glob("*.log")
+        for log_file in log_files:
+            with open(log_file, "r") as f:
+                lines = f.readlines()
+            for i, line in enumerate(lines):
+                if "SEVERE" in line:
+                    logger.error(f"SEVERE error is found in {log_file} (line: {i+1})")
+                    found_severe_error = True
+        return found_severe_error
+
+    def _sort_images(self) -> None:
         """
         Sort images in the working directory into subdirectories based on their target names.
         This will be automatically done by `Almaqso.process()`.
@@ -560,10 +558,6 @@ class Almaqso:
         The images are moved to subdirectories named after their target names.
         The image names will be renamed to include the project code.
         For example, an image named `uid___A002_X123456_X7890/dirty_fits/J1234+5678_mfs.fits` will be moved to `J1234+5678/uid___A002_X123456_X7890_dirty_J1234+5678_mfs.fits`.
-
-        Args:
-            remove_non_target: If True, remove images that do not match any target names. Default is False.
-            keep_original: If True, keep the original images in their locations. Default is False.
         """
         logger = logging.getLogger(self._logger_name)
         logger.info("Sorting FITS images into target directories.")
@@ -600,28 +594,17 @@ class Almaqso:
             fits_files = list(fits_dir.glob("*.fits"))
             for fits_file in fits_files:
                 # Get target name from file name
-                # image format: target_<mfs/spwNN_mfs/spwNN_cube>.fits
+                # image format: <target>_<mfs/spwNN_mfs/spwNN_cube>.fits
                 target_name = fits_file.stem.split("_")[0]
 
-                if in_source_list(target_name, self._sources):
-                    # Create target directory if not exists
-                    target_dir = self._work_dir / "fits" / target_name
-                    target_dir.mkdir(parents=True, exist_ok=True)
-                    # Move or copy the FITS file
-                    new_path = target_dir / (prefix_name + fits_file.name)
-                    if keep_original:
-                        shutil.copy(fits_file, new_path)
-                        logger.info(f"Copied {fits_file} to {new_path}")
-                    else:
-                        shutil.move(str(fits_file), str(new_path))
-                        logger.info(f"Moved {fits_file} to {new_path}")
-                elif remove_non_target:
-                    fits_file.unlink()
-                    logger.info(f"Removed {fits_file} as it does not match any target.")
-                else:
-                    logger.debug(
-                        f"Skipping {fits_file} (target '{target_name}' not in sources)"
-                    )
+                # Create target directory if not exists
+                target_dir = self._work_dir / "fits" / target_name
+                target_dir.mkdir(parents=True, exist_ok=True)
+
+                # Move the FITS file
+                new_path = target_dir / (prefix_name + fits_file.name)
+                shutil.move(str(fits_file), str(new_path))
+                logger.info(f"Moved {fits_file} to {new_path}")
 
     def analysis_calc_spectrum(self) -> None:
         """

@@ -46,13 +46,13 @@ Almaqso._process()
 Almaqso._sort_images()
 ----------------------
 
-:numref:`fig-L4-almaqso.Almaqso.sort_images-activity` shows the activity diagram for the :py:meth:`almaqso.Almaqso.sort_images()` method.
+:numref:`fig-L4-almaqso.Almaqso._sort_images-activity` shows the activity diagram for the :py:meth:`almaqso.Almaqso._sort_images()` method.
 
-.. figure:: diagrams/L4-almaqso.Almaqso.sort_images-activity.svg
-   :name: fig-L4-almaqso.Almaqso.sort_images-activity
+.. figure:: diagrams/L4-almaqso.Almaqso._sort_images-activity.svg
+   :name: fig-L4-almaqso.Almaqso._sort_images-activity
    :class: thumbnail
-   :target: _static/L4-almaqso.Almaqso.sort_images-activity.svg
+   :target: _static/L4-almaqso.Almaqso._sort_images-activity.svg
    :align: center
-   :alt: Almaqso.sort_images() Activity Diagram
+   :alt: Almaqso._sort_images() Activity Diagram
 
-   Activity diagram of :py:meth:`almaqso.Almaqso.sort_images()`. (Web version: Click to show full-size diagram.)
+   Activity diagram of :py:meth:`almaqso.Almaqso._sort_images()`. (Web version: Click to show full-size diagram.)
