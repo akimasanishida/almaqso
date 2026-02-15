@@ -11,7 +11,6 @@ is shown below:
 
 .. code-block:: python
     
-    import sys
     from almaqso import Almaqso
 
     if __name__ == "__main__":

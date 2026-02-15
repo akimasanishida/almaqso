@@ -206,6 +206,7 @@ skinparam participantRoundCorner $ROUNDED_BOX_SIZE
   !$calcTech = "//<size:" + $TECHN_FONT_SIZE + ">[" + $breakNewLineTechn($techn) + "]</size>//"
   !$calcDescr = $breakNewLineDescr($descr)
   !$calcLink = $getLink($link)
+  !$props = $getProps()
 
 participant $alias $stereo $calcLink [
 !if ($sprite != "")

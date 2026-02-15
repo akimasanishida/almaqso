@@ -13,7 +13,7 @@ Almaqso.process()
    :align: center
    :alt: Almaqso.process() Activity Diagram
 
-   Activity diagram of :py:meth:`almaqso.Almaqso.process()`. (Web version: Click to show full-size diagram.)
+   Activity diagram of :py:meth:`almaqso.Almaqso.process()`.
 
 Almaqso._process_warpper()
 ----------------------------
@@ -27,7 +27,7 @@ Almaqso._process_warpper()
    :align: center
    :alt: Almaqso._process_wrapper() Activity Diagram
 
-   Activity diagram of :py:meth:`almaqso.Almaqso._process_wrapper()`. (Web version: Click to show full-size diagram.)
+   Activity diagram of :py:meth:`almaqso.Almaqso._process_wrapper()`.
 
 Almaqso._process()
 -------------------
@@ -41,7 +41,7 @@ Almaqso._process()
    :align: center
    :alt: Almaqso._process() Activity Diagram
 
-   Activity diagram of :py:meth:`almaqso.Almaqso._process()`. (Web version: Click to show full-size diagram.)
+   Activity diagram of :py:meth:`almaqso.Almaqso._process()`.
 
 Almaqso._sort_images()
 ----------------------
@@ -55,4 +55,4 @@ Almaqso._sort_images()
    :align: center
    :alt: Almaqso._sort_images() Activity Diagram
 
-   Activity diagram of :py:meth:`almaqso.Almaqso._sort_images()`. (Web version: Click to show full-size diagram.)
+   Activity diagram of :py:meth:`almaqso.Almaqso._sort_images()`.

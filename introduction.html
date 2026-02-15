@@ -47,6 +47,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#why-almaqso">Why almaqso?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#license">License</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citation">Citation</a></li>
 </ul>
@@ -91,6 +92,10 @@ It is designed to collaborate with assets of ALMA community such as CASA, analys
 <p><cite>almaqso</cite> was originally developed to study the galactic molecular clouds.
 When quasi-stellar objects (QSOs) that are observed as calibration sources by ALMA are located behind the molecular clouds, the calibration data can contain the absorption features caused by them.
 By analyzing such absorption features, we can investigate the physical and chemical properties of the molecular clouds.</p>
+<figure class="align-center" id="fig-absorption">
+<a class="reference external image-reference" href="_static/absorption.png"><img alt="Absorption features in ALMA calibration data." class="thumbnail" src="_images/absorption.png" />
+</a>
+</figure>
 <p>However, since QSOs are mainly used for calibration purposes, the absorption features are masked out in the standard calibration process of ALMA data like calibration scripts provided by ALMA.
 In addition, when you want to analyze a large number of calibration data (conducting a statistical study, for example), it takes a lot of time and effort to download and process the data one by one.</p>
 <p>To solve these problems, <cite>almaqso</cite> was developed to automatically download, process and analyze a large number of calibration data observed by ALMA.</p>
@@ -104,6 +109,12 @@ In addition, when you want to analyze a large number of calibration data (conduc
 <li><p>Analysis features such as creating spectrum plots are also provided.</p></li>
 </ul>
 </section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
+<p>The basic usage of <code class="docutils literal notranslate"><span class="pre">almaqso</span></code> is described in the <a class="reference internal" href="usage.html"><span class="doc">Basic usage</span></a>.</p>
+<p><strong>If you find any problems or questions, feel free to report or ask from</strong> <a class="reference external" href="https://github.com/akimasanishida/almaqso/issues">issue</a>.
+I would like you to use English or Japanese.</p>
+</section>
 <section id="license">
 <h2>License<a class="headerlink" href="#license" title="Link to this heading"></a></h2>
 <p>This project is licensed under the MIT License.
@@ -112,18 +123,25 @@ Please see <a class="reference external" href="https://github.com/akimasanishida
 <section id="citation">
 <h2>Citation<a class="headerlink" href="#citation" title="Link to this heading"></a></h2>
 <p>If <cite>almaqso</cite> helps your research, please cite this software.
-Please check the latest citation information at <a class="reference external" href="https://zenodo.org/records/18181096">Zenodo</a>.</p>
-<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><span class="nc">@software</span><span class="p">{</span><span class="nl">nishida_2025_18181096</span><span class="p">,</span>
+Please check the latest citation information at <a class="reference external" href="https://doi.org/10.5281/zenodo.14752250">Zenodo</a>.</p>
+<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><span class="nc">@software</span><span class="p">{</span><span class="nl">nishida_2026_18334952</span><span class="p">,</span>
 <span class="na">author</span><span class="w">       </span><span class="p">=</span><span class="w"> </span><span class="s">{Nishida, Akimasa and</span>
+<span class="s">                Kishikawa, Ryo and</span>
 <span class="s">                Yoshimura, Yuki and</span>
 <span class="s">                Narita, Kanako}</span><span class="p">,</span>
 <span class="na">title</span><span class="w">        </span><span class="p">=</span><span class="w"> </span><span class="s">{almaqso}</span><span class="p">,</span>
-<span class="na">month</span><span class="w">        </span><span class="p">=</span><span class="w"> </span><span class="nv">apr</span><span class="p">,</span>
-<span class="na">year</span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="m">2025</span><span class="p">,</span>
+<span class="na">month</span><span class="w">        </span><span class="p">=</span><span class="w"> </span><span class="nv">jan</span><span class="p">,</span>
+<span class="na">year</span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="m">2026</span><span class="p">,</span>
 <span class="na">publisher</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{Zenodo}</span><span class="p">,</span>
-<span class="na">version</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{1.5.1}</span><span class="p">,</span>
-<span class="na">doi</span><span class="w">          </span><span class="p">=</span><span class="w"> </span><span class="s">{10.5281/zenodo.18181096}</span><span class="p">,</span>
-<span class="na">url</span><span class="w">          </span><span class="p">=</span><span class="w"> </span><span class="s">{https://doi.org/10.5281/zenodo.18181096}</span><span class="p">,</span>
+<span class="na">version</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{1.6.0}</span><span class="p">,</span>
+<span class="na">doi</span><span class="w">          </span><span class="p">=</span><span class="w"> </span><span class="s">{10.5281/zenodo.18334952}</span><span class="p">,</span>
+<span class="na">url</span><span class="w">          </span><span class="p">=</span><span class="w"> </span><span class="s">{https://doi.org/10.5281/zenodo.18334952}</span><span class="p">,</span>
+<span class="na">swhid</span><span class="w">        </span><span class="p">=</span><span class="w"> </span><span class="s">{swh:1:dir:ad33568ee7a116c4377820a5ddc87ec3aa0545ce</span>
+<span class="s">                ;origin=https://doi.org/10.5281/zenodo.14752250;vi</span>
+<span class="s">                sit=swh:1:snp:3931013c0f76f5ddc4a12e857819b7522897</span>
+<span class="s">                d68c;anchor=swh:1:rel:2e78a89c6a5fd103e5a5081e988b</span>
+<span class="s">                3e7eb7ecb1b6;path=almaqso-1.6.0</span>
+<span class="s">                }</span><span class="p">,</span>
 <span class="p">}</span>
 </pre></div>
 </div>
