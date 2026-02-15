@@ -31,4 +31,4 @@ C4-Container Diagram
    :align: center
    :alt: C4-Container Diagram
 
-   C4-Container Diagram. (Web version: Click to show full-size diagram.)
+   C4-Container Diagram.

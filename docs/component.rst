@@ -39,4 +39,4 @@ C4-Component Diagram
    :align: center
    :alt: C4-Component Diagram
    
-   C4-Component Diagram. (Web version: Click to show full-size diagram.)
+   C4-Component Diagram.

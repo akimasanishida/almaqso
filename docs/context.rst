@@ -31,4 +31,4 @@ C4-Context Diagram
    :align: center
    :alt: C4-Context Diagram
 
-   C4-Context Diagram. (Web version: Click to show full-size diagram.)
+   C4-Context Diagram.
