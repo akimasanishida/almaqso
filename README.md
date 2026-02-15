@@ -47,6 +47,9 @@ import almaqso
 
 See sample code in `sample` folder and [documentation](https://akimasanishida.github.io/almaqso/usage.html).
 
+**If you find any problems or questions, feel free to report or ask from [issue](https://github.com/akimasanishida/almaqso/issues).**
+I would like you to use English or Japanese.
+
 ## Citation
 
 Please cite this package (software) if it helps your work!

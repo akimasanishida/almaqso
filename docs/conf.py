@@ -29,7 +29,7 @@ napoleon_google_docstring = True
 autosummary_generate = True
 
 templates_path = ['_templates']
-html_static_path = ['diagrams']
+html_static_path = ['diagrams', '_static']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 add_module_names = False
