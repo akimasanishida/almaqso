@@ -15,6 +15,7 @@ if __name__ == "__main__":
         # target=["J1832-1035"],
         # band=6,
         # cycle="8",
+        # maximum_velocity_resolution=50.0, # km/s
         # work_dir="./test_dir_J1832-1035_band6_cycle8/",
         casapath="/usr/local/casa/casa-6.6.6-17-pipeline-2025.1.0.35-py3.10.el8/bin/casa"
     ) as almaqso:

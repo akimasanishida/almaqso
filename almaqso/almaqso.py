@@ -55,6 +55,7 @@ class Almaqso:
         cycle (list[int] | int | str): project name to work with. Default is "" (all cycles). If project_code is given, this parameter is ignored.
         project_code (list[str] | str): ALMA project code to work with. Default is "" (all projects). If given, cycle parameter is ignored.
         frequency_ghz (float | tuple[float, float] | None): A single frequency in GHz or a tuple of (min_frequency, max_frequency) in GHz. Data covering the specified frequency range completely will be targeted. Default is None.
+        velocity_resolution (float): Velocity resolution threshold in km/s. Data withfiner (smaller) velocity resolution than this value are selected. Default is 50.
         work_dir (str, optional): Working directory. Default is './'.
         casapath (str, optional): Path to the CASA executable. Default is 'casa'.
     """
@@ -66,6 +67,7 @@ class Almaqso:
         cycle: str = "",
         project_code: list[str] | str = "",
         frequency_ghz: float | tuple[float, float] | None = None,
+        maximum_velocity_resolution: float = 50.0,
         work_dir: str = "./",
         casapath: str = "casa",
     ) -> None:
@@ -78,6 +80,7 @@ class Almaqso:
         self._sources: list[str] = parse_str_list(target)
         self._project_code: list[str] = parse_str_list(project_code)
         self._frequency_ghz: float | tuple[float, float] | None = frequency_ghz
+        self._maximum_velocity_resolution: float = maximum_velocity_resolution
 
         # Prepare working dir
         os.makedirs(self._work_dir, exist_ok=True)
@@ -195,6 +198,7 @@ class Almaqso:
         )
         logger.info(f"Target band: {self._band if self._band != [] else 'all'}")
         logger.info(f"Target cycle: {self._cycle if self._cycle != [] else 'all'}")
+        logger.info(f"Maximum velocity resolution threshold: < {self._maximum_velocity_resolution} km/s")
         logger.info(f"Number of parallel processes: {n_parallel}")
         logger.info(
             "I will skip previously successful projects."
@@ -228,6 +232,7 @@ class Almaqso:
                 self._cycle,
                 self._project_code,
                 self._frequency_ghz,
+                self._maximum_velocity_resolution,
             )
         except Exception as e:
             logger.error(f"Network error while querying data: {e}")
