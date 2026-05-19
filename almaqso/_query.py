@@ -104,14 +104,21 @@ def query(
     alma = Alma()
     alma.archive_url = "https://almascience.nao.ac.jp"
 
-    query = _create_query(source_names, bands, cycles, project_code, frequency_ghz, maximum_velocity_resolution)
+    query = _create_query(source_names,
+        bands,
+        cycles,
+        project_code,
+        frequency_ghz,
+        maximum_velocity_resolution
+    )
 
     mous_list_pd = alma.query_tap(query).to_table().to_pandas()
     mous_list_pd_only_12m = mous_list_pd[
         mous_list_pd["antenna_arrays"].str.contains("DV|DA")
     ]  # only 12m data
     mous_list_pd_only_12m_fdm = mous_list_pd_only_12m[
-        mous_list_pd_only_12m["velocity_resolution"] < maximum_velocity_resolution * 1.e3
+        mous_list_pd_only_12m["velocity_resolution"]
+        < maximum_velocity_resolution * 1.0e3
     ]  # only FDM data
     mous_list = np.unique(mous_list_pd_only_12m_fdm["member_ous_uid"])
 

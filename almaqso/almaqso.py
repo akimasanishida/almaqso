@@ -198,7 +198,9 @@ class Almaqso:
         )
         logger.info(f"Target band: {self._band if self._band != [] else 'all'}")
         logger.info(f"Target cycle: {self._cycle if self._cycle != [] else 'all'}")
-        logger.info(f"Maximum velocity resolution threshold: < {self._maximum_velocity_resolution} km/s")
+        logger.info(
+            f"Maximum velocity resolution threshold: < {self._maximum_velocity_resolution} km/s"
+        )
         logger.info(f"Number of parallel processes: {n_parallel}")
         logger.info(
             "I will skip previously successful projects."
