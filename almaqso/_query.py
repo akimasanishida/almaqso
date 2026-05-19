@@ -146,5 +146,4 @@ def query(
     for file in files:
         unique_files_dict[file["url"]] = file
     unique_files = list(unique_files_dict.values())
-    
     return unique_files
