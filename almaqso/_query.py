@@ -104,12 +104,13 @@ def query(
     alma = Alma()
     alma.archive_url = "https://almascience.nao.ac.jp"
 
-    query = _create_query(source_names,
+    query = _create_query(
+        source_names,
         bands,
         cycles,
         project_code,
         frequency_ghz,
-        maximum_velocity_resolution
+        maximum_velocity_resolution,
     )
 
     mous_list_pd = alma.query_tap(query).to_table().to_pandas()
