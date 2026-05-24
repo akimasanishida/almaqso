@@ -55,7 +55,7 @@ class Almaqso:
         cycle (list[int] | int | str): project name to work with. Default is "" (all cycles). If project_code is given, this parameter is ignored.
         project_code (list[str] | str): ALMA project code to work with. Default is "" (all projects). If given, cycle parameter is ignored.
         frequency_ghz (float | tuple[float, float] | None): A single frequency in GHz or a tuple of (min_frequency, max_frequency) in GHz. Data covering the specified frequency range completely will be targeted. Default is None.
-        velocity_resolution (float): Velocity resolution threshold in km/s. Data withfiner (smaller) velocity resolution than this value are selected. Default is 50.
+        velocity_resolution (float): Velocity resolution threshold in km/s. Data with finer (smaller) velocity resolution than this value are selected. Default is 50.
         work_dir (str, optional): Working directory. Default is './'.
         casapath (str, optional): Path to the CASA executable. Default is 'casa'.
     """

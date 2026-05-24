@@ -10,7 +10,6 @@ def _create_query(
     cycles: list[int],
     project_code: list[str],
     frequency_ghz: float | tuple[float, float] | None,
-    maximum_velocity_resolution: float = 50.0,
 ) -> str:
     """
     Create a TAP query string for the given source names, bands, and cycles.
@@ -110,7 +109,6 @@ def query(
         cycles,
         project_code,
         frequency_ghz,
-        maximum_velocity_resolution,
     )
 
     mous_list_pd = alma.query_tap(query).to_table().to_pandas()
