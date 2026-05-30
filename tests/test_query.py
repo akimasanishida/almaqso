@@ -386,14 +386,14 @@ class TestCreateQueryExactMatch:
 
         assert result.strip() == expected.strip()
 
-    def test_exact_query_with_maximum_velocity_resolution_mid(self):
-        """Test exact query with maximum velocity resolution specified."""
-        source_names = ["NGC1097"]
-        bands = [7]
-        cycles = []  # Ignored because project_code is provided
-        maximum_velocity_resolution = 50.0  # km/s
 
-        result = query(source_names, bands, cycles, [], None, maximum_velocity_resolution)
+@pytest.mark.integration
+class TestQueryIntegration:
+    """Integration tests for query() that make real network requests to the ALMA archive."""
+
+    def test_ngc1097_band7_velocity_resolution_50kms(self):
+        """Test query with NGC1097 Band 7 and 50 km/s velocity resolution threshold."""
+        result = query(["NGC1097"], [7], [], [], None, 50.0)
 
         expected = [{'url': 'https://almascience.nao.ac.jp/dataPortal/2015.1.00126.S_uid___A002_Xb80c59_X9223.asdm.sdm.tar', 'size_bytes': np.int64(16377745408)},
                     {'url': 'https://almascience.nao.ac.jp/dataPortal/2015.1.00126.S_uid___A002_Xb825df_X609.asdm.sdm.tar', 'size_bytes': np.int64(17589186560)},
@@ -405,14 +405,9 @@ class TestCreateQueryExactMatch:
 
         assert result == expected
 
-    def test_exact_query_with_maximum_velocity_resolution_low(self):
-        """Test exact query with low maximum velocity resolution specified."""
-        source_names = ["NGC4945"]
-        bands = [6]
-        cycles = []  # Ignored because project_code is provided
-        maximum_velocity_resolution = 100.0  # km/s
-
-        result = query(source_names, bands, cycles, [], None, maximum_velocity_resolution)
+    def test_ngc4945_band6_velocity_resolution_100kms(self):
+        """Test query with NGC4945 Band 6 and 100 km/s velocity resolution threshold."""
+        result = query(["NGC4945"], [6], [], [], None, 100.0)
 
         expected = [{'url': 'https://almascience.nao.ac.jp/dataPortal/2013.1.00099.S_uid___A002_X98124f_X2127.asdm.sdm.tar', 'size_bytes': np.int64(3665391616)},
                     {'url': 'https://almascience.nao.ac.jp/dataPortal/2021.1.00783.S_uid___A002_Xf89be2_X4027.asdm.sdm.tar', 'size_bytes': np.int64(34229103616)},
@@ -432,27 +427,15 @@ class TestCreateQueryExactMatch:
 
         assert result == expected
 
-    def test_exact_query_with_maximum_velocity_resolution_high(self):
-        """Test exact query with high maximum velocity resolution specified."""
-        source_names = ["NGC4945"]
-        bands = [6]
-        cycles = []  # Ignored because project_code is provided
-        maximum_velocity_resolution = 1.0  # km/s
+    def test_ngc4945_band6_velocity_resolution_1kms_returns_empty(self):
+        """Test that a very strict threshold (1 km/s) returns no results for NGC4945 Band 6."""
+        result = query(["NGC4945"], [6], [], [], None, 1.0)
 
-        result = query(source_names, bands, cycles, [], None, maximum_velocity_resolution)
+        assert result == []
 
-        expected = []
-
-        assert result == expected
-
-    def test_exact_query_with_j062307_200kms(self):
-        """Test exact query with high maximum velocity resolution specified."""
-        source_names = ["J062307-643620"]
-        bands = []
-        cycles = []  # Ignored because project_code is provided
-        maximum_velocity_resolution = 200.0  # km/s
-
-        result = query(source_names, bands, cycles, [], None, maximum_velocity_resolution)
+    def test_j062307_velocity_resolution_200kms(self):
+        """Test query with J062307-643620 and 200 km/s velocity resolution threshold."""
+        result = query(["J062307-643620"], [], [], [], None, 200.0)
 
         expected = [{'url': 'https://almascience.nao.ac.jp/dataPortal/2015.1.01522.S_uid___A002_Xb7189f_Xa9cb.asdm.sdm.tar', 'size_bytes': np.int64(12194554880)},
                     {'url': 'https://almascience.nao.ac.jp/dataPortal/2015.1.01522.S_uid___A002_Xb7189f_Xaf15.asdm.sdm.tar', 'size_bytes': np.int64(10028267520)}
@@ -460,17 +443,8 @@ class TestCreateQueryExactMatch:
 
         assert result == expected
 
-    def test_exact_query_with_j062307_50kms(self):
-        """Test exact query with low maximum velocity resolution specified."""
-        source_names = ["J062307-643620"]
-        bands = []
-        cycles = []  # Ignored because project_code is provided
-        maximum_velocity_resolution = 50.0  # km/s
+    def test_j062307_velocity_resolution_50kms_returns_empty(self):
+        """Test that a 50 km/s threshold returns no results for J062307-643620."""
+        result = query(["J062307-643620"], [], [], [], None, 50.0)
 
-        result = query(source_names, bands, cycles, [], None, maximum_velocity_resolution)
-
-        expected = []
-
-        assert result == expected
-
-        
+        assert result == []
