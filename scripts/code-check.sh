@@ -1,2 +1,2 @@
-uv run ruff check almaqso --exclude _templates
-uv run ruff format --diff almaqso --exclude _templates
+uv run ruff check --fix almaqso --exclude _templates
+uv run ruff format almaqso --exclude _templates
