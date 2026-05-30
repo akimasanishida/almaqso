@@ -1,5 +1,6 @@
 import pytest
-from almaqso._query import _create_query
+import numpy as np
+from almaqso._query import _create_query, query
 
 
 class TestCreateQueryExactMatch:
@@ -385,3 +386,65 @@ class TestCreateQueryExactMatch:
 
         assert result.strip() == expected.strip()
 
+
+@pytest.mark.integration
+class TestQueryIntegration:
+    """Integration tests for query() that make real network requests to the ALMA archive."""
+
+    def test_ngc1097_band7_velocity_resolution_50kms(self):
+        """Test query with NGC1097 Band 7 and 50 km/s velocity resolution threshold."""
+        result = query(["NGC1097"], [7], [], [], None, 50.0)
+
+        expected = [{'url': 'https://almascience.nao.ac.jp/dataPortal/2015.1.00126.S_uid___A002_Xb80c59_X9223.asdm.sdm.tar', 'size_bytes': np.int64(16377745408)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2015.1.00126.S_uid___A002_Xb825df_X609.asdm.sdm.tar', 'size_bytes': np.int64(17589186560)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2015.1.00126.S_uid___A002_Xb825df_X971.asdm.sdm.tar', 'size_bytes': np.int64(31754557440)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2015.1.00126.S_uid___A002_Xb825df_Xc3d.asdm.sdm.tar', 'size_bytes': np.int64(31732332544)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2011.0.00108.S_uid___A002_X30a93d_Xba7.asdm.sdm.tar', 'size_bytes': np.int64(4552451072)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2011.0.00108.S_uid___A002_X30cca6_X342.asdm.sdm.tar', 'size_bytes': np.int64(5194443776)}
+                    ]
+
+        assert result == expected
+
+    def test_ngc4945_band6_velocity_resolution_100kms(self):
+        """Test query with NGC4945 Band 6 and 100 km/s velocity resolution threshold."""
+        result = query(["NGC4945"], [6], [], [], None, 100.0)
+
+        expected = [{'url': 'https://almascience.nao.ac.jp/dataPortal/2013.1.00099.S_uid___A002_X98124f_X2127.asdm.sdm.tar', 'size_bytes': np.int64(3665391616)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2021.1.00783.S_uid___A002_Xf89be2_X4027.asdm.sdm.tar', 'size_bytes': np.int64(34229103616)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2021.1.00783.S_uid___A002_Xf8d822_X4fb9.asdm.sdm.tar', 'size_bytes': np.int64(35797571584)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2021.1.00783.S_uid___A002_Xf8d822_X579e.asdm.sdm.tar', 'size_bytes': np.int64(35797147648)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2021.1.00783.S_uid___A002_Xf8f6a9_X16dfc.asdm.sdm.tar', 'size_bytes': np.int64(39039451136)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2021.1.00783.S_uid___A002_Xf8f6a9_X5e59.asdm.sdm.tar', 'size_bytes': np.int64(34229502976)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2013.1.00099.S_uid___A002_X9fa4e2_X6a9f.asdm.sdm.tar', 'size_bytes': np.int64(91015168)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2013.1.00099.S_uid___A002_X9fa4e2_X6ce6.asdm.sdm.tar', 'size_bytes': np.int64(90475520)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2013.1.00099.S_uid___A002_X9fa4e2_X6fb1.asdm.sdm.tar', 'size_bytes': np.int64(91072512)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2013.1.00099.S_uid___A002_X9fa4e2_X71d9.asdm.sdm.tar', 'size_bytes': np.int64(91046912)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2013.1.00099.S_uid___A002_X9fa4e2_X75cb.asdm.sdm.tar', 'size_bytes': np.int64(90792960)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2013.1.00099.S_uid___A002_X9fa4e2_X79dd.asdm.sdm.tar', 'size_bytes': np.int64(90382336)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2016.1.01279.S_uid___A002_Xbb44e1_X1d53.asdm.sdm.tar', 'size_bytes': np.int64(6406522880)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2016.1.01279.S_uid___A002_Xbb44e1_X23b1.asdm.sdm.tar', 'size_bytes': np.int64(6409761792)}
+                    ]
+
+        assert result == expected
+
+    def test_ngc4945_band6_velocity_resolution_1kms_returns_empty(self):
+        """Test that a very strict threshold (1 km/s) returns no results for NGC4945 Band 6."""
+        result = query(["NGC4945"], [6], [], [], None, 1.0)
+
+        assert result == []
+
+    def test_j062307_velocity_resolution_200kms(self):
+        """Test query with J062307-643620 and 200 km/s velocity resolution threshold."""
+        result = query(["J062307-643620"], [], [], [], None, 200.0)
+
+        expected = [{'url': 'https://almascience.nao.ac.jp/dataPortal/2015.1.01522.S_uid___A002_Xb7189f_Xa9cb.asdm.sdm.tar', 'size_bytes': np.int64(12194554880)},
+                    {'url': 'https://almascience.nao.ac.jp/dataPortal/2015.1.01522.S_uid___A002_Xb7189f_Xaf15.asdm.sdm.tar', 'size_bytes': np.int64(10028267520)}
+                    ]
+
+        assert result == expected
+
+    def test_j062307_velocity_resolution_50kms_returns_empty(self):
+        """Test that a 50 km/s threshold returns no results for J062307-643620."""
+        result = query(["J062307-643620"], [], [], [], None, 50.0)
+
+        assert result == []

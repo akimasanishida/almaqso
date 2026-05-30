@@ -85,6 +85,7 @@ def query(
     cycles: list[int],
     project_code: list[str],
     frequency_ghz: float | tuple[float, float] | None,
+    maximum_velocity_resolution: float = 50.0,
 ) -> list[dict]:
     """
     Query ALMA data and get the URLs of the data, the size of the data, and the total size of the data.
@@ -102,14 +103,21 @@ def query(
     alma = Alma()
     alma.archive_url = "https://almascience.nao.ac.jp"
 
-    query = _create_query(source_names, bands, cycles, project_code, frequency_ghz)
+    query = _create_query(
+        source_names,
+        bands,
+        cycles,
+        project_code,
+        frequency_ghz,
+    )
 
     mous_list_pd = alma.query_tap(query).to_table().to_pandas()
     mous_list_pd_only_12m = mous_list_pd[
         mous_list_pd["antenna_arrays"].str.contains("DV|DA")
     ]  # only 12m data
     mous_list_pd_only_12m_fdm = mous_list_pd_only_12m[
-        mous_list_pd_only_12m["velocity_resolution"] < 50000
+        mous_list_pd_only_12m["velocity_resolution"]
+        < maximum_velocity_resolution * 1.0e3
     ]  # only FDM data
     mous_list = np.unique(mous_list_pd_only_12m_fdm["member_ous_uid"])
 
@@ -136,5 +144,4 @@ def query(
     for file in files:
         unique_files_dict[file["url"]] = file
     unique_files = list(unique_files_dict.values())
-
     return unique_files

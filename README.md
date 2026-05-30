@@ -98,6 +98,32 @@ Then, you can run `main.py` or something with
 uv run main.py  # or something
 ```
 
+### Format code
+
+```shell
+./scripts/code-check.sh
+```
+
+### Test code
+
+For unit tests, run
+
+```shell
+uv run pytest -m "not integration"
+```
+
+For integration tests, run
+
+```shell
+uv run pytest -m "integration"
+```
+
+Or, you can run all tests with
+
+```shell
+uv run pytest
+```
+
 ### Render diagrams
 
 (Re-)Render all PUML files in `docs/diagrams` with the command below.
