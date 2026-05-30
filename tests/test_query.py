@@ -445,7 +445,7 @@ class TestCreateQueryExactMatch:
 
         assert result == expected
 
-    def test_exact_query_with_maximum_velocity_resolution_another_low(self):
+    def test_exact_query_with_j062307_200kms(self):
         """Test exact query with high maximum velocity resolution specified."""
         source_names = ["J062307-643620"]
         bands = []
@@ -460,7 +460,7 @@ class TestCreateQueryExactMatch:
 
         assert result == expected
 
-    def test_exact_query_with_maximum_velocity_resolution_another_low(self):
+    def test_exact_query_with_j062307_50kms(self):
         """Test exact query with low maximum velocity resolution specified."""
         source_names = ["J062307-643620"]
         bands = []
