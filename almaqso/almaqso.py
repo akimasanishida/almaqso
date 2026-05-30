@@ -209,7 +209,7 @@ class Almaqso:
         )
         if do_tclean:
             logger.info(
-                f"tclean will be performed. {', '.join(tclean_mode)} images will be created, and the weighting is \"{tclean_weightings[0]}\" with robust=\"{tclean_weightings[1]}\"."
+                f'tclean will be performed. {", ".join(tclean_mode)} images will be created, and the weighting is "{tclean_weightings[0]}" with robust="{tclean_weightings[1]}".'
             )
         else:
             logger.info("tclean will NOT be performed.")
@@ -551,7 +551,7 @@ class Almaqso:
                 lines = f.readlines()
             for i, line in enumerate(lines):
                 if "SEVERE" in line:
-                    logger.error(f"SEVERE error is found in {log_file} (line: {i+1})")
+                    logger.error(f"SEVERE error is found in {log_file} (line: {i + 1})")
                     found_severe_error = True
         return found_severe_error
 
