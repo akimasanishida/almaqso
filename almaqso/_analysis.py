@@ -11,7 +11,10 @@ SPECTRUM_DIR = "spectrum"
 
 def _get_spectrum(fits_file: Path) -> tuple[np.ndarray, np.ndarray]:
     """
-    Extract frequency and spectrum data from a cube FITS file.
+    Extract frequency and spectrum data at the cube's central spatial pixel.
+
+    The center uses zero-based indices (ny // 2, nx // 2), choosing the
+    higher-index central pixel when a spatial dimension is even.
 
     Args:
         fits_file (Path): Path to the cube FITS file.
@@ -33,7 +36,9 @@ def _get_spectrum(fits_file: Path) -> tuple[np.ndarray, np.ndarray]:
         CRVAL3 + (np.arange(data.shape[0]) - (CRPIX3 - 1)) * CDELT3
     ) / 1e9  # in GHz
 
-    spectrums = np.nanmax(data, axis=(1, 2))  # Jy
+    center_y = data.shape[1] // 2
+    center_x = data.shape[2] // 2
+    spectrums = data[:, center_y, center_x]  # Jy
 
     return frequencies, spectrums
 
