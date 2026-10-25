@@ -49,3 +49,7 @@ dev = [
     "sphinx-rtd-theme>=3.0.2",
     "sphinxcontrib-plantuml>=0.31",
 ]
+
+[tool.uv]
+# Supply-chain cooldown: ignore distributions uploaded in the last 3 days.
+exclude-newer = "3 days"
